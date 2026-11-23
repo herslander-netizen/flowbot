@@ -29,7 +29,7 @@ export function criarClienteProspecao({ getAccessToken, fetcher = fetch, baseUrl
   }
 
   function validarId(id) {
-    if (!/^[0-9a-f]{8}-[0-9a-f-]{27}$/i.test(String(id ?? "")))
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(String(id ?? "")))
       throw new Error("identificador_invalido");
     return id;
   }
