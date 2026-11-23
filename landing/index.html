@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
 <title>FlowBot — Teste a conversa antes do cliente</title>
 <meta name="description" content="Desenhe fluxos de conversa, teste todos os caminhos e só leve para o cliente quando estiver pronto. Módulo do Nexus." />
 <meta name="theme-color" content="#0B0B0B" />
@@ -14,12 +14,12 @@
 :root{
   --bg:#0B0B0B; --card:#141413; --sunken:#1C1C1A; --hover:rgba(245,245,245,.06);
   --line:rgba(245,245,245,.08); --line-2:rgba(245,245,245,.14);
-  --fg:#F5F5F5; --fg-2:#BCBAB4; --fg-3:#7C7872;
-  --acc:#38BDF8; --acc-rgb:56,189,248;
-  --ok:#34D399;
+  --fg:#F5F5F5; --fg-2:#BCBAB4; --fg-3:#7C7872; --dim:#3A3835;
+  --acc:#38BDF8; --acc-rgb:56,189,248; --ok:#34D399; --mark:#F59E0B;
   --display:"Bricolage Grotesque","Inter",system-ui,sans-serif;
   --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
   --ease:cubic-bezier(.32,.72,0,1); --spring:cubic-bezier(.34,1.56,.64,1);
+  --mat:inset 0 1px 0 rgba(255,255,255,.07),inset 0 0 0 .5px rgba(255,255,255,.04),0 16px 32px -20px rgba(0,0,0,.95);
   --key:inset 0 1px 0 rgba(255,255,255,.6),inset 0 -1px 0 rgba(0,0,0,.14),0 1px 2px rgba(0,0,0,.4),0 12px 24px -12px rgba(0,0,0,.9);
   --pop:inset 0 1px 0 rgba(255,255,255,.07),0 40px 120px rgba(0,0,0,.7),0 0 0 .5px rgba(245,245,245,.12);
   color-scheme:dark;
@@ -42,7 +42,7 @@ h1,h2{font-family:var(--display);letter-spacing:-.045em;line-height:.98;margin:0
 .btn:active{transform:scale(.96)}
 .btn.ghost{background:transparent;color:var(--fg);box-shadow:inset 0 0 0 .5px var(--line-2)}
 
-/* palco: auras, pontos e granulado */
+/* palco */
 .stage{position:relative;overflow:clip;isolation:isolate}
 .stage>.in{position:relative;z-index:2}
 .au{position:absolute;inset:-20%;pointer-events:none}
@@ -52,7 +52,7 @@ h1,h2{font-family:var(--display);letter-spacing:-.045em;line-height:.98;margin:0
 .au i:nth-child(3){left:22%;bottom:-30%;background:radial-gradient(closest-side,rgba(52,211,153,.16),transparent);animation:d3 27s ease-in-out infinite alternate}
 .au i:nth-child(4){right:14%;bottom:-34%;background:radial-gradient(closest-side,rgba(245,158,11,.14),transparent);animation:d1 31s ease-in-out infinite alternate-reverse}
 .au.b i:nth-child(1){background:radial-gradient(closest-side,rgba(52,211,153,.2),transparent)}
-.au.b i:nth-child(2){background:radial-gradient(closest-side,rgba(56,189,248,.2),transparent)}
+.au.b i:nth-child(2){background:radial-gradient(closest-side,rgba(245,158,11,.18),transparent)}
 @keyframes d1{100%{transform:translate(9vmax,6vmax) scale(1.15)}}
 @keyframes d2{100%{transform:translate(-8vmax,7vmax) scale(.9)}}
 @keyframes d3{100%{transform:translate(6vmax,-7vmax) scale(1.1)}}
@@ -67,11 +67,13 @@ h1,h2{font-family:var(--display);letter-spacing:-.045em;line-height:.98;margin:0
 .fxb .body{fill:var(--c);transition:fill .3s}
 .fxb .eyes{transform:translate(calc(var(--lx)*5px),calc(var(--ly)*4px));transition:transform .2s var(--ease)}
 .fxb .eyes>g{display:none}
-.fxb[data-eye=dot] .e-dot,.fxb[data-eye=arc] .e-arc,.fxb[data-eye=wide] .e-wide{display:block}
+.fxb[data-eye=dot] .e-dot,.fxb[data-eye=arc] .e-arc,.fxb[data-eye=wide] .e-wide,.fxb[data-eye=flat] .e-flat{display:block}
 .fxb circle{fill:var(--e)}
 .fxb .eyes path{stroke:var(--e);stroke-width:5.6;stroke-linecap:round;fill:none}
 .fxb .e-dot{transform-origin:50px 48px;animation:blink 4.6s ease infinite;animation-delay:var(--bd)}
 @keyframes blink{0%,93%,100%{transform:scaleY(1)}96%{transform:scaleY(.08)}}
+.fxb.think .sq{animation:think 1s ease-in-out infinite}
+@keyframes think{50%{transform:translateY(-5px) rotate(-3deg)}}
 .ring{position:absolute;left:0;top:0;width:160px;height:160px;margin:-80px 0 0 -80px;border-radius:50%;border:3px solid var(--acc);pointer-events:none}
 .bit{position:absolute;left:0;top:0;pointer-events:none}
 .bub{position:absolute;left:0;top:0;z-index:2;width:max-content;max-width:240px;padding:8px 13px;border-radius:15px;background:var(--fg);color:var(--bg);font-size:13px;font-weight:550;line-height:1.35;box-shadow:var(--pop);pointer-events:none;opacity:0}
@@ -85,18 +87,17 @@ h1,h2{font-family:var(--display);letter-spacing:-.045em;line-height:.98;margin:0
 .nav nav a{transition:color .2s}
 .nav nav a:hover{color:var(--fg)}
 .nav .btn{height:36px;padding:0 16px;font-size:13.5px}
-@media (max-width:860px){.nav nav{display:none}}
 
 /* hero */
 #hero{min-height:max(100svh,780px);display:grid;align-items:center;padding:96px 0 60px}
 #hero .in{text-align:center}
 .soon{display:inline-flex;align-items:center;gap:8px;margin:0 0 22px;padding:6px 13px;border-radius:999px;border:.5px solid var(--line-2);background:rgba(245,245,245,.05);font-size:13px;color:var(--fg-2);opacity:0}
-.soon i{width:7px;height:7px;border-radius:50%;background:var(--acc);box-shadow:0 0 0 4px rgba(var(--acc-rgb),.2);animation:soonP 1.8s ease-in-out infinite}
+.soon i{flex:0 0 auto;width:7px;height:7px;border-radius:50%;background:var(--acc);box-shadow:0 0 0 4px rgba(var(--acc-rgb),.2);animation:soonP 1.8s ease-in-out infinite}
 @keyframes soonP{50%{box-shadow:0 0 0 7px rgba(var(--acc-rgb),0)}}
 #hero h1{font-size:clamp(46px,8.4vw,116px);font-weight:700}
 #hero h1 span{display:inline-block;opacity:0;white-space:pre}
 #hero .lead{max-width:44ch;margin:22px auto 0;font-size:clamp(16px,1.8vw,19px);color:var(--fg-2);opacity:0}
-.acc{position:relative;width:min(420px,100%);margin:clamp(96px,12vh,128px) auto 0;padding:34px 24px 20px;border-radius:26px;background:color-mix(in srgb,var(--card) 90%,transparent);border:.5px solid var(--line-2);box-shadow:var(--pop);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);text-align:left;display:grid;gap:10px;opacity:0}
+.acc{position:relative;width:min(420px,100%);margin:clamp(96px,12vh,128px) auto 0;padding:34px 24px 20px;border-radius:26px;background:color-mix(in srgb,var(--card) 90%,transparent);border:.5px solid var(--line-2);box-shadow:var(--pop);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);text-align:left;display:grid;grid-template-columns:minmax(0,1fr);gap:10px;opacity:0}
 .acc b{font:700 24px var(--display);letter-spacing:-.03em}
 .acc p{margin:-4px 0 6px;color:var(--fg-2);font-size:14px}
 .acc .row{display:flex;align-items:center;gap:10px;height:48px;border-radius:14px;border:.5px solid var(--line);background:var(--sunken);padding:0 15px;font-size:15px;color:var(--fg-2)}
@@ -114,60 +115,93 @@ h1,h2{font-family:var(--display);letter-spacing:-.045em;line-height:.98;margin:0
 .rv.on{opacity:1;transform:none}
 
 /* dor */
-#dor{min-height:90svh;display:grid;align-items:center}
-.dor-l{display:grid;gap:.08em;font:700 clamp(34px,6vw,76px)/1.02 var(--display);letter-spacing:-.045em}
-.dor-l span{display:block;color:var(--fg-3);opacity:0;transform:translateY(.4em);transition:opacity .8s var(--ease),transform .8s var(--ease),color .9s var(--ease)}
-.dor-l span.on{opacity:1;transform:none}
-.dor-l span.hot{color:var(--fg)}
-.dor-p{margin:34px 0 0;max-width:46ch;font-size:clamp(16px,1.7vw,19px);color:var(--fg-2);opacity:0;transition:opacity .8s var(--ease)}
-.dor-p.on{opacity:1}
+#dor{padding:clamp(110px,15vw,200px) 0;text-align:center}
+.dor p{font:700 clamp(30px,5.6vw,76px)/1.04 var(--display);letter-spacing:-.04em;margin:0;color:var(--dim);transition:color .9s var(--ease)}
+.dor p.on{color:var(--fg)}
+.dor p+p{margin-top:.16em}
+.dor .lead{font:400 clamp(16px,1.8vw,20px)/1.5 Inter,sans-serif;letter-spacing:0;max-width:44ch;color:var(--dim);margin:40px auto 0!important}
+.dor .lead.on{color:var(--fg-2)}
+.dor-floor{height:120px;margin-top:26px}
+.dor-then{margin-top:6px;font:500 13px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--fg-2);opacity:0;transition:opacity .6s}
+.dor-then.on{opacity:1}
 
-/* como funciona */
-.lanes{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:clamp(56px,7vw,80px)}
-.lane{position:relative;min-height:230px;padding:30px 22px 22px;border-radius:24px;background:color-mix(in srgb,var(--card) 92%,transparent);border:.5px solid var(--line-2);box-shadow:0 20px 60px rgba(0,0,0,.4);display:grid;align-content:start;gap:10px;transition:transform .35s var(--spring)}
-.lane:hover{transform:translateY(-4px)}
+/* manhã: caixa de mensagem e três raias */
+.comp{position:relative;display:flex;align-items:center;gap:10px;width:min(640px,100%);min-height:60px;margin:clamp(110px,13vw,150px) auto 0;padding:8px 8px 8px 20px;border-radius:30px;background:var(--card);border:.5px solid var(--line-2);box-shadow:var(--pop);font-size:15.5px}
+.comp .tx{flex:1;min-height:1.5em}
+.comp .tx:empty::before{content:"Descreva o atendimento que você quer";color:var(--fg-3)}
+.comp .tx::after{content:"";display:inline-block;width:2px;height:1.1em;margin-left:2px;vertical-align:-3px;background:var(--acc);animation:car 1s steps(1) infinite}
+@keyframes car{50%{opacity:0}}
+.comp .go{width:44px;height:44px;border-radius:50%;background:var(--fg);color:var(--bg);box-shadow:var(--key);display:grid;place-items:center;flex:0 0 auto;transition:transform .3s var(--spring)}
+.comp.sent .go{transform:scale(1.25) rotate(-12deg)}
+.comp .go svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.lanes{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:clamp(110px,12vw,140px)}
+.lane{position:relative;min-height:250px;padding:30px 18px 18px;border-radius:24px;background:color-mix(in srgb,var(--card) 92%,transparent);border:.5px solid var(--line-2);box-shadow:0 20px 60px rgba(0,0,0,.4);opacity:0;display:grid;align-content:start;gap:10px}
 .lane h3{margin:0;font:600 12px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--fg-2);display:flex;justify-content:space-between}
 .lane h3 b{color:var(--fg);font-weight:500}
-.lane strong{font:700 26px/1.05 var(--display);letter-spacing:-.03em}
-.lane p{margin:0;color:var(--fg-2);font-size:14.5px}
 .co{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:13px;background:var(--sunken);font-size:13.5px}
 .co i{width:9px;height:9px;border-radius:50%;background:var(--c,#6B6762);flex:0 0 auto}
 .co span{margin-left:auto;font:500 11.5px var(--mono);color:var(--fg-2)}
-@media (max-width:860px){.lanes{grid-template-columns:1fr}}
-
-/* demo */
-.demo-g{display:grid;grid-template-columns:1fr 400px;gap:clamp(32px,6vw,80px);align-items:center}
-.sum{margin-top:30px;display:grid;gap:8px;max-width:420px}
-.sum .co span b{color:var(--acc);font-weight:500}
-.warn{margin-top:18px;font:500 11.5px var(--mono);letter-spacing:.04em;color:var(--fg-3)}
-.phone{position:relative;border-radius:34px;padding:10px;background:var(--card);border:.5px solid var(--line-2);box-shadow:var(--pop);margin-top:70px}
-.ph-in{border-radius:26px;background:#101010;overflow:hidden;display:flex;flex-direction:column;height:540px}
-.ph-h{display:flex;align-items:center;gap:11px;padding:14px 16px;border-bottom:.5px solid var(--line)}
-.ph-h .av{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;background:var(--sunken)}
-.ph-h .av svg{width:26px;height:26px}
-.ph-h b{display:block;font:700 15px var(--display);letter-spacing:-.02em}
-.ph-h small{display:flex;align-items:center;gap:6px;font:500 11px var(--mono);color:var(--ok);letter-spacing:.04em}
-.ph-h small::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}
-.ph-h small.off{color:var(--fg-3)}
-.ph-h button{margin-left:auto;font:500 11px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--fg-3);transition:color .2s}
-.ph-h button:hover{color:var(--fg)}
-.msgs{flex:1;overflow-y:auto;padding:16px 14px;display:flex;flex-direction:column;gap:8px;scrollbar-width:none}
-.m{max-width:84%;padding:10px 13px;font-size:14px;line-height:1.45}
-.m.b{align-self:flex-start;background:var(--sunken);border-radius:18px 18px 18px 6px}
-.m.u{align-self:flex-end;background:var(--acc);color:#04121B;font-weight:550;border-radius:18px 18px 6px 18px}
-.m.s{align-self:center;max-width:92%;text-align:center;font:500 11.5px var(--mono);letter-spacing:.04em;color:var(--ok);background:color-mix(in srgb,var(--ok) 12%,transparent);border-radius:999px;padding:7px 13px}
-.m.ty{display:flex;gap:4px;align-items:center;padding:13px 14px}
-.m.ty i{width:6px;height:6px;border-radius:50%;background:var(--fg-2);animation:ty 1.1s ease-in-out infinite}
-.m.ty i:nth-child(2){animation-delay:.15s}.m.ty i:nth-child(3){animation-delay:.3s}
-@keyframes ty{0%,60%,100%{opacity:.3;transform:none}30%{opacity:1;transform:translateY(-3px)}}
-.ops{display:flex;flex-wrap:wrap;gap:6px;padding:10px 12px 14px;border-top:.5px solid var(--line);min-height:62px}
-.op{height:36px;padding:0 14px;border-radius:999px;background:var(--sunken);border:.5px solid var(--line-2);font-size:13.5px;transition:background .2s,transform .25s var(--spring),border-color .2s}
-.op:hover{background:var(--hover);border-color:rgba(var(--acc-rgb),.5);transform:translateY(-1px)}
-.op:active{transform:scale(.95)}
-.op.hu{background:transparent;color:var(--fg-2)}
-.again{display:block;margin:auto;font:500 12px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--fg-3);transition:color .2s}
+.msg{padding:11px 14px;border-radius:18px 18px 18px 6px;background:var(--sunken);font-size:14px;line-height:1.45;min-height:5.6em}
+.msg mark,.m mark{background:color-mix(in srgb,var(--mark) 30%,transparent);color:inherit;border-radius:4px;padding:0 2px}
+.fact{font:500 11.5px var(--mono);color:var(--fg-3);opacity:0}
+.week{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.day{display:grid;justify-items:center;gap:6px;padding:10px 0;border-radius:13px;background:var(--sunken);font:500 11px var(--mono);color:var(--fg-3);transition:background .3s,color .3s,transform .4s var(--spring)}
+.day i{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--line-2);transition:.3s}
+.day.sent{color:var(--fg)}
+.day.sent i{background:var(--fg-3);border-color:transparent}
+.day.win{background:color-mix(in srgb,var(--ok) 22%,var(--sunken));color:var(--fg);transform:translateY(-6px)}
+.day.win i{background:var(--ok);border-color:transparent}
+.reply{padding:10px 13px;border-radius:18px 18px 6px;background:var(--ok);color:#04130D;font-size:14px;font-weight:550;justify-self:end;opacity:0}
+.again{display:block;margin:34px auto 0;font:500 12px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--fg-3);opacity:0;transition:opacity .4s,color .2s}
+.again.on{opacity:1}
 .again:hover{color:var(--fg)}
-@media (max-width:860px){.demo-g{grid-template-columns:1fr}.phone{max-width:400px;width:100%;margin-inline:auto}}
+
+/* conversa */
+.duo{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:clamp(30px,6vw,90px);align-items:center}
+.pts{display:grid;gap:18px;margin-top:34px}
+.pts div{border-top:.5px solid var(--line-2);padding-top:14px;color:var(--fg-2);font-size:15px;max-width:46ch}
+.pts b{display:block;color:var(--fg);font:600 18px var(--display);letter-spacing:-.01em;margin-bottom:3px}
+.sum{display:flex;flex-wrap:wrap;gap:6px;margin-top:22px}
+.sum span{font:500 11.5px var(--mono);padding:6px 10px;border-radius:999px;background:var(--sunken);color:var(--fg-3);transition:background .3s,color .3s}
+.sum span.on{background:color-mix(in srgb,var(--acc) 18%,var(--sunken));color:var(--fg)}
+.phone{position:relative;width:min(330px,100%);height:560px;margin-top:90px;padding:14px 14px 14px;border-radius:44px;background:var(--card);border:.5px solid var(--line-2);box-shadow:var(--pop),inset 0 0 0 6px #0E0E0D;display:grid;grid-template-rows:auto 1fr auto;gap:10px}
+.ph-h{display:flex;align-items:center;gap:10px;padding:12px 10px 10px;border-bottom:.5px solid var(--line)}
+.ph-av{width:36px;height:36px;border-radius:50%;background:var(--sunken);display:grid;place-items:center}
+.ph-av svg{width:28px;height:28px}
+.ph-h b{display:block;font-size:14.5px}
+.ph-h small{color:var(--fg-3);font-size:12px}
+.ph-you{margin-left:auto;display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:12px;background:var(--fg);color:var(--bg);font-size:11.5px;font-weight:600;opacity:0;transition:opacity .3s}
+.ph-you.on{opacity:1}
+.ph-b{display:flex;flex-direction:column;gap:8px;padding:6px 6px 0;overflow-y:auto;scrollbar-width:none;min-height:0}
+.ph-b>:first-child{margin-top:auto}
+.m{max-width:86%;padding:10px 13px;border-radius:18px 18px 18px 6px;background:var(--sunken);font-size:14px;line-height:1.42;flex:0 0 auto}
+.m.r{align-self:flex-end;border-radius:18px 18px 6px;background:var(--acc);color:#04121B;font-weight:550}
+.m.s{align-self:center;text-align:center;font:500 11px var(--mono);letter-spacing:.04em;color:var(--ok);background:color-mix(in srgb,var(--ok) 12%,transparent);border-radius:999px;padding:7px 12px}
+.m small{display:block;margin-top:4px;font:500 10px var(--mono);color:var(--fg-3)}
+.m.r small{color:rgba(4,18,27,.6)}
+.typing{display:inline-flex;gap:4px;padding:12px 14px;border-radius:18px;background:var(--sunken);align-self:flex-start;flex:0 0 auto}
+.typing i{width:6px;height:6px;border-radius:50%;background:var(--fg-2);animation:ty 1s ease infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes ty{0%,60%,100%{opacity:.3;transform:none}30%{opacity:1;transform:translateY(-3px)}}
+.ops{display:flex;flex-wrap:wrap;gap:6px;min-height:44px;align-content:flex-end}
+.op{height:36px;padding:0 13px;border-radius:999px;background:var(--sunken);border:.5px solid var(--line-2);font-size:13px;transition:background .2s,transform .25s var(--spring),border-color .2s}
+.op:hover{background:var(--hover);border-color:rgba(var(--acc-rgb),.5)}
+.op:active{transform:scale(.95)}
+.take{width:100%;height:44px;border-radius:999px;box-shadow:var(--key);background:var(--fg);color:var(--bg);font-weight:600;font-size:14.5px;transition:background .3s,color .3s,transform .3s var(--spring)}
+.take.pulse{animation:tk 1s ease-in-out infinite}
+@keyframes tk{50%{box-shadow:0 0 0 8px rgba(245,245,245,.12)}}
+.take.done{background:var(--sunken);color:var(--fg-2);transform:scale(.98);box-shadow:none}
+
+/* níveis */
+.rk{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:clamp(20px,5vw,60px);margin-top:clamp(70px,9vw,110px)}
+.rk-bot{width:clamp(150px,20vw,220px);aspect-ratio:1/1}
+.rk-t small{font:500 12px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--fg-3)}
+.rk-t b{display:block;font:700 clamp(40px,6vw,76px)/1 var(--display);letter-spacing:-.045em;margin:6px 0 10px}
+.rk-t p{margin:0;color:var(--fg-2);min-height:1.6em}
+.rk-steps{display:flex;gap:6px;margin-top:22px;flex-wrap:wrap}
+.rk-steps i{width:34px;height:8px;border-radius:4px;background:var(--sunken);transition:background .4s,transform .4s var(--spring)}
+.rk-steps i.on{transform:scaleY(1.5)}
+.fxb .hat{transform-origin:50% 30%}
 
 /* time */
 .crew{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-top:clamp(110px,12vw,140px)}
@@ -187,12 +221,11 @@ h1,h2{font-family:var(--display);letter-spacing:-.045em;line-height:.98;margin:0
 .shp svg{width:20px;height:20px;fill:var(--fg-3)}
 .shp button[aria-pressed=true]{background:var(--fg)}
 .shp button[aria-pressed=true] svg{fill:var(--bg)}
-@media (max-width:860px){.crew{grid-template-columns:repeat(2,1fr);row-gap:70px}.mate.mk{grid-column:1/-1}}
 
-/* para quem: letreiro */
+/* quem usa */
 #gente{padding-bottom:clamp(60px,8vw,100px)}
 .mq{overflow:hidden;margin-top:18px;-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
-.mq:first-of-type{margin-top:clamp(48px,6vw,72px)}
+.mq.a{margin-top:clamp(48px,6vw,72px)}
 .mq-t{display:flex;gap:16px;width:max-content;animation:mq 70s linear infinite}
 .mq.b .mq-t{animation-direction:reverse;animation-duration:84s}
 .mq:hover .mq-t{animation-play-state:paused}
@@ -207,45 +240,79 @@ h1,h2{font-family:var(--display);letter-spacing:-.045em;line-height:.98;margin:0
 .ps-mid b{display:block;font:700 23px/1.05 var(--display);letter-spacing:-.035em}
 .ps-mid small{color:var(--mu);font-size:12.5px}
 .ps-say{font-size:13px;line-height:1.4;color:var(--mu);min-height:3.6em}
+.ps-ft{display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px dashed rgba(11,11,11,.18);font:500 11px var(--mono);color:var(--mu)}
+.ps-ft b{display:inline-flex;align-items:center;gap:6px;color:var(--bg);font-weight:600}
+.ps-ft b::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--c)}
 
-/* diferenciais */
-.feats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:clamp(56px,7vw,80px)}
-.feat{padding:26px 20px 22px;border-radius:24px;background:color-mix(in srgb,var(--card) 92%,transparent);border:.5px solid var(--line-2);display:grid;align-content:start;gap:8px;transition:transform .35s var(--spring),border-color .2s}
-.feat:hover{transform:translateY(-4px);border-color:rgba(var(--acc-rgb),.4)}
-.feat small{font:500 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--acc)}
-.feat b{font:700 21px/1.1 var(--display);letter-spacing:-.03em}
-.feat p{margin:0;font-size:14px;color:var(--fg-2)}
-@media (max-width:960px){.feats{grid-template-columns:repeat(2,1fr)}}
-@media (max-width:560px){.feats{grid-template-columns:1fr}}
+/* comparar */
+.vs{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:clamp(34px,5vw,56px)}
+.vs>div{padding:26px 24px;border-radius:26px;border:.5px solid var(--line-2);background:color-mix(in srgb,var(--card) 92%,transparent)}
+.vs h3{margin:0 0 14px;font:600 12px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--fg-3)}
+.vs ul{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.vs li{font-size:16px;color:var(--fg-3);padding-left:26px;position:relative}
+.vs li::before{content:"";position:absolute;left:0;top:.5em;width:12px;height:2px;border-radius:1px;background:currentColor}
+.vs .us{background:var(--fg);color:var(--bg);border-color:transparent}
+.vs .us h3{color:rgba(11,11,11,.55)}
+.vs .us li{color:var(--bg);font-weight:550}
+.vs .us li::before{width:8px;height:8px;top:.42em;left:2px;border-radius:50%;background:var(--acc)}
+
+/* conta */
+.calc{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:clamp(34px,5vw,56px)}
+.calc>div{padding:26px 24px;border-radius:26px;border:.5px solid var(--line-2);background:color-mix(in srgb,var(--card) 92%,transparent);box-shadow:var(--mat)}
+.calc label{display:grid;gap:8px;margin-bottom:20px;font-size:14px;color:var(--fg-2)}
+.calc label:last-child{margin-bottom:0}
+.calc label span{display:flex;justify-content:space-between}
+.calc label b{color:var(--fg);font:500 14px var(--mono)}
+.calc input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:3px;background:var(--sunken);outline:none;margin:8px 0}
+.calc input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:22px;height:22px;border-radius:50%;background:var(--fg);cursor:grab;box-shadow:0 2px 10px rgba(0,0,0,.5);transition:transform .25s var(--spring)}
+.calc input[type=range]:active::-webkit-slider-thumb{transform:scale(1.15);cursor:grabbing}
+.calc input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radius:50%;background:var(--fg);cursor:grab}
+.out small{font:500 12px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--fg-3)}
+.out>b{display:block;font:700 clamp(40px,6vw,72px)/1 var(--display);letter-spacing:-.045em;margin:8px 0 22px}
+.out dl{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0}
+.out dd{margin:0;font:600 22px var(--display)}
+.out dt{font-size:12.5px;color:var(--fg-3)}
+.out p{margin:22px 0 0;font-size:12.5px;color:var(--fg-3)}
 
 /* dúvidas */
-.faq{margin-top:clamp(48px,6vw,72px);display:grid;gap:10px;max-width:760px}
-.faq details{border-radius:20px;background:color-mix(in srgb,var(--card) 92%,transparent);border:.5px solid var(--line-2);transition:background .3s}
-.faq details[open]{background:var(--card)}
-.faq summary{list-style:none;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:20px 22px;cursor:pointer;font:600 17px/1.3 var(--display);letter-spacing:-.02em}
+.faq{margin-top:clamp(30px,4vw,48px);border-top:.5px solid var(--line-2)}
+.faq details{border-bottom:.5px solid var(--line-2)}
+.faq summary{list-style:none;cursor:pointer;padding:20px 40px 20px 0;font:600 clamp(17px,2vw,21px) var(--display);letter-spacing:-.015em;position:relative}
 .faq summary::-webkit-details-marker{display:none}
-.faq summary i{flex:0 0 auto;width:28px;height:28px;border-radius:50%;background:var(--sunken);display:grid;place-items:center;transition:transform .35s var(--spring),background .3s}
-.faq summary i::before{content:"+";font:500 16px/1 var(--mono);color:var(--fg-2)}
-.faq details[open] summary i{transform:rotate(45deg);background:var(--fg)}
-.faq details[open] summary i::before{color:var(--bg)}
-.faq .ans{padding:0 22px 20px;color:var(--fg-2);font-size:15px;max-width:62ch}
+.faq summary::after{content:"+";position:absolute;right:6px;top:50%;transform:translateY(-50%);font:400 26px var(--display);color:var(--fg-3);transition:transform .3s var(--spring)}
+.faq details[open] summary::after{transform:translateY(-50%) rotate(45deg)}
+.faq p{margin:0 0 22px;color:var(--fg-2);max-width:66ch}
 
 /* fechamento */
-#acesso{min-height:90svh;display:grid;align-items:center;text-align:center}
-#acesso h2{font-size:clamp(44px,7.6vw,104px);font-weight:700}
-#acesso p{max-width:44ch;margin:22px auto 34px;font-size:clamp(16px,1.8vw,19px);color:var(--fg-2)}
-#acesso .acts{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
-#acesso .perch{height:110px}
+#acesso{padding:clamp(100px,13vw,170px) 0 80px;text-align:center}
+#acesso h2{font-size:clamp(38px,6.4vw,84px);font-weight:700}
+#acesso .sub{color:var(--fg-2);max-width:40ch;margin:18px auto 0;font-size:clamp(16px,1.8vw,19px)}
+#acesso .acc{opacity:1}
+#acesso .acc .btn.ghost{margin-top:0}
 
-footer{border-top:.5px solid var(--line);padding:30px 0}
-.ft{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:16px;font-size:13.5px;color:var(--fg-3)}
-.ft nav{display:flex;gap:20px}
-.ft nav a:hover{color:var(--fg)}
-.ft p{flex-basis:100%;margin:0;font:500 11.5px var(--mono);letter-spacing:.03em}
+footer{border-top:.5px solid var(--line);padding:26px 0 40px;font-size:13px;color:var(--fg-3)}
+footer .wrap{display:flex;flex-wrap:wrap;gap:8px 20px;justify-content:space-between}
+footer .links{display:flex;flex-wrap:wrap;gap:6px 18px}
+footer .links a{text-decoration:underline;text-underline-offset:3px}
+footer .links a:hover{color:var(--fg)}
+footer p{margin:0;flex-basis:100%}
 
+@media (max-width:860px){
+  .nav nav{display:none}
+  .lanes{grid-template-columns:1fr;gap:86px}
+  .duo{grid-template-columns:1fr;justify-items:center}
+  .duo>div:first-child{justify-self:stretch}
+  .rk{grid-template-columns:1fr;justify-items:center;text-align:center}
+  .rk-steps{justify-content:center}
+  .crew{grid-template-columns:1fr 1fr;gap:80px 12px}
+  .mate.mk{grid-column:1/-1}
+  .vs,.calc{grid-template-columns:1fr}
+  .pass{width:290px}
+}
 @media (prefers-reduced-motion:reduce){
-  *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
-  .rv,.dor-l span,.dor-p{opacity:1!important;transform:none!important}
+  *,*::before,*::after{transition-duration:.01ms!important;scroll-behavior:auto!important}
+  .au i,.fxb .e-dot,.mq-t,.soon i,.comp .tx::after{animation:none!important}
+  .rv{opacity:1!important;transform:none!important}
 }
 </style>
 </head>
@@ -260,162 +327,207 @@ footer{border-top:.5px solid var(--line);padding:30px 0}
 
 <header class="nav" id="nav">
   <a class="logo" href="#hero" aria-label="FlowBot, início"><span id="logoG"></span>flowbot</a>
-  <nav aria-label="Seções">
-    <a href="#como">Como funciona</a><a href="#demo">Demo</a><a href="#time">O time</a><a href="#gente">Para quem</a><a href="#duvidas">Dúvidas</a>
-  </nav>
-  <a class="btn" href="#demo">Testar agora</a>
+  <nav aria-label="Seções"><a href="#manha">Como funciona</a><a href="#conversa">Demo</a><a href="#time">O time</a><a href="#duvidas">Dúvidas</a><a href="#conta">A conta</a></nav>
+  <a class="btn" href="#conversa">Testar agora</a>
 </header>
 
 <main>
+<!-- 1. abertura -->
 <section class="stage" id="hero">
   <div class="au"><i></i><i></i><i></i><i></i></div><div class="dots"></div>
   <div class="in wrap">
     <p class="soon"><i></i>Módulo do Nexus · em desenvolvimento</p>
     <h1 id="h1" aria-label="Teste a conversa antes do cliente.">Teste a conversa antes do cliente.</h1>
-    <p class="lead">Monte o fluxo de atendimento, percorra cada caminho como se fosse o cliente e só publique quando tudo responder certo.</p>
+    <p class="lead">Um time de agentes monta o fluxo, percorre cada caminho como se fosse o cliente e só deixa publicar quando tudo responde certo.</p>
     <div class="acc" id="acc">
       <b>Simule um atendimento</b>
       <p>Um orçamento audiovisual, do primeiro oi até a equipe.</p>
       <div class="row" style="--c:#38BDF8"><i></i>Tipo de vídeo<span>pergunta</span></div>
       <div class="row" style="--c:#F59E0B"><i></i>Cidade e data<span>pergunta</span></div>
       <div class="row" style="--c:#34D399"><i></i>Passa para a equipe<span>transferência</span></div>
-      <a class="btn" href="#demo">Abrir a simulação</a>
+      <a class="btn" href="#conversa">Abrir a simulação</a>
       <small>Sem cadastro. Nada é enviado para ninguém.</small>
     </div>
   </div>
   <div class="grain"></div>
 </section>
 
-<section class="stage" id="dor" aria-label="O problema">
+<!-- 2. a dor -->
+<section class="stage" id="dor">
   <div class="dots"></div>
-  <div class="in wrap">
-    <div class="dor-l" id="dorL">
-      <span>O bot respondeu errado.</span>
-      <span>O cliente caiu no caminho errado.</span>
-      <span>E você só descobriu na hora da ligação.</span>
-    </div>
-    <p class="dor-p" id="dorP">Testar depois de publicar é descobrir o erro na frente do cliente. O FlowBot inverte a ordem: primeiro você simula, depois você publica.</p>
+  <div class="in wrap dor" id="dorW">
+    <p>O bot respondeu errado.</p>
+    <p>O cliente caiu no caminho errado.</p>
+    <p>Ninguém tinha testado.</p>
+    <p class="lead">Testar depois de publicar é descobrir o erro na frente do cliente. Por isso o atendimento travou na terça.</p>
+    <div class="dor-floor" id="dorF"></div>
+    <div class="dor-then" id="dorT">Até agora.</div>
   </div>
 </section>
 
-<section class="sc" id="como">
-  <div class="wrap">
-    <div class="sc-h rv"><span class="eyebrow"><i></i>Como funciona</span><h2>Três passos. Nenhuma linha de código.</h2>
-      <p>Do rascunho ao teste completo sem publicar nada.</p></div>
-    <div class="lanes">
-      <article class="lane rv"><h3>Passo <b>01</b></h3><strong>Monte o fluxo</strong><p>Mensagens, perguntas, condições e transferências em blocos.</p>
-        <div class="co" style="--c:#38BDF8"><i></i>Boas-vindas<span>mensagem</span></div><div class="co" style="--c:#F59E0B"><i></i>Tipo de vídeo<span>pergunta</span></div></article>
-      <article class="lane rv"><h3>Passo <b>02</b></h3><strong>Simule a conversa</strong><p>Responda como o cliente e veja por onde o fluxo segue. Teste todos os ramos.</p>
-        <div class="co" style="--c:#A78BFA"><i></i>Outro tipo<span>ramo B</span></div><div class="co" style="--c:#F59E0B"><i></i>Cidade<span>ramo A</span></div></article>
-      <article class="lane rv"><h3>Passo <b>03</b></h3><strong>Passe para a equipe</strong><p>Coletou o que precisava? A conversa vai para uma pessoa. O bot não estima preço.</p>
-        <div class="co" style="--c:#34D399"><i></i>Equipe assumiu<span>agora</span></div></article>
-    </div>
-  </div>
-</section>
-
-<section class="stage sc" id="demo">
+<!-- 3. a manhã: um pedido, três agentes -->
+<section class="stage sc" id="manha">
   <div class="au b"><i></i><i></i><i></i><i></i></div>
-  <div class="in wrap demo-g">
+  <div class="in wrap">
+    <div class="sc-h rv"><span class="eyebrow"><i></i>Como funciona</span><h2>Você descreve. O time monta e testa.</h2>
+      <p>Sem arrastar caixinha nem escrever regra. Você diz que atendimento quer, e cada agente cuida de uma parte.</p></div>
+    <div class="comp" id="comp"><div class="tx" id="compT"></div><button class="go" aria-label="Enviar pedido"><svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></div>
+    <div class="lanes">
+      <div class="lane" id="l1"><h3>Monta <b id="l1n"></b></h3><div id="l1b" style="display:grid;gap:6px"></div></div>
+      <div class="lane" id="l2"><h3>Simula <b>ramo A</b></h3><div class="msg" id="l2m"></div><div class="fact" id="l2f">resposta escrita a partir do fluxo</div></div>
+      <div class="lane" id="l3"><h3>Passa <b>para a equipe</b></h3><div class="week" id="l3w"></div><div class="reply" id="l3r">Equipe assumiu.</div></div>
+    </div>
+    <button class="again" id="again2">Ver de novo</button>
+  </div>
+  <div class="grain"></div>
+</section>
+
+<!-- 4. a conversa -->
+<section class="stage sc" id="conversa">
+  <div class="au"><i></i><i></i><i></i><i></i></div>
+  <div class="in wrap duo">
     <div>
-      <div class="sc-h rv"><span class="eyebrow"><i></i>Demo</span><h2>Converse com o fluxo.</h2>
-        <p>Escolha as respostas, siga por caminhos diferentes, peça a equipe ou recomece. O bot coleta o pedido; quem confirma o preço é a equipe.</p></div>
-      <div class="sum rv" aria-live="polite">
-        <div class="co" style="--c:#38BDF8"><i></i>Tipo de vídeo<span id="rTipo">—</span></div>
-        <div class="co" style="--c:#F59E0B"><i></i>Cidade<span id="rCid">—</span></div>
-        <div class="co" style="--c:#34D399"><i></i>Período<span id="rData">—</span></div>
+      <div class="sc-h rv"><span class="eyebrow"><i></i>A primeira conversa</span><h2>Converse com o fluxo. Antes de todo mundo.</h2>
+        <p>Do outro lado, você faz o papel do cliente. Escolha as respostas e veja exatamente o que ele veria.</p></div>
+      <div class="pts rv">
+        <div><b>Uma pergunta por vez</b>O fluxo espera a resposta antes de seguir. Nada de despejar formulário.</div>
+        <div><b>Cada ramo, testado</b>Recomece e escolha outro caminho. Cada resposta leva para onde você definiu.</div>
+        <div><b>A equipe assume com um toque</b>O bot não escreve mais nada naquela conversa. O preço quem confirma é a equipe.</div>
       </div>
-      <p class="warn rv">Simulação: não usa WhatsApp, não envia mensagens e não guarda dados.</p>
+      <div class="sum rv" aria-live="polite"><span id="rTipo">tipo —</span><span id="rCid">cidade —</span><span id="rData">período —</span></div>
     </div>
     <div class="phone rv" id="phone" role="region" aria-label="Simulação de conversa">
-      <div class="ph-in">
-        <div class="ph-h"><span class="av" id="phAv"></span><div><b>FlowBot</b><small id="phSt">simulação ativa</small></div><button id="rst" aria-label="Recomeçar a simulação">Recomeçar</button></div>
-        <div class="msgs" id="msgs" aria-live="polite"></div>
-        <div class="ops" id="ops" role="group" aria-label="Respostas"></div>
-      </div>
+      <div class="ph-h"><div class="ph-av" id="phAv"></div><div><b>FlowBot</b><small>Produtora Lumen · simulação</small></div><span class="ph-you" id="phYou">Equipe</span></div>
+      <div class="ph-b" id="msgs" aria-live="polite"></div>
+      <div class="ops" id="ops" role="group" aria-label="Respostas"></div>
+    </div>
+  </div>
+  <div class="grain"></div>
+</section>
+
+<!-- 5. níveis do fluxo -->
+<section class="stage sc" id="nivel">
+  <div class="dots"></div>
+  <div class="in wrap">
+    <div class="sc-h rv"><span class="eyebrow"><i></i>Do rascunho ao ar</span><h2>Todo fluxo sobe de nível.</h2>
+      <p>Cada fluxo começa como rascunho e ganha um selo a cada etapa vencida. Só o último nível vai para o cliente.</p></div>
+    <div class="rk rv">
+      <div class="rk-bot" id="rkBot"></div>
+      <div class="rk-t"><small id="rkK">Nível 1 de 6</small><b id="rkN">Rascunho</b><p id="rkG">Todo fluxo começa aqui.</p><div class="rk-steps" id="rkS"></div></div>
     </div>
   </div>
 </section>
 
+<!-- 6. o time -->
 <section class="stage sc" id="time">
   <div class="dots"></div>
   <div class="in wrap">
     <div class="sc-h rv"><span class="eyebrow"><i></i>O time</span><h2>Um agente para cada etapa.</h2>
-      <p>Cada bloco do fluxo tem uma função. Você decide quem abre, quem pergunta, quem filtra e quem chama a equipe.</p></div>
+      <p>Cada bloco do fluxo tem dono. Você fala com eles como fala com gente, e pode criar quantos quiser.</p></div>
     <div class="crew" id="crew">
       <div class="mate"><small>Primeiro contato</small><b>Recepcionista</b><p>Abre a conversa e explica o que vai acontecer.</p></div>
-      <div class="mate"><small>Triagem</small><b>Qualificador</b><p>Faz as perguntas certas, na ordem certa, e ramifica pela resposta.</p></div>
-      <div class="mate"><small>Transferência</small><b>Passador</b><p>Encerra o bot e entrega o resumo completo para a equipe.</p></div>
-      <div class="mate"><small>Validação</small><b>Guardião</b><p>Segura respostas fora do esperado sem travar o atendimento.</p></div>
+      <div class="mate"><small>Triagem</small><b>Qualificador</b><p>Pergunta o que importa, na ordem certa, e ramifica pela resposta.</p></div>
+      <div class="mate"><small>Transferência</small><b>Passador</b><p>Encerra o bot e entrega o resumo para a equipe.</p></div>
+      <div class="mate"><small>Validação</small><b>Guardião</b><p>Segura respostas fora do esperado sem travar a conversa.</p></div>
       <div class="mate mk" id="mk"><small>Crie o seu</small><label class="sr" for="mkN">Nome do agente</label><input id="mkN" placeholder="Dê um nome" maxlength="18" />
         <div class="sw" id="mkC" role="group" aria-label="Cor"></div><div class="shp" id="mkS" role="group" aria-label="Formato"></div></div>
     </div>
   </div>
 </section>
 
+<!-- 7. quem usa -->
 <section class="sc" id="gente">
-  <div class="wrap"><div class="sc-h rv"><span class="eyebrow"><i></i>Quem usa</span><h2>Todo negócio que pergunta antes de atender.</h2>
-    <p>Se a sua equipe precisa de três respostas antes de começar, o FlowBot faz essas perguntas por ela.</p></div></div>
-  <div class="mq"><div class="mq-t" id="mqA"></div></div>
+  <div class="wrap"><div class="sc-h rv"><span class="eyebrow"><i></i>Quem usa</span><h2>Cada negócio com o seu fluxo.</h2>
+    <p>Todo fluxo vira um cartão com o que ele já resolveu. Dá para baixar e mostrar para a equipe.</p></div></div>
+  <div class="mq a"><div class="mq-t" id="mqA"></div></div>
   <div class="mq b"><div class="mq-t" id="mqB"></div></div>
 </section>
 
-<section class="sc" id="dif">
+<!-- 8. a diferença -->
+<section class="sc" id="comparar">
   <div class="wrap">
-    <div class="sc-h rv"><span class="eyebrow"><i></i>Por dentro</span><h2>Feito para não quebrar na frente do cliente.</h2></div>
-    <div class="feats">
-      <article class="feat rv"><small>Ramos</small><b>Caminhos condicionais</b><p>Cada resposta leva para a sequência que você definiu.</p></article>
-      <article class="feat rv"><small>Controle</small><b>A equipe assume</b><p>Um toque e o bot para na hora. Não volta sem ordem.</p></article>
-      <article class="feat rv"><small>Versões</small><b>Teste congelado</b><p>A simulação roda numa versão travada. O rascunho não interfere.</p></article>
-      <article class="feat rv"><small>Privacidade</small><b>Nenhum dado real</b><p>O piloto não conecta WhatsApp nem manda contatos para terceiros.</p></article>
+    <div class="sc-h rv"><span class="eyebrow"><i></i>A diferença</span><h2>Bot comum responde. O FlowBot é testado antes.</h2></div>
+    <div class="vs rv">
+      <div><h3>Bot comum</h3><ul><li>Você publica e torce.</li><li>O erro aparece com o cliente.</li><li>Ninguém sabe qual ramo quebrou.</li><li>O bot continua falando depois que a equipe entra.</li><li>Estima preço sozinho.</li></ul></div>
+      <div class="us"><h3>FlowBot</h3><ul><li>Cada caminho é simulado antes.</li><li>O erro aparece para você, não para o cliente.</li><li>Cada ramo tem selo de testado.</li><li>A equipe assume e o bot para.</li><li>Quem fala em preço é a equipe.</li></ul></div>
     </div>
   </div>
 </section>
 
+<!-- 9. a conta -->
+<section class="sc" id="conta">
+  <div class="wrap">
+    <div class="sc-h rv"><span class="eyebrow"><i></i>Faça a conta</span><h2>Quanto custa um fluxo que ninguém testou?</h2><p>Ponha os seus números.</p></div>
+    <div class="calc rv">
+      <div>
+        <label><span>Conversas por dia útil <b id="vA">40</b></span><input type="range" id="iA" min="5" max="200" step="5" value="40" /></label>
+        <label><span>Caem num caminho errado <b id="vB">10%</b></span><input type="range" id="iB" min="1" max="40" value="10" /></label>
+        <label><span>Desses, desistem <b id="vC">50%</b></span><input type="range" id="iC" min="5" max="100" step="5" value="50" /></label>
+        <label><span>Valor de um pedido <b id="vD">R$ 2.000</b></span><input type="range" id="iD" min="200" max="20000" step="100" value="2000" /></label>
+      </div>
+      <div class="out" aria-live="polite">
+        <small>Deixado na mesa por mês</small><b id="oT">R$ 0</b>
+        <dl><div><dd id="oA">0</dd><dt>conversas no caminho errado</dt></div><div><dd id="oB">0</dd><dt>clientes que desistem</dt></div><div><dd id="oC">22</dd><dt>dias úteis</dt></div></dl>
+        <p>Conta ilustrativa, com 22 dias úteis. Não é promessa de resultado.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 10. dúvidas -->
 <section class="sc" id="duvidas">
   <div class="wrap">
-    <div class="sc-h rv"><span class="eyebrow"><i></i>Dúvidas</span><h2>Perguntas de quem vai montar o primeiro fluxo.</h2></div>
+    <div class="sc-h rv"><span class="eyebrow"><i></i>Dúvidas</span><h2>O que todo mundo pergunta.</h2></div>
     <div class="faq" id="faq"></div>
   </div>
 </section>
 
+<!-- 11. fechamento -->
 <section class="stage" id="acesso">
   <div class="au"><i></i><i></i><i></i><i></i></div><div class="dots"></div>
   <div class="in wrap">
-    <div class="perch" id="perch"></div>
-    <h2>Veja o fluxo funcionando antes de mostrar.</h2>
-    <p>A demo é aberta e não pede cadastro. Percorra todos os caminhos agora.</p>
-    <div class="acts"><a class="btn" href="#demo">Abrir a simulação</a><a class="btn ghost" href="https://github.com/herslander-netizen/flowbot" target="_blank" rel="noopener">Ver no GitHub</a></div>
+    <h2>Alguém vai testar esse fluxo hoje.</h2>
+    <p class="sub">Pode ser o seu cliente. Pode ser você, agora, antes dele.</p>
+    <div class="acc" id="acc2">
+      <b>Abra a simulação</b>
+      <p>Percorra todos os caminhos. Sem cadastro e sem enviar nada.</p>
+      <a class="btn" href="#conversa">Testar o fluxo agora</a>
+      <a class="btn ghost" href="https://github.com/herslander-netizen/flowbot" target="_blank" rel="noopener">Ver no GitHub</a>
+      <small>Conceito em desenvolvimento.</small>
+    </div>
   </div>
   <div class="grain"></div>
 </section>
 </main>
 
-<footer><div class="wrap ft">
-  <span><b style="color:var(--fg)">FlowBot</b> · módulo do Nexus</span>
-  <nav aria-label="Rodapé"><a href="#demo">Demo</a><a href="#duvidas">Dúvidas</a><a href="https://github.com/herslander-netizen/flowbot" target="_blank" rel="noopener">GitHub</a></nav>
-  <p>Esta página apresenta um conceito. O editor visual e as integrações ainda não existem. Empresas e cenários da simulação são fictícios.</p>
+<footer><div class="wrap">
+  <span>flowbot · módulo do Nexus para atendimento conversacional.</span>
+  <div class="links"><a href="#conversa">Demo</a><a href="#duvidas">Dúvidas</a><a href="https://github.com/herslander-netizen/flowbot" target="_blank" rel="noopener">GitHub</a></div>
+  <p>Esta página apresenta um conceito. O editor visual e as integrações ainda não existem. Empresas, pessoas e números das demonstrações são ilustrativos.</p>
 </div></footer>
 
 <script>
 const $=(s,r=document)=>r.querySelector(s),$$=(s,r=document)=>[...r.querySelectorAll(s)];
 const RM=matchMedia('(prefers-reduced-motion: reduce)').matches,mob=()=>innerWidth<860;
 
-/* ── formatos dos agentes (curvas polares suavizadas) ── */
+/* ── formatos dos agentes ── */
 const mid=(a,b)=>((a[0]+b[0])/2).toFixed(2)+','+((a[1]+b[1])/2).toFixed(2);
-function blob(fn,rot=0){const N=120,p=[];for(let i=0;i<N;i++){const a=i/N*Math.PI*2,r=41*fn(a);p.push([50+r*Math.cos(a+rot),50+4+r*Math.sin(a+rot)])}
+function blob(fn,rot=0){const N=120,p=[];for(let i=0;i<N;i++){const a=i/N*Math.PI*2,r=41*fn(a);p.push([50+r*Math.cos(a+rot),54+r*Math.sin(a+rot)])}
   return 'M'+mid(p[N-1],p[0])+p.map((q,i)=>`Q${q[0].toFixed(2)},${q[1].toFixed(2)} ${mid(q,p[(i+1)%N])}`).join('')+'Z'}
 const SHAPES=[
-  'M12,48C12,25 29,11 50,11C71,11 88,25 88,48C88,70 71,83 50,83C44,83 38,82 33,80L17,90L21,71C15,65 12,57 12,48Z', // balão
-  blob(t=>.8/Math.pow(Math.pow(Math.abs(Math.cos(t)),5)+Math.pow(Math.abs(Math.sin(t)),5),.2),.0),                     // squircle
-  blob(t=>.74+.26*Math.pow(Math.abs(Math.cos(1.5*t)),1.1),-Math.PI/2),                                                 // trevo
-  blob(t=>.86+.08*Math.cos(8*t),.2),                                                                                   // selo
-  blob(t=>{const k=Math.PI/3,u=((t%k)+k)%k-k/2;return .9*(.82*Math.cos(k/2)/Math.cos(u)+.18)},Math.PI/6),              // hexágono
-  blob(t=>.82+.12*Math.cos(2*t)+.05*Math.cos(3*t),.5)                                                                  // seixo
-];
+  'M12,48C12,25 29,11 50,11C71,11 88,25 88,48C88,70 71,83 50,83C44,83 38,82 33,80L17,90L21,71C15,65 12,57 12,48Z',
+  blob(t=>.8/Math.pow(Math.pow(Math.abs(Math.cos(t)),5)+Math.pow(Math.abs(Math.sin(t)),5),.2)),
+  blob(t=>.74+.26*Math.pow(Math.abs(Math.cos(1.5*t)),1.1),-Math.PI/2),
+  blob(t=>.86+.08*Math.cos(8*t),.2),
+  blob(t=>{const k=Math.PI/3,u=((t%k)+k)%k-k/2;return .9*(.82*Math.cos(k/2)/Math.cos(u)+.18)},Math.PI/6),
+  blob(t=>.82+.12*Math.cos(2*t)+.05*Math.cos(3*t),.5)];
 const lum=h=>{const n=parseInt(h.slice(1),16),f=c=>{c/=255;return c<=.03928?c/12.92:((c+.055)/1.055)**2.4};return .2126*f(n>>16&255)+.7152*f(n>>8&255)+.0722*f(n&255)};
 const eyeFor=c=>lum(c)>.42?'#0B0B0B':'#FFFFFF';
 const TEAM=[{shape:0,color:'#38BDF8'},{shape:2,color:'#F59E0B'},{shape:1,color:'#34D399'},{shape:4,color:'#F87171'},{shape:3,color:'#A78BFA'}];
 const svgBot=(shape,color,eyes='dot')=>`<svg viewBox="0 0 100 100" aria-hidden="true"><path fill="${color}" d="${SHAPES[shape]}"/><path fill="url(#botSh)" d="${SHAPES[shape]}"/><path fill="url(#botHi)" d="${SHAPES[shape]}"/>${eyes==='arc'?`<path d="M35,53q6,-14 12,0M53,53q6,-14 12,0" fill="none" stroke="${eyeFor(color)}" stroke-width="5.6" stroke-linecap="round"/>`:`<circle cx="41" cy="48" r="4.8" fill="${eyeFor(color)}"/><circle cx="59" cy="48" r="4.8" fill="${eyeFor(color)}"/>`}</svg>`;
+/* selo de nível: um fone de atendimento que cai na cabeça */
+const SEL=['M20,46C20,22 34,10 50,10C66,10 80,22 80,46','M80,46q4,14 -8,22','M68,70q-6,3 -11,2'];
+const selG=c=>{const ln=lum(c)>.55?'rgba(0,0,0,.25)':'rgba(255,255,255,.35)';return `<path d="${SEL[0]}" fill="none" stroke="${c}" stroke-width="6" stroke-linecap="round"/><rect x="12" y="38" width="14" height="22" rx="6" fill="${c}" stroke="${ln}"/><rect x="74" y="38" width="14" height="22" rx="6" fill="${c}" stroke="${ln}"/><path d="${SEL[1]}" fill="none" stroke="${c}" stroke-width="3.4" stroke-linecap="round"/><circle cx="64" cy="70" r="4.4" fill="${c}"/>`};
 $('#logoG').outerHTML=svgBot(0,'#38BDF8','arc');
 $('#phAv').innerHTML=svgBot(0,'#38BDF8');
 addEventListener('scroll',()=>$('#nav').classList.toggle('lit',scrollY>40),{passive:true});
@@ -425,9 +537,9 @@ const Ez={out:t=>1-Math.pow(1-t,3),inOut:t=>t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2,
   bounce:t=>{const n=7.5625,d=2.75;return t<1/d?n*t*t:t<2/d?n*(t-=1.5/d)*t+.75:t<2.5/d?n*(t-=2.25/d)*t+.9375:n*(t-=2.625/d)*t+.984375}};
 const ALL=[];
 class Stage{constructor(el){this.el=el;this.run=0;this.lean=false;this.bots=[];this.layer=document.createElement('div');this.layer.className='fxl';el.appendChild(this.layer)}
-  add(spec){const i=this.bots.length,el=document.createElement('div'),c=spec.color;el.className='fxb';el.dataset.eye='dot';el.setAttribute('aria-hidden','true');
+  add(spec){const i=ALL.length,el=document.createElement('div'),c=spec.color;el.className='fxb';el.dataset.eye='dot';el.setAttribute('aria-hidden','true');
     el.style.cssText=`--c:${c};--e:${eyeFor(c)};--bd:-${(i*1.7%4).toFixed(2)}s`;
-    el.innerHTML=`<div class="sq"><svg viewBox="0 0 100 100"><path class="body" d="${SHAPES[spec.shape]}"/><path class="sh" d="${SHAPES[spec.shape]}" fill="url(#botSh)"/><path class="hi" d="${SHAPES[spec.shape]}" fill="url(#botHi)"/><g class="eyes"><g class="e-arc"><path d="M35,53q6,-14 12,0"/><path d="M53,53q6,-14 12,0"/></g><g class="e-dot"><circle cx="41" cy="48" r="4.8"/><circle cx="59" cy="48" r="4.8"/></g><g class="e-wide"><circle cx="41" cy="47" r="6.4"/><circle cx="59" cy="47" r="6.4"/></g></g></svg></div>`;
+    el.innerHTML=`<div class="sq"><svg viewBox="0 0 100 100"><path class="body" d="${SHAPES[spec.shape]}"/><path class="sh" d="${SHAPES[spec.shape]}" fill="url(#botSh)"/><path class="hi" d="${SHAPES[spec.shape]}" fill="url(#botHi)"/><g class="eyes"><g class="e-arc"><path d="M35,53q6,-14 12,0"/><path d="M53,53q6,-14 12,0"/></g><g class="e-dot"><circle cx="41" cy="48" r="4.8"/><circle cx="59" cy="48" r="4.8"/></g><g class="e-wide"><circle cx="41" cy="47" r="6.4"/><circle cx="59" cy="47" r="6.4"/></g><g class="e-flat"><path d="M35,50h12"/><path d="M53,50h12"/></g></g><g class="hat"></g></svg></div>`;
     this.layer.appendChild(el);const b={el,sq:el.firstChild,x:0,y:0,sc:.5,rot:0,op:0,lean:0,st:this};el.onclick=()=>{hop(b,46);flash(b,'arc',700)};this.bots.push(b);ALL.push(b);return b}
   P(t,ax=.5,ay=0){const r=t.getBoundingClientRect(),s=this.el.getBoundingClientRect();return [r.left-s.left+r.width*ax,r.top-s.top+r.height*ay]}
   seats(card,bots,size=72){const r=card.getBoundingClientRect(),s=this.el.getBoundingClientRect(),n=bots.length,step=Math.min(size*1.08,r.width/(n+.4));
@@ -437,9 +549,9 @@ const eye=(b,k)=>{b.el.dataset.eye=k};
 function flash(b,k,ms){eye(b,k);setTimeout(()=>{if(b.el.dataset.eye===k)eye(b,'dot')},ms)}
 function hop(b,h=40,ms=440){if(RM)return;b.sq.animate([{transform:'none'},{transform:'scale(1.13,.85)',offset:.14},{transform:`translateY(${-h}px) scale(.93,1.09)`,offset:.5},{transform:'scale(1.1,.9)',offset:.86},{transform:'none'}],{duration:ms,easing:'ease-out'})}
 function squash(b,k=1){if(RM)return;b.sq.animate([{transform:'none'},{transform:`scale(${1+.2*k},${1-.22*k})`,offset:.3},{transform:`scale(${1-.05*k},${1+.07*k})`,offset:.65},{transform:'none'}],{duration:300,easing:'ease-out'})}
-function tween(b,to,ms,ease=Ez.out){const st=b.st,run=st.run,from={};for(const k in to)from[k]=b[k];
+function tween(b,to,ms,ease=Ez.out,lift=0){const st=b.st,run=st.run,from={};for(const k in to)from[k]=b[k];
   return new Promise(res=>{const t0=performance.now();(function step(now){if(run!==st.run)return res();const t=RM?1:Math.max(0,Math.min(1,(now-t0)/ms));
-    for(const k in to){const e=typeof ease==='function'?ease:(ease[k]||ease.def);b[k]=from[k]+(to[k]-from[k])*e(t)}apply(b);t<1?requestAnimationFrame(step):res()})(t0)})}
+    for(const k in to){const e=typeof ease==='function'?ease:(ease[k]||ease.def);b[k]=from[k]+(to[k]-from[k])*e(t)}if(lift&&'y' in to)b.y-=Math.sin(Math.PI*Ez.inOut(t))*lift;apply(b);t<1?requestAnimationFrame(step):res()})(t0)})}
 const wait=ms=>new Promise(r=>setTimeout(r,RM?0:ms));
 function anim(el,kf,o){return el.animate(kf,{fill:'forwards',easing:'cubic-bezier(.32,.72,0,1)',...o,duration:RM?1:o.duration,delay:RM?0:(o.delay||0)}).finished.catch(()=>{})}
 function ring(st,x,y,color='#38BDF8'){if(RM)return;const r=document.createElement('div');r.className='ring';r.style.borderColor=color;st.layer.appendChild(r);
@@ -454,13 +566,13 @@ function say(b,text,ms=2200){const st=b.st,el=document.createElement('div');el.c
   setTimeout(()=>{el.animate([{opacity:1},{opacity:0}],{duration:250,fill:'forwards'}).onfinish=()=>el.remove()},ms);hop(b,22,360);flash(b,'arc',ms)}
 function lookAt(cx,cy,only){for(const b of only||ALL){const s=b.st.el.getBoundingClientRect(),dx=cx-(s.left+b.x),dy=cy-(s.top+b.y-b.sc*8),d=Math.hypot(dx,dy)||1,k=Math.min(1,d/170);
   b.el.style.setProperty('--lx',(dx/d*k).toFixed(2));b.el.style.setProperty('--ly',(dy/d*k).toFixed(2));const l=b.st.lean?dx/d*k*5:0;if(l!==b.lean){b.lean=l;apply(b)}}}
-addEventListener('pointermove',e=>lookAt(e.clientX,e.clientY),{passive:true});
+let typing=false;addEventListener('pointermove',e=>{if(!typing)lookAt(e.clientX,e.clientY)},{passive:true});
 const seen=(el,fn,th=.3)=>{const io=new IntersectionObserver(es=>es.forEach(e=>{if(e.isIntersecting){io.disconnect();fn()}}),{threshold:th});io.observe(el)};
 $$('.rv').forEach(e=>seen(e,()=>e.classList.add('on'),.2));
 async function dropOn(st,bots,seats,ms=860){const W=st.el.clientWidth;bots.forEach((b,i)=>{const s=i%2?1:-1;Object.assign(b,{x:seats[i].x+s*W*.3,y:seats[i].y-380,sc:seats[i].sc,rot:s*-380,op:1});eye(b,'wide');apply(b)});
   await Promise.all(bots.map((b,i)=>(async()=>{await wait(i*120);setTimeout(()=>squash(b,1),ms*.364);await tween(b,{x:seats[i].x,y:seats[i].y,rot:0},ms,{y:Ez.bounce,def:Ez.out});eye(b,'dot')})()))}
 
-/* ── cena 1: caem girando, quicam no cartão e a frase nasce ── */
+/* ── cena 1: caem rolando, quicam no cartão e a frase nasce ── */
 (()=>{const st=new Stage($('#hero')),bots=TEAM.map(s=>st.add(s)),card=$('#acc'),h1=$('#h1');
   h1.innerHTML=['Teste ','a ','conversa','<br>','antes ','do ','cliente.'].map(w=>w==='<br>'?w:`<span aria-hidden="true">${w}</span>`).join('');
   const size=()=>mob()?56:74;let seated=false;
@@ -475,55 +587,112 @@ async function dropOn(st,bots,seats,ms=860){const W=st.el.clientWidth;bots.forEa
     anim($('.soon'),[{opacity:0,transform:'translateY(8px)'},{opacity:1,transform:'none'}],{duration:500});
     $$('span',h1).forEach((s,i)=>anim(s,[{opacity:0,transform:'translateY(.5em) rotate(8deg) scale(.8)'},{opacity:1,transform:'none'}],{duration:620,delay:i*90,easing:'cubic-bezier(.34,1.56,.64,1)'}));
     const p=st.P(h1,.5,.5);setTimeout(()=>{ring(st,p[0],p[1]);burst(st,p[0],p[1],26,.8)},380);
-    anim($('#hero .lead'),[{opacity:0,transform:'translateY(10px)'},{opacity:1,transform:'none'}],{duration:600,delay:560});st.lean=true;
-    setTimeout(()=>say(bots[0],'Oi! Vamos testar?',2400),1500)}
+    anim($('#hero .lead'),[{opacity:0,transform:'translateY(10px)'},{opacity:1,transform:'none'}],{duration:600,delay:560});st.lean=true}
   addEventListener('resize',reseat);(document.fonts?.ready||Promise.resolve()).then(()=>setTimeout(play,250))})();
 
-/* ── cena 2: as frases do problema acendem uma a uma ── */
-(()=>{const ls=$$('#dorL span');seen($('#dorL'),async()=>{for(let i=0;i<ls.length;i++){ls[i].classList.add('on');await wait(520)}
-  await wait(200);ls[ls.length-1].classList.add('hot');$('#dorP').classList.add('on')},.4)})();
+/* ── cena 2: as frases acendem e um agente cinza fica sozinho ── */
+(()=>{const st=new Stage($('#dor')),w=$('#dorW'),ps=$$('p',w),floor=$('#dorF');const lone=st.add({shape:0,color:'#4A4744'});
+  const place=()=>{const p=st.P(floor,.5,.62),s=mob()?64:80;Object.assign(lone,{x:p[0],y:p[1],sc:s/160});apply(lone)};
+  addEventListener('resize',place);
+  seen(w,async()=>{for(const p of ps){p.classList.add('on');await wait(p.classList.contains('lead')?200:620)}
+    place();lone.op=1;const y=lone.y;lone.y=y-260;eye(lone,'wide');apply(lone);setTimeout(()=>squash(lone,1),760*.364);
+    await tween(lone,{y},760,{y:Ez.bounce,def:Ez.out});eye(lone,'flat');lone.st.lean=true;
+    await wait(700);$('#dorT').classList.add('on');await wait(500);hop(lone,30,420);flash(lone,'arc',1800)},.35)})();
 
-/* ── cena 3: a demo, com o Recepcionista sentado no celular ── */
+/* ── cena 3: sentam na caixa, ouvem o pedido e cada um pula para a sua raia ── */
+(()=>{const st=new Stage($('#manha')),T=TEAM.slice(0,4),bots=T.map(s=>st.add(s)),[rec,qua,pas,gua]=bots;
+  const comp=$('#comp'),tx=$('#compT'),lanes=[$('#l1'),$('#l2'),$('#l3')],size=()=>mob()?54:68;let mode='';
+  const blocos=[['Boas-vindas','mensagem','#38BDF8'],['Tipo de vídeo','pergunta','#F59E0B'],['Cidade e data','pergunta','#F59E0B'],['Equipe','transferência','#34D399']];
+  const MSG='Oi! Para preparar o seu orçamento: é <mark>vídeo institucional</mark>, <mark>evento</mark> ou <mark>clipe</mark>? E em qual cidade?';
+  const workers=[qua,gua,pas];
+  const reseat=()=>{if(mode==='comp')st.seats(comp,bots,size()).forEach((s,i)=>{Object.assign(bots[i],s);apply(bots[i])});
+    if(mode==='lanes'){Object.assign(rec,st.seats(comp,[rec],size())[0]);apply(rec);workers.forEach((b,i)=>{Object.assign(b,st.seats(lanes[i],[b],size())[0]);apply(b)})}};
+  async function play(){const run=++st.run;mode='';tx.textContent='';comp.classList.remove('sent');$('#again2').classList.remove('on');
+    lanes.forEach(l=>{l.getAnimations().forEach(a=>a.cancel());l.style.opacity=0});$('#l1b').innerHTML='';$('#l1n').textContent='';$('#l2m').innerHTML='';
+    $('#l2f').getAnimations().forEach(a=>a.cancel());$('#l3r').getAnimations().forEach(a=>a.cancel());
+    $('#l3w').innerHTML=['oi','tipo','local','data','equipe'].map(d=>`<div class="day"><i></i>${d}</div>`).join('');
+    const W=st.el.clientWidth,seats=st.seats(comp,bots,size());
+    bots.forEach((b,i)=>{const s=i%2?1:-1;Object.assign(b,{x:seats[i].x+s*W*.3,y:seats[i].y-360,sc:seats[i].sc,rot:s*-360,op:1});eye(b,'wide');apply(b)});
+    await Promise.all(bots.map((b,i)=>(async()=>{await wait(i*120);setTimeout(()=>squash(b,1),820*.364);await tween(b,{x:seats[i].x,y:seats[i].y,rot:0},820,{y:Ez.bounce,def:Ez.out});eye(b,'dot')})()));
+    if(run!==st.run)return;mode='comp';st.lean=true;typing=true;
+    const text='Quero um atendimento de orçamento para a minha produtora de vídeo';
+    for(let i=1;i<=text.length;i++){if(run!==st.run)return;tx.textContent=text.slice(0,i);const r=tx.getBoundingClientRect();lookAt(r.right,r.top+r.height/2,bots);if(i%12===0)reseat();await wait(26+Math.random()*30)}
+    typing=false;reseat();await wait(350);if(run!==st.run)return;comp.classList.add('sent');const g=st.P($('.go',comp),.5,.5);ring(st,g[0],g[1],'#F5F5F5');
+    bots.forEach((b,i)=>setTimeout(()=>hop(b,34,400),i*70));await wait(520);say(rec,'Deixa com a gente.',1700);await wait(1100);if(run!==st.run)return;
+    await Promise.race([wait(1300),Promise.all(lanes.map((l,i)=>anim(l,[{opacity:0,transform:'translateY(40px) scale(.96)'},{opacity:1,transform:'none'}],{duration:600,delay:i*110,easing:'cubic-bezier(.34,1.3,.64,1)'})))]);
+    lanes.forEach(l=>{l.getAnimations().forEach(a=>a.cancel());l.style.opacity=1});await wait(60);if(run!==st.run)return;
+    await Promise.all(workers.map((b,i)=>(async()=>{await wait(i*170);eye(b,'wide');const s=st.seats(lanes[i],[b],size())[0];await tween(b,s,720,{def:Ez.inOut},150);squash(b,.9);eye(b,'dot');ring(st,s.x,s.y+size()/2,T[[1,3,2][i]].color)})()));
+    if(run!==st.run)return;mode='lanes';
+    (async()=>{qua.el.classList.add('think');for(let i=0;i<blocos.length;i++){if(run!==st.run)return;const d=document.createElement('div');d.className='co';d.style.setProperty('--c',blocos[i][2]);d.innerHTML=`<i></i>${blocos[i][0]}<span>${blocos[i][1]}</span>`;$('#l1b').appendChild(d);
+        anim(d,[{opacity:0,transform:'translateY(12px) scale(.94)'},{opacity:1,transform:'none'}],{duration:420,easing:'cubic-bezier(.34,1.56,.64,1)'});$('#l1n').textContent=(i+1)+(i?' blocos':' bloco');hop(qua,14,260);await wait(520)}
+      qua.el.classList.remove('think');flash(qua,'arc',1500)})();
+    (async()=>{await wait(700);gua.el.classList.add('think');const box=$('#l2m'),parts=MSG.split(/(<mark>.*?<\/mark>)/);let html='';
+      for(const p of parts){if(p.startsWith('<mark>')){html+=p;box.innerHTML=html;hop(gua,16,260);await wait(240)}else for(const ch of p){if(run!==st.run)return;html+=ch;box.innerHTML=html;await wait(17)}}
+      gua.el.classList.remove('think');flash(gua,'arc',1500);anim($('#l2f'),[{opacity:0},{opacity:1}],{duration:400})})();
+    await wait(1500);const days=$$('#l3w .day');
+    for(const i of [0,1,2,3]){if(run!==st.run)return;days[i].classList.add('sent');hop(pas,14,260);await wait(620)}
+    if(run!==st.run)return;days[4].classList.add('win');anim($('#l3r'),[{opacity:0,transform:'translateY(10px) scale(.8)'},{opacity:1,transform:'none'}],{duration:450,easing:'cubic-bezier(.34,1.56,.64,1)'});
+    const z=st.P(lanes[2],.5,.6);burst(st,z[0],z[1],34,.9,['#34D399','#38BDF8','#F5F5F5']);hop(pas,60,560);flash(pas,'arc',2200);await wait(300);say(pas,'Pedido completo. É com vocês.',2600);
+    bots.forEach((b,i)=>b!==pas&&setTimeout(()=>{hop(b,30,420);flash(b,'arc',1200)},200+i*90));await wait(1200);$('#again2').classList.add('on')}
+  $('#again2').onclick=()=>play();addEventListener('resize',reseat);seen(comp,play,.6)})();
+
+/* ── cena 4: a conversa no celular, com o Recepcionista em cima ── */
 const FLUXO={inicio:'oi',nos:{
-  oi:{tipo:'msg',texto:'Olá! Vou adiantar as informações para a equipe preparar o seu orçamento.',prox:'tipo'},
+  oi:{tipo:'msg',texto:'Oi! Aqui é da Produtora Lumen. Vou adiantar algumas informações para a equipe preparar o seu orçamento.',prox:'tipo'},
   tipo:{tipo:'perg',texto:'Que tipo de vídeo você precisa?',campo:'tipo',ops:[['Institucional','cidade'],['Evento','cidade'],['Clipe musical','cidade'],['Outro tipo','livre']]},
-  livre:{tipo:'perg',texto:'Pode me contar um pouco mais?',campo:'tipo',ops:[['Documentário curto','cidade'],['Conteúdo para redes','cidade'],['Treinamento','cidade']]},
-  cidade:{tipo:'perg',texto:'Em qual cidade seria a gravação?',campo:'cid',ops:[['São Paulo','data'],['Rio de Janeiro','data'],['Belo Horizonte','data'],['Outra cidade','data']]},
-  data:{tipo:'perg',texto:'Para quando você está planejando?',campo:'data',ops:[['Próximo mês','fim'],['Em 2 a 3 meses','fim'],['Ainda sem data','fim']]},
-  fim:{tipo:'transf',texto:'Tudo certo! A equipe vai analisar o pedido e confirmar o orçamento com você.',det:'Equipe assumiu · o bot parou'}}};
-const demo=(()=>{const st=new Stage($('#demo')),host=st.add({shape:0,color:'#38BDF8'}),phone=$('#phone'),msgs=$('#msgs'),ops=$('#ops'),phSt=$('#phSt');
-  const R={tipo:$('#rTipo'),cid:$('#rCid'),data:$('#rData')};const E={no:null,dados:{},fim:false,busy:false,gen:0};
-  const place=()=>{const p=st.P(phone,.5,0),s=mob()?54:66;Object.assign(host,{x:p[0],y:p[1]-s/2+s*.2,sc:s/160,op:1});apply(host)};
-  const add=(t,c)=>{const m=document.createElement('div');m.className='m '+c;m.textContent=t;msgs.appendChild(m);anim(m,[{opacity:0,transform:'translateY(8px) scale(.96)'},{opacity:1,transform:'none'}],{duration:380,easing:'cubic-bezier(.34,1.56,.64,1)'});msgs.scrollTop=msgs.scrollHeight;return m};
-  const sum=()=>{for(const k in R){R[k].innerHTML=E.dados[k]?`<b>${E.dados[k]}</b>`:'—'}};
-  async function digita(ms,g){const t=document.createElement('div');t.className='m b ty';t.innerHTML='<i></i><i></i><i></i>';msgs.appendChild(t);msgs.scrollTop=msgs.scrollHeight;await wait(ms);t.remove();return g===E.gen}
+  livre:{tipo:'perg',texto:'Pode me contar um pouco mais?',campo:'tipo',ops:[['Documentário','cidade'],['Para redes sociais','cidade'],['Treinamento','cidade']]},
+  cidade:{tipo:'perg',texto:'Em qual cidade seria a gravação?',campo:'cid',ops:[['São Paulo','data'],['Rio de Janeiro','data'],['Belo Horizonte','data'],['Outra','data']]},
+  data:{tipo:'perg',texto:'Para quando você está planejando?',campo:'data',ops:[['Próximo mês','fim'],['Em 2 a 3 meses','fim'],['Sem data ainda','fim']]},
+  fim:{tipo:'transf',texto:'Perfeito, já tenho o que preciso. A equipe vai confirmar o orçamento com você.'}}};
+(()=>{const st=new Stage($('#conversa')),host=st.add(TEAM[0]),phone=$('#phone'),msgs=$('#msgs'),ops=$('#ops'),you=$('#phYou');
+  const R={tipo:[$('#rTipo'),'tipo'],cid:[$('#rCid'),'cidade'],data:[$('#rData'),'período']};const E={no:null,dados:{},fim:false,busy:false,gen:0};
+  const hora=(()=>{let m=9*60+12;return()=>{m+=1;return `${String(m/60|0).padStart(2,'0')}:${String(m%60).padStart(2,'0')}`}})();
+  const place=()=>{const p=st.P(phone,.5,0),s=mob()?58:70;Object.assign(host,{x:p[0],y:p[1]-s/2+s*.2,sc:s/160});apply(host)};
+  const add=(html,c)=>{const m=document.createElement('div');m.className='m '+c;m.innerHTML=html;msgs.appendChild(m);anim(m,[{opacity:0,transform:'translateY(10px) scale(.96)'},{opacity:1,transform:'none'}],{duration:380,easing:'cubic-bezier(.34,1.56,.64,1)'});msgs.scrollTop=msgs.scrollHeight;return m};
+  const sum=()=>{for(const k in R){const [el,l]=R[k];el.textContent=`${l} ${E.dados[k]||'—'}`;el.classList.toggle('on',!!E.dados[k])}};
+  async function digita(ms,g){const t=document.createElement('div');t.className='typing';t.innerHTML='<i></i><i></i><i></i>';msgs.appendChild(t);msgs.scrollTop=msgs.scrollHeight;host.el.classList.add('think');await wait(ms);host.el.classList.remove('think');t.remove();return g===E.gen}
   async function ir(id){const g=E.gen,no=FLUXO.nos[id];E.no=id;ops.innerHTML='';E.busy=true;
-    if(!await digita(no.tipo==='msg'?700:600,g))return;add(no.texto,'b');hop(host,20,340);E.busy=false;
+    if(!await digita(no.tipo==='msg'?800:650,g))return;add(`${no.texto}<small>bot · ${hora()}</small>`,'');hop(host,18,320);E.busy=false;
     if(no.tipo==='msg')return ir(no.prox);
     if(no.tipo==='perg'){no.ops.forEach(([l,p],i)=>{const b=document.createElement('button');b.className='op';b.textContent=l;b.onclick=()=>esc(l,p);ops.appendChild(b);
         anim(b,[{opacity:0,transform:'translateY(6px)'},{opacity:1,transform:'none'}],{duration:320,delay:i*50})});
-      const h=document.createElement('button');h.className='op hu';h.textContent='Falar com a equipe';h.onclick=()=>esc('Quero falar com a equipe','fim',true);ops.appendChild(h);return}
-    add(no.det,'s');E.fim=true;phSt.textContent='equipe no comando';phSt.className='off';
-    const r=document.createElement('button');r.className='again';r.textContent='Recomeçar';r.onclick=reset;ops.appendChild(r);
-    const p=st.P(phone,.5,.45);ring(st,p[0],p[1],'#34D399');burst(st,p[0],p[1],30,.9,['#34D399','#38BDF8','#F5F5F5']);hop(host,50,480);flash(host,'arc',1400)}
-  function esc(l,p,humano){if(E.busy||E.fim)return;add(l,'u');const no=FLUXO.nos[E.no];if(no.campo&&!humano)E.dados[no.campo]=l;sum();ir(p)}
-  function reset(){E.gen++;Object.assign(E,{no:null,dados:{},fim:false,busy:false});msgs.innerHTML='';ops.innerHTML='';phSt.textContent='simulação ativa';phSt.className='';sum();ir(FLUXO.inicio)}
-  $('#rst').onclick=reset;addEventListener('resize',place);
+      const h=document.createElement('button');h.className='take pulse';h.textContent='Equipe assume a conversa';h.onclick=assume;ops.appendChild(h);anim(h,[{opacity:0},{opacity:1}],{duration:400,delay:200});return}
+    fecha(false)}
+  function esc(l,p){if(E.busy||E.fim)return;add(`${l}<small>cliente · ${hora()}</small>`,'r');const no=FLUXO.nos[E.no];if(no.campo)E.dados[no.campo]=l;sum();ir(p)}
+  function assume(){if(E.busy||E.fim)return;E.gen++;fecha(true)}
+  function fecha(manual){E.fim=true;ops.innerHTML='';you.classList.add('on');
+    if(manual)add('Oi! Aqui é a Marina, da equipe. Vou continuar com você daqui.<small>equipe · '+hora()+'</small>','');
+    add('o bot parou · a equipe está no comando','s');
+    const b=document.createElement('button');b.className='take done';b.textContent='Recomeçar a simulação';b.onclick=reset;ops.appendChild(b);
+    const p=st.P(phone,.5,.4);ring(st,p[0],p[1],'#34D399');burst(st,p[0],p[1],30,.9,['#34D399','#38BDF8','#F5F5F5']);hop(host,50,480);flash(host,'arc',1600);setTimeout(()=>say(host,manual?'Passei a vez.':'Pedido completo!',1900),500)}
+  function reset(){E.gen++;Object.assign(E,{no:null,dados:{},fim:false,busy:false});msgs.innerHTML='';ops.innerHTML='';you.classList.remove('on');sum();ir(FLUXO.inicio)}
+  addEventListener('resize',place);sum();
   seen(phone,async()=>{await wait(300);place();const ty=host.y;host.y=ty-300;host.rot=-200;host.op=1;eye(host,'wide');apply(host);
-    setTimeout(()=>squash(host,1),860*.364);await tween(host,{y:ty,rot:0},860,{y:Ez.bounce,def:Ez.out});eye(host,'dot');st.lean=true;reset()},.35);
-  return {}})();
+    setTimeout(()=>squash(host,1),860*.364);await tween(host,{y:ty,rot:0},860,{y:Ez.bounce,def:Ez.out});eye(host,'dot');st.lean=true;reset()},.35)})();
 
-/* ── cena 4: o time cai nos cartões; o quinto é seu ── */
+/* ── cena 5: o selo cai na cabeça a cada nível ── */
+(()=>{const st=new Stage($('#nivel')),slot=$('#rkBot'),big=st.add(TEAM[0]),hat=$('.hat',big.el);
+  const LV=[['Rascunho','Todo fluxo começa aqui. O selo vem com o teste.',null],['Primeiro teste','Rodou do oi até o fim pelo menos uma vez.','#F5F1EA'],['Ramos cobertos','Cada resposta possível foi percorrida.','#F59E0B'],['À prova de erro','Respostas estranhas não travam a conversa.','#F87171'],['Revisado','Alguém da equipe leu e aprovou os textos.','#A78BFA'],['No ar','Pronto para o cliente. O selo verde.','#34D399']];
+  $('#rkS').innerHTML=LV.map(()=>'<i></i>').join('');
+  const place=()=>{const p=st.P(slot,.5,.5);Object.assign(big,{x:p[0],y:p[1],sc:slot.offsetWidth/160*.86,op:1});apply(big)};
+  async function loop(){const run=st.run;place();let k=0;while(run===st.run){const [n,g,c]=LV[k];$('#rkK').textContent=`Nível ${k+1} de ${LV.length}`;$('#rkN').textContent=n;$('#rkG').textContent=g;
+      $$('#rkS i').forEach((e,i)=>{e.classList.toggle('on',i===k);e.style.background=i<=k?(LV[i][2]||'#6B6762'):''});
+      if(c){hat.innerHTML=selG(c);hat.animate([{transform:'translateY(-120px) rotate(-30deg)',opacity:0},{transform:'translateY(-120px) rotate(-30deg)',opacity:1,offset:.05},{transform:'none',opacity:1}],{duration:RM?1:620,easing:'cubic-bezier(.34,1.56,.64,1)'});
+        setTimeout(()=>{squash(big,1.1);flash(big,'arc',1100);const p=st.P(slot,.5,.2);ring(st,p[0],p[1],c);if(k===LV.length-1)burst(st,p[0],p[1],50,1.1)},RM?0:430)}else{hat.innerHTML='';hop(big,30,420)}
+      await wait(k===LV.length-1?3200:2100);k=(k+1)%LV.length}}
+  addEventListener('resize',place);seen(slot,()=>{st.lean=true;loop()},.5);place();big.op=0;apply(big)})();
+
+/* ── cena 6: o time cai nos cartões; o quinto é seu ── */
 (()=>{const st=new Stage($('#time')),cards=$$('#crew .mate'),bots=TEAM.map(s=>st.add(s)),mk=bots[4];
   const size=()=>mob()?58:70;let ok=false;
   const seats=()=>cards.map((c,i)=>st.seats(c,[bots[i]],size())[0]);
   const place=()=>{if(!ok)return;seats().forEach((s,i)=>{Object.assign(bots[i],s);apply(bots[i])})};
   const COLS=['#38BDF8','#F59E0B','#34D399','#F87171','#A78BFA','#F472B6','#FACC15','#F5F5F5'];let cor=4,fmt=3;
-  $('#mkC').innerHTML=COLS.map((c,i)=>`<button style="--c:${c}" aria-label="Cor ${i+1}" aria-pressed="${c===TEAM[4].color}"></button>`).join('');
-  $('#mkS').innerHTML=SHAPES.map((d,i)=>`<button aria-label="Formato ${i+1}" aria-pressed="${i===3}"><svg viewBox="0 0 100 100"><path d="${d}"/></svg></button>`).join('');
+  $('#mkC').innerHTML=COLS.map((c,i)=>`<button style="--c:${c}" aria-label="Cor ${i+1}" aria-pressed="${i===cor}"></button>`).join('');
+  $('#mkS').innerHTML=SHAPES.map((d,i)=>`<button aria-label="Formato ${i+1}" aria-pressed="${i===fmt}"><svg viewBox="0 0 100 100"><path d="${d}"/></svg></button>`).join('');
   const paint=()=>{const c=COLS[cor];mk.el.style.setProperty('--c',c);mk.el.style.setProperty('--e',eyeFor(c));$$('path.body,path.sh,path.hi',mk.el).forEach(p=>p.setAttribute('d',SHAPES[fmt]))};
-  $$('#mkC button').forEach((b,i)=>b.onclick=()=>{cor=COLS.indexOf(COLS[i]);$$('#mkC button').forEach((x,k)=>x.setAttribute('aria-pressed',k===i));paint();squash(mk,1);flash(mk,'arc',700)});
-  $$('#mkS button').forEach((b,i)=>b.onclick=()=>{fmt=i;$$('#mkS button').forEach((x,k)=>x.setAttribute('aria-pressed',k===i));paint();hop(mk,34,420);const p=[mk.x,mk.y];ring(st,p[0],p[1],COLS[cor])});
+  $$('#mkC button').forEach((b,i)=>b.onclick=()=>{cor=i;$$('#mkC button').forEach((x,k)=>x.setAttribute('aria-pressed',k===i));paint();squash(mk,1);flash(mk,'arc',700)});
+  $$('#mkS button').forEach((b,i)=>b.onclick=()=>{fmt=i;$$('#mkS button').forEach((x,k)=>x.setAttribute('aria-pressed',k===i));paint();hop(mk,34,420);ring(st,mk.x,mk.y,COLS[cor])});
   let tm;$('#mkN').addEventListener('input',e=>{const v=e.target.value.trim();if(e.target.value.length%5===1)hop(mk,16,300);clearTimeout(tm);if(v.length>1)tm=setTimeout(()=>say(mk,`Oi, eu sou ${v}!`,1800),700)});
   addEventListener('resize',place);
   seen($('#crew'),async()=>{cards.forEach((c,i)=>anim(c,[{opacity:0,transform:'translateY(30px)'},{opacity:1,transform:'none'}],{duration:700,delay:i*70}));
@@ -532,27 +701,35 @@ const demo=(()=>{const st=new Stage($('#demo')),host=st.add({shape:0,color:'#38B
     const falas=['Eu abro a conversa.','Eu pergunto.','Eu chamo a equipe.','Eu seguro o erro.'];
     let k=0;setInterval(()=>{if(document.hidden)return;say(bots[k%4],falas[k%4],1900);k++},3400)},.3)})();
 
-/* ── cena 5: letreiro de quem usa ── */
-(()=>{const A=[['Produtora audiovisual','Orçamentos','Tipo de vídeo, cidade e data antes de chamar a equipe.',0,'#38BDF8'],['Clínica','Triagem','Especialidade e convênio antes do atendente.',4,'#F87171'],['Distribuidora B2B','Vendas','Volume, prazo e região antes do vendedor.',1,'#34D399'],['Escola de idiomas','Matrículas','Nível, idioma e horário antes da secretaria.',2,'#F59E0B']],
-  B=[['Suporte técnico','Chamados','Categoria e urgência antes do especialista.',3,'#A78BFA'],['Imobiliária','Visitas','Bairro, faixa e tipo antes do corretor.',5,'#F472B6'],['Buffet de eventos','Reservas','Data, convidados e cardápio antes da proposta.',0,'#FACC15'],['Oficina','Agenda','Modelo, defeito e dia antes do mecânico.',1,'#38BDF8']];
-  const card=([n,k,s,sh,c])=>`<article class="pass"><div class="ps-top">flowbot<span>${k.toUpperCase()}</span></div><div class="ps-mid">${svgBot(sh,c)}<div><b>${n}</b><small>fluxo de ${k.toLowerCase()}</small></div></div><div class="ps-say">${s}</div></article>`;
+/* ── cena 7: letreiro de cartões ── */
+(()=>{const A=[['Produtora Lumen','Orçamentos','Tipo de vídeo, cidade e data antes de chamar a equipe.',0,'#38BDF8','No ar','214 conversas'],['Clínica Aurora','Triagem','Especialidade e convênio antes do atendente.',4,'#F87171','Revisado','98 conversas'],['Distribuidora Norte','Vendas','Volume, prazo e região antes do vendedor.',1,'#34D399','No ar','1.402 conversas'],['Escola Ponte','Matrículas','Nível, idioma e horário antes da secretaria.',2,'#F59E0B','Ramos cobertos','61 conversas']],
+  B=[['Suporte Volt','Chamados','Categoria e urgência antes do especialista.',3,'#A78BFA','No ar','3.118 conversas'],['Imobiliária Casa Clara','Visitas','Bairro, faixa e tipo antes do corretor.',5,'#F472B6','Primeiro teste','12 conversas'],['Buffet Festa Boa','Reservas','Data, convidados e cardápio antes da proposta.',0,'#FACC15','Revisado','77 conversas'],['Oficina Torque','Agenda','Modelo, defeito e dia antes do mecânico.',1,'#38BDF8','No ar','530 conversas']];
+  const card=([n,k,s,sh,c,lv,q],i)=>`<article class="pass" style="--c:${c}"><div class="ps-top">flowbot<span>Nº ${String(41207+i*1733).padStart(5,'0')}</span></div><div class="ps-mid">${svgBot(sh,c)}<div><b>${n}</b><small>fluxo de ${k.toLowerCase()}</small></div></div><div class="ps-say">${s}</div><div class="ps-ft"><b>${lv}</b>${q}</div></article>`;
   const fill=(el,L)=>{const h=L.map(card).join('');el.innerHTML=h+h.replace(/<article /g,'<article aria-hidden="true" ')};fill($('#mqA'),A);fill($('#mqB'),B)})();
+
+/* ── a conta ── */
+(()=>{const brl=v=>'R$ '+Math.round(v).toLocaleString('pt-BR'),n=v=>Math.round(v).toLocaleString('pt-BR');
+  const upd=()=>{const a=+$('#iA').value,b=+$('#iB').value,c=+$('#iC').value,d=+$('#iD').value;
+    $('#vA').textContent=a;$('#vB').textContent=b+'%';$('#vC').textContent=c+'%';$('#vD').textContent=brl(d);
+    const erradas=a*22*b/100,perdidos=erradas*c/100;$('#oA').textContent=n(erradas);$('#oB').textContent=n(perdidos);$('#oT').textContent=brl(perdidos*d)};
+  $$('.calc input').forEach(i=>i.addEventListener('input',upd));upd()})();
 
 /* ── dúvidas ── */
 [['O FlowBot manda mensagens de verdade pelo WhatsApp?','Não nesta fase. O piloto é uma simulação local: sem WhatsApp, sem custo de API e sem dados de clientes.'],
- ['Preciso saber programar para montar um fluxo?','Não. Você monta com blocos e escreve os textos. As condições são escolhas, não código.'],
- ['O que acontece quando a equipe assume?','O bot para de enviar mensagens na hora. A conversa fica com a pessoa até ela devolver.'],
- ['Dá para testar vários caminhos do mesmo fluxo?','Sim. Recomece a simulação quantas vezes quiser e escolha respostas diferentes para percorrer cada ramo.'],
+ ['Preciso saber programar?','Não. Você descreve o atendimento, ajusta os blocos e escreve os textos. As condições são escolhas, não código.'],
+ ['O que acontece quando a equipe assume?','O bot para de enviar mensagens na hora e não volta a falar naquela conversa sem ordem da equipe.'],
+ ['O bot passa preço para o cliente?','Não. O FlowBot coleta o pedido. Quem confirma valor e prazo é sempre uma pessoa da equipe.'],
+ ['Dá para testar vários caminhos do mesmo fluxo?','Sim. Recomece a simulação quantas vezes quiser. Cada ramo percorrido conta para o nível do fluxo.'],
  ['O FlowBot é o mesmo produto que o Flow?','Não. O Flow é a plataforma de gestão para negócios de beleza. O FlowBot é um módulo do Nexus para atendimento conversacional.'],
- ['Quando o editor visual fica pronto?','Ainda não existe. Esta página mostra o conceito e o piloto de simulação.']]
- .forEach(([q,a])=>{const d=document.createElement('details');const s=document.createElement('summary');s.textContent=q;s.appendChild(document.createElement('i'));const p=document.createElement('div');p.className='ans';p.textContent=a;d.append(s,p);$('#faq').appendChild(d)});
+ ['Quando o editor fica pronto?','Ainda não existe. Esta página mostra o conceito e o piloto de simulação.']]
+ .forEach(([q,a])=>{const d=document.createElement('details'),s=document.createElement('summary'),p=document.createElement('p');s.textContent=q;p.textContent=a;d.append(s,p);$('#faq').appendChild(d)});
 
-/* ── cena 6: fechamento, o time volta e comemora ── */
-(()=>{const st=new Stage($('#acesso')),bots=TEAM.map(s=>st.add(s)),perch=$('#perch');
-  const seats=()=>st.seats(perch,bots,mob()?50:64).map(s=>({...s,y:s.y+perch.offsetHeight-6}));let ok=false;
-  addEventListener('resize',()=>{if(ok)seats().forEach((s,i)=>{Object.assign(bots[i],s);apply(bots[i])})});
-  seen(perch,async()=>{await dropOn(st,bots,seats(),900);ok=true;st.lean=true;const p=st.P(perch,.5,.8);ring(st,p[0],p[1]);burst(st,p[0],p[1],40,1);
-    for(const b of bots){hop(b,52,460);flash(b,'arc',1200);await wait(80)}},.6)})();
+/* ── cena 8: o time volta e senta no último cartão ── */
+(()=>{const st=new Stage($('#acesso')),bots=TEAM.map(s=>st.add(s)),card=$('#acc2'),size=()=>mob()?56:70;let ok=false;
+  addEventListener('resize',()=>{if(ok)st.seats(card,bots,size()).forEach((s,i)=>{Object.assign(bots[i],s);apply(bots[i])})});
+  seen(card,async()=>{await dropOn(st,bots,st.seats(card,bots,size()),900);ok=true;st.lean=true;
+    for(const b of bots){hop(b,40,420);flash(b,'arc',900);await wait(90)}},.4);
+  $$('a',card).forEach(a=>a.addEventListener('pointerenter',()=>bots.forEach((b,i)=>setTimeout(()=>hop(b,18,300),i*50))))})();
 </script>
 </body>
 </html>
