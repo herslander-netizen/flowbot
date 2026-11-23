@@ -199,7 +199,7 @@ h1,h2{font-family:var(--display);letter-spacing:-.045em;line-height:.98;margin:0
 .rk-t b{display:block;font:700 clamp(40px,6vw,76px)/1 var(--display);letter-spacing:-.045em;margin:6px 0 10px}
 .rk-t p{margin:0;color:var(--fg-2);min-height:1.6em}
 .rk-steps{display:flex;gap:6px;margin-top:22px;flex-wrap:wrap}
-.rk-steps i{width:34px;height:8px;border-radius:4px;background:var(--sunken);transition:background .4s,transform .4s var(--spring)}
+.rk-steps i{width:34px;height:8px;border-radius:4px;background:var(--sunken);box-shadow:inset 0 0 0 1px var(--line-2);transition:background .4s,transform .4s var(--spring)}
 .rk-steps i.on{transform:scaleY(1.5)}
 .fxb .hat{transform-origin:50% 30%}
 
@@ -322,6 +322,8 @@ footer p{margin:0;flex-basis:100%}
   <defs>
     <radialGradient id="botSh" cx=".5" cy=".95" r=".75"><stop offset="0" stop-color="#000" stop-opacity=".28"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
     <radialGradient id="botHi" cx=".32" cy=".22" r=".5"><stop offset="0" stop-color="#fff" stop-opacity=".38"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+    <radialGradient id="capHi" cx=".36" cy=".18" r=".55"><stop offset="0" stop-color="#fff" stop-opacity=".42"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+    <filter id="capBlur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.2"/></filter>
   </defs>
 </svg>
 
@@ -410,10 +412,10 @@ footer p{margin:0;flex-basis:100%}
   <div class="dots"></div>
   <div class="in wrap">
     <div class="sc-h rv"><span class="eyebrow"><i></i>Do rascunho ao ar</span><h2>Todo fluxo sobe de nível.</h2>
-      <p>Cada fluxo começa como rascunho e ganha um selo a cada etapa vencida. Só o último nível vai para o cliente.</p></div>
+      <p>Cada fluxo começa como rascunho e ganha uma boina nova a cada etapa vencida. A preta é o topo: só ela vai para o cliente.</p></div>
     <div class="rk rv">
       <div class="rk-bot" id="rkBot"></div>
-      <div class="rk-t"><small id="rkK">Nível 1 de 6</small><b id="rkN">Rascunho</b><p id="rkG">Todo fluxo começa aqui.</p><div class="rk-steps" id="rkS"></div></div>
+      <div class="rk-t"><small id="rkK">Rascunho</small><b id="rkN">Rascunho</b><p id="rkG">Todo fluxo começa aqui.</p><div class="rk-steps" id="rkS"></div></div>
     </div>
   </div>
 </section>
@@ -528,9 +530,13 @@ const eyeFor=c=>lum(c)>.42?'#0B0B0B':'#FFFFFF';
 const TEAM=[{shape:0,color:'#FF6B2C'},{shape:1,color:'#38BDF8'},{shape:2,color:'#FACC15'},{shape:3,color:'#34D399'},{shape:4,color:'#EF4444'}];
 const NOVO={shape:5,color:'#A78BFA'};
 const svgBot=(shape,color,eyes='dot')=>{const m='sb'+(MID++),e=eyeFor(color);return `<svg viewBox="0 0 100 100" aria-hidden="true"><defs><mask id="${m}" maskUnits="userSpaceOnUse" x="-10" y="-10" width="120" height="120">${frag(shape,'#fff')}</mask></defs><g mask="url(#${m})"><rect x="-4" y="-4" width="108" height="108" fill="${color}"/><rect x="-4" y="-4" width="108" height="108" fill="url(#botSh)"/><rect x="-4" y="-4" width="108" height="108" fill="url(#botHi)"/></g><g transform="${eyeT(shape)}">${eyes==='arc'?`<path d="M35,53q6,-14 12,0M53,53q6,-14 12,0" fill="none" stroke="${e}" stroke-width="5.6" stroke-linecap="round"/>`:`<circle cx="41" cy="48" r="4.8" fill="${e}"/><circle cx="59" cy="48" r="4.8" fill="${e}"/>`}</g></svg>`};
-/* selo de nível: um fone de atendimento que cai na cabeça */
-const SEL=['M20,46C20,22 34,10 50,10C66,10 80,22 80,46','M80,46q4,14 -8,22','M68,70q-6,3 -11,2'];
-const selG=c=>{const ln=lum(c)>.55?'rgba(0,0,0,.25)':'rgba(255,255,255,.35)';return `<path d="${SEL[0]}" fill="none" stroke="${c}" stroke-width="6" stroke-linecap="round"/><rect x="12" y="38" width="14" height="22" rx="6" fill="${c}" stroke="${ln}"/><rect x="74" y="38" width="14" height="22" rx="6" fill="${c}" stroke="${ln}"/><path d="${SEL[1]}" fill="none" stroke="${c}" stroke-width="3.4" stroke-linecap="round"/><circle cx="64" cy="70" r="4.4" fill="${c}"/>`};
+/* boina de patente: o desenho é sempre o mesmo, só a cor muda */
+const PATENTES=[null,['branca','#F1EEE7'],['cinza','#8E939C'],['azul-marinho','#24408E'],['verde-musgo','#2F6B45'],['vinho','#8C1F3D'],['preta','#1C1C20']];
+const CAP=[[46,17,-11,.8],[45,17,-11,.9],[48,20,-11,.72],[70,23,-24,.6],[34,22,-18,.56],[56,19,-14,.62]];
+const mixHex=(h,t,a)=>{const p=x=>parseInt(x,16),c=[1,3,5].map(i=>p(h.substr(i,2))),d=[1,3,5].map(i=>p(t.substr(i,2)));return '#'+c.map((v,i)=>Math.round(v+(d[i]-v)*a).toString(16).padStart(2,'0')).join('')};
+const BOINA_D='M-46,3 C-47,-12 -24,-22 0,-22 C26,-22 46,-13 46,0 C46,10 25,15 0,15 C-26,15 -45,12 -46,3 Z';
+const boinaG=(c,shape,maskId)=>{const [x,y,r,k]=CAP[shape],rim=mixHex(c,'#000000',.28),bal=mixHex(c,'#000000',.08);
+  return `<g mask="url(#${maskId})"><ellipse cx="${x+3}" cy="${y+13*k}" rx="${38*k}" ry="${6*k}" fill="#000" fill-opacity=".22" filter="url(#capBlur)" transform="rotate(${r} ${x} ${y})"/></g><g transform="translate(${x} ${y}) rotate(${r}) scale(${k})"><path d="${BOINA_D}" fill="${c}"/><path d="M-45,5 C-36,11 -16,13.5 0,13.5 C22,13.5 40,9 45.5,3 C45,10 25,15 0,15 C-26,15 -43,12 -45,5 Z" fill="${rim}" opacity=".9"/><path d="${BOINA_D}" fill="url(#botSh)"/><path d="${BOINA_D}" fill="url(#capHi)"/><path d="M3,-21.5 L3.6,-25" stroke="${rim}" stroke-width="3.4" stroke-linecap="round"/><circle cx="4" cy="-28.4" r="5.2" fill="${bal}"/><circle cx="4" cy="-28.4" r="5.2" fill="url(#botHi)"/></g>`};
 $('#logoG').outerHTML=svgBot(0,'#FF6B2C','arc');
 $('#phAv').innerHTML=svgBot(1,'#38BDF8');
 addEventListener('scroll',()=>$('#nav').classList.toggle('lit',scrollY>40),{passive:true});
@@ -674,15 +680,16 @@ const FLUXO={inicio:'oi',nos:{
   seen(phone,async()=>{await wait(300);place();const ty=host.y;host.y=ty-300;host.rot=-200;host.op=1;eye(host,'wide');apply(host);
     setTimeout(()=>squash(host,1),860*.364);await tween(host,{y:ty,rot:0},860,{y:Ez.bounce,def:Ez.out});eye(host,'dot');st.lean=true;reset()},.35)})();
 
-/* ── cena 5: o selo cai na cabeça a cada nível ── */
-(()=>{const st=new Stage($('#nivel')),slot=$('#rkBot'),big=st.add(TEAM[1]),hat=$('.hat',big.el);
-  const LV=[['Rascunho','Todo fluxo começa aqui. O selo vem com o teste.',null],['Primeiro teste','Rodou do oi até o fim pelo menos uma vez.','#F5F1EA'],['Ramos cobertos','Cada resposta possível foi percorrida.','#F59E0B'],['À prova de erro','Respostas estranhas não travam a conversa.','#F87171'],['Revisado','Alguém da equipe leu e aprovou os textos.','#A78BFA'],['No ar','Pronto para o cliente. O selo verde.','#34D399']];
-  $('#rkS').innerHTML=LV.map(()=>'<i></i>').join('');
+/* ── cena 5: a boina cai na cabeça a cada nível ── */
+(()=>{const spec=TEAM[1],st=new Stage($('#nivel')),slot=$('#rkBot'),big=st.add(spec),hat=$('.hat',big.el),maskId=$('mask',big.el).id;
+  const LV=[['Rascunho','Todo fluxo começa aqui. A primeira boina vem com o teste.'],['Primeiro teste','Rodou do oi até o fim pelo menos uma vez.'],['Ramos cobertos','Cada resposta possível foi percorrida.'],['À prova de erro','Respostas estranhas não travam a conversa.'],['Revisado','Alguém da equipe leu e aprovou os textos.'],['Ensaio geral','A equipe simulou o atendimento de ponta a ponta.'],['No ar','Pronto para o cliente. A boina preta.']];
+  $('#rkS').innerHTML=LV.slice(1).map(()=>'<i></i>').join('');
   const place=()=>{const p=st.P(slot,.5,.5);Object.assign(big,{x:p[0],y:p[1],sc:slot.offsetWidth/160*.86,op:1});apply(big)};
-  async function loop(){const run=st.run;place();let k=0;while(run===st.run){const [n,g,c]=LV[k];$('#rkK').textContent=`Nível ${k+1} de ${LV.length}`;$('#rkN').textContent=n;$('#rkG').textContent=g;
-      $$('#rkS i').forEach((e,i)=>{e.classList.toggle('on',i===k);e.style.background=i<=k?(LV[i][2]||'#6B6762'):''});
-      if(c){hat.innerHTML=selG(c);hat.animate([{transform:'translateY(-120px) rotate(-30deg)',opacity:0},{transform:'translateY(-120px) rotate(-30deg)',opacity:1,offset:.05},{transform:'none',opacity:1}],{duration:RM?1:620,easing:'cubic-bezier(.34,1.56,.64,1)'});
-        setTimeout(()=>{squash(big,1.1);flash(big,'arc',1100);const p=st.P(slot,.5,.2);ring(st,p[0],p[1],c);if(k===LV.length-1)burst(st,p[0],p[1],50,1.1)},RM?0:430)}else{hat.innerHTML='';hop(big,30,420)}
+  async function loop(){const run=st.run;place();let k=0;while(run===st.run){const [n,g]=LV[k],pt=PATENTES[k];
+      $('#rkK').textContent=k?`Nível ${k} de 6 · boina ${pt[0]}`:'Rascunho · sem boina';$('#rkN').textContent=n;$('#rkG').textContent=g;
+      $$('#rkS i').forEach((e,i)=>{e.classList.toggle('on',i===k-1);e.style.background=i<k?PATENTES[i+1][1]:''});
+      if(pt){hat.innerHTML=boinaG(pt[1],spec.shape,maskId);hat.animate([{transform:'translateY(-120px) rotate(-30deg)',opacity:0},{transform:'translateY(-120px) rotate(-30deg)',opacity:1,offset:.05},{transform:'none',opacity:1}],{duration:RM?1:620,easing:'cubic-bezier(.34,1.56,.64,1)'});
+        setTimeout(()=>{squash(big,1.1);flash(big,'arc',1100);const p=st.P(slot,.5,.2);ring(st,p[0],p[1],lum(pt[1])<.05?'#F5F5F5':pt[1]);if(k===LV.length-1)burst(st,p[0],p[1],50,1.1)},RM?0:430)}else{hat.innerHTML='';hop(big,30,420)}
       await wait(k===LV.length-1?3200:2100);k=(k+1)%LV.length}}
   addEventListener('resize',place);seen(slot,()=>{st.lean=true;loop()},.5);place();big.op=0;apply(big)})();
 
