@@ -111,6 +111,26 @@ CREATE TABLE IF NOT EXISTS public.flowbot_prospect_events (
 CREATE INDEX IF NOT EXISTS flowbot_events_workspace_time_idx
   ON public.flowbot_prospect_events (workspace_id, occurred_at DESC);
 
+-- Um registro bloqueado não pode ser desbloqueado pelo cliente via Data API.
+-- Remover bloqueio requer procedimento administrativo formal separado.
+CREATE OR REPLACE FUNCTION public.flowbot_guard_prospect()
+RETURNS trigger
+LANGUAGE plpgsql
+SET search_path = ''
+AS $
+BEGIN
+  IF OLD.suppressed AND NOT NEW.suppressed THEN
+    RAISE EXCEPTION 'flowbot_prospect_suppressed';
+  END IF;
+  NEW.updated_at = now();
+  RETURN NEW;
+END;
+$;
+DROP TRIGGER IF EXISTS flowbot_guard_prospect_update ON public.flowbot_prospects;
+CREATE TRIGGER flowbot_guard_prospect_update
+  BEFORE UPDATE ON public.flowbot_prospects
+  FOR EACH ROW EXECUTE FUNCTION public.flowbot_guard_prospect();
+
 -- RLS ativada inclusive para quem possui privilégios de OWNER na tabela.
 ALTER TABLE public.flowbot_workspaces ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.flowbot_workspaces FORCE ROW LEVEL SECURITY;
