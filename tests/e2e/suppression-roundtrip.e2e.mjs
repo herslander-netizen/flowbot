@@ -26,7 +26,7 @@ async function mobile() {
     new URL(route.request().url()).origin === base.origin ? route.continue() : route.abort());
   const page = await context.newPage();
   page.setDefaultTimeout(7000);
-  await page.goto(base, { waitUntil: "domcontentloaded" });
+  await page.goto(base.href, { waitUntil: "domcontentloaded" });
   await page.locator('.bottomnav [data-aba="lista"]').click();
   return { context, page };
 }
