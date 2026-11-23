@@ -9,6 +9,8 @@ const tipos = {
   ".js": "text/javascript; charset=utf-8",
   ".mjs": "text/javascript; charset=utf-8",
   ".svg": "image/svg+xml",
+  ".png": "image/png",
+  ".json": "application/json; charset=utf-8",
   ".webmanifest": "application/manifest+json",
 };
 const porta = Number(process.env.PORT || 4173);
