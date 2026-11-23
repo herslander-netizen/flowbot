@@ -111,7 +111,7 @@ function renderApp() {
     estatistica("Empresas cadastradas", leads.length, "Dados desta sessão"),
     estatistica("Leads qualificados", leads.filter((l) => l.etapa === "qualificado").length, "Prontos para revisão"),
     estatistica("Em negociação", leads.filter((l) => ["proposta", "negociacao"].includes(l.etapa)).length, "Propostas e negociações"),
-    estatistica("Contatos permitidos?", ativos.length, "Ainda sem autorização de envio"),
+    estatistica("Sem bloqueio", ativos.length, "Envio desativado no MVP"),
     '</section>',
     '<div class="note">', icone("info"),
     '<span>Este é um <strong>ambiente local de demonstração</strong>: os dados ficam apenas na memória desta aba e se perdem ao atualizar. Os exemplos são fictícios. Nenhum scraping, WhatsApp, e-mail ou IA é executado. Exporte o CSV para guardar as informações.</span></div>',
