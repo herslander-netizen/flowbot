@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 
 import {
   ETAPAS, validarEmpresa, importarCsv, lerCsv, criarRascunho, pontuacao,
-  exportarCsv, chaveEmpresa, dadosDeDemonstracao
+  exportarCsv, chaveEmpresa, dadosDeDemonstracao, explicarPontuacao, resumoFunil
 } from "../src/prospecting.mjs";
 
 test("pipeline contém as etapas de negociação e ganho", () => {
@@ -69,4 +69,35 @@ test("pontuação é determinística e cenário de demonstração é fictício",
   assert.ok(leads.every((l) => l.origem === "exemplo_ficticio"));
   assert.ok(leads.every((l) => !l.optInWhatsapp));
   assert.ok(leads.every((l) => pontuacao(l) >= 0 && pontuacao(l) <= 100));
+});
+test("pontuação explicável soma exatamente os critérios atendidos", () => {
+  const lead = validarEmpresa({ nome: "Loja", cidade: "Aracaju", site: "https://loja.com",
+    fato: "Abre aos domingos", fonteFato: "https://loja.com/horarios", etapa: "proposta" });
+  const criterios = explicarPontuacao(lead);
+  const soma = criterios.filter((c) => c.atendido).reduce((s, c) => s + c.pontos, 0);
+  assert.equal(soma, pontuacao(lead));
+  assert.equal(criterios.find((c) => c.id === "segmento").atendido, false);
+  for (const l of dadosDeDemonstracao()) {
+    assert.equal(explicarPontuacao(l).filter((c) => c.atendido).reduce((s, c) => s + c.pontos, 0), pontuacao(l));
+  }
+});
+
+test("resumo do funil conta só o que existe e não inventa taxa sem encerrados", () => {
+  const vazio = resumoFunil([]);
+  assert.equal(vazio.total, 0);
+  assert.equal(vazio.taxaGanho, null);
+  assert.ok(vazio.porEtapa.every((e) => e.quantidade === 0 && e.percentual === 0));
+  const leads = [
+    validarEmpresa({ nome: "Alfa", etapa: "ganho", latitude: -10, longitude: -37 }),
+    validarEmpresa({ nome: "Beta", etapa: "perdido", suprimido: true }),
+    validarEmpresa({ nome: "Gama", etapa: "lead" }),
+    validarEmpresa({ nome: "Delta", etapa: "negociacao" }),
+  ];
+  const r = resumoFunil(leads);
+  assert.equal(r.total, 4);
+  assert.equal(r.emAndamento, 2);
+  assert.equal(r.taxaGanho, 0.5);
+  assert.equal(r.naoContatar, 1);
+  assert.equal(r.comCoordenadas, 1);
+  assert.equal(r.porEtapa.reduce((s, e) => s + e.quantidade, 0), 4);
 });
