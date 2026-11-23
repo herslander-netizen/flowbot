@@ -1,7 +1,7 @@
 // Modo Prospecção — camada de interface. Toda regra de negócio fica em prospecting.mjs.
 // A tela é montada uma vez e cada região é atualizada sozinha, sem recriar o mapa.
 import {
-  ETAPAS, dadosDeDemonstracao, validarEmpresa, chaveEmpresa, importarCsv, criarRascunho,
+  ETAPAS, dadosDeDemonstracao, validarEmpresa, chaveEmpresa, importarCsv, criarRascunho, podePrepararAbordagem,
   pontuacao, explicarPontuacao, resumoFunil, exportarCsv,
 } from "./prospecting.mjs";
 import { icone } from "./ui/icones.mjs";
@@ -184,7 +184,7 @@ function desenharResumo() {
   $("#funil-meta").textContent = r.total ? formatar.numero(r.total) + " empresa(s) nesta sessão" : "Sem empresas";
 
   $("#aviso-demo").innerHTML = r.demonstracao
-    ? `<div class="alert alert--warning">${icone("info")}<span><strong>Dados de demonstração.</strong> ${r.demonstracao} empresa(s) fictícia(s) para testar a interface. Tudo fica só nesta aba e some ao atualizar: exporte o CSV para guardar.</span></div>`
+    ? `<div class="alert alert--warning">${icone("info")}<span><strong>Dados de demonstração.</strong> ${r.demonstracao} empresa(s) fictícia(s) para testar a interface. Tudo fica só nesta aba e some ao atualizar: o CSV guarda a marcação Não contatar, mas não é backup. Sem a coluna suprimido, não recupera bloqueios ausentes; nunca comprova consentimento.</span></div>`
     : `<div class="alert">${icone("info")}<span>Os dados ficam só nesta aba e somem ao atualizar. Exporte o CSV para guardar.</span></div>`;
 }
 
@@ -439,7 +439,8 @@ function painelDetalhe(id) {
   const criterios = explicarPontuacao(l);
   const indice = ETAPAS.findIndex((e) => e.id === l.etapa);
   const eventos = historico.get(l.id) ?? [];
-  const texto = rascunhos.get(l.id) ?? "";
+  const bloqueado = !podePrepararAbordagem(l);
+  const texto = bloqueado ? "" : rascunhos.get(l.id) ?? "";
   const evidencia = l.fato && l.fonteFato;
   return `<section class="drawer" role="dialog" aria-modal="true" aria-labelledby="detalhe-titulo" data-chave="detalhe${html(l.id)}">
     <span class="drawer__grab" aria-hidden="true"></span>
@@ -498,18 +499,18 @@ function painelDetalhe(id) {
 
       <section class="section" aria-labelledby="s-contato">
         <h3 class="section__title" id="s-contato">Contato</h3>
-        <label class="switch"><span><strong>Não contatar</strong><br><span class="t-small t-muted">Exclui a empresa de qualquer abordagem.</span></span><input type="checkbox" id="suppression"${l.suprimido ? " checked" : ""}></label>
+        <label class="switch"><span><strong>Não contatar</strong><br><span class="t-small t-muted">Exclui a empresa de qualquer abordagem. Não se desfaz nesta versão.</span></span><input type="checkbox" id="suppression"${l.suprimido ? " checked disabled" : ""}></label>
       </section>
 
       <section class="section" aria-labelledby="s-rasc">
         <h3 class="section__title" id="s-rasc">Rascunho de abordagem <span class="badge">Revisão humana</span></h3>
-        ${l.suprimido ? `<div class="alert alert--danger">${icone("proibido")}<span>Esta empresa está marcada como não contatar. Desmarque acima só se houver base para um novo contato.</span></div>` : ""}
-        <label class="sr-only" for="lead-draft">Rascunho (não é enviado)</label>
-        <textarea class="textarea" id="lead-draft" rows="8" placeholder="Use Preparar rascunho para criar uma sugestão a partir dos dados acima."${l.suprimido ? " disabled" : ""}>${html(texto)}</textarea>
+        ${l.suprimido ? `<div class="alert alert--danger">${icone("proibido")}<span>Esta empresa está marcada como não contatar. Não é possível remover esta marcação nesta versão.</span></div>` : ""}
+        ${bloqueado ? "" : `<label class="sr-only" for="lead-draft">Rascunho (não é enviado)</label>
+        <textarea class="textarea" id="lead-draft" rows="8" placeholder="Use Preparar rascunho para criar uma sugestão a partir dos dados acima.">${html(texto)}</textarea>`}
         <p class="field__hint">O FlowBot não envia mensagens. Confira fatos, base legal e regras do canal antes de usar.</p>
         <div class="draft-actions">
-          <button type="button" class="btn btn--secondary" data-acao="gerar"${l.suprimido ? " disabled" : ""}>${icone("faisca")}Preparar rascunho</button>
-          <button type="button" class="btn btn--primary" data-acao="copiar"${l.suprimido ? " disabled" : ""}>${icone("copiar")}Copiar texto</button>
+          <button type="button" class="btn btn--secondary" data-acao="gerar"${bloqueado ? " disabled" : ""}>${icone("faisca")}Preparar rascunho</button>
+          <button type="button" class="btn btn--primary" data-acao="copiar"${bloqueado ? " disabled" : ""}>${icone("copiar")}Copiar texto</button>
         </div>
       </section>
 
@@ -585,7 +586,13 @@ async function importarArquivo(arquivo) {
   if (arquivo.size > 1_000_000) { aviso("CSV acima de 1 MB. Divida em arquivos menores.", { tipo: "danger" }); return; }
   try {
     const resposta = importarCsv(await arquivo.text(), estado.leads);
-    estado.leads = [...estado.leads, ...resposta.adicionados];
+    const bloqueados = new Set(resposta.suprimirIds);
+    estado.leads = [...estado.leads.map((l) => {
+      if (!bloqueados.has(l.id)) return l;
+      rascunhos.delete(l.id);
+      registrar(l.id, "Marcada como não contatar por CSV", "proibido");
+      return { ...l, suprimido: true };
+    }), ...resposta.adicionados];
     resposta.adicionados.forEach((l) => registrar(l.id, "Importada de " + arquivo.name, "importar"));
     ultimoEnquadramento = "";
     atualizar();
@@ -631,16 +638,19 @@ document.addEventListener("click", async (evento) => {
   else if (acao === "em-breve") aviso(alvo.dataset.modulo + " ainda não existe nesta versão. A navegação já está reservada para ele.");
   else if (acao === "gerar" && estado.painel?.tipo === "detalhe") {
     const lead = estado.leads.find((x) => x.id === estado.painel.id);
+    if (!podePrepararAbordagem(lead)) return;
     rascunhos.set(lead.id, criarRascunho(lead, REMETENTE));
     registrar(lead.id, "Rascunho preparado", "faisca");
     desenharPainel();
     aviso("Rascunho criado. Confira o texto e as fontes antes de usar.", { tipo: "success" });
   } else if (acao === "copiar" && estado.painel?.tipo === "detalhe") {
+    const lead = estado.leads.find((x) => x.id === estado.painel.id);
+    if (!podePrepararAbordagem(lead)) return;
     const texto = $("#lead-draft")?.value.trim();
     if (!texto) { aviso("Prepare ou escreva uma mensagem antes de copiar."); return; }
     try {
       await navigator.clipboard.writeText(texto);
-      registrar(estado.painel.id, "Texto copiado para revisão", "copiar");
+      registrar(lead.id, "Texto copiado para revisão", "copiar");
       desenharPainel();
       aviso("Texto copiado. O FlowBot não enviou nenhuma mensagem.", { tipo: "success" });
     } catch {
@@ -659,7 +669,10 @@ document.addEventListener("input", (evento) => {
     const l = estado.leads.find((x) => x.id === estado.painel.id);
     if (l) l.nota = evento.target.value.slice(0, 1000);
   }
-  if (id === "lead-draft" && estado.painel?.tipo === "detalhe") rascunhos.set(estado.painel.id, evento.target.value);
+  if (id === "lead-draft" && estado.painel?.tipo === "detalhe") {
+    const lead = estado.leads.find((x) => x.id === estado.painel.id);
+    if (podePrepararAbordagem(lead)) rascunhos.set(lead.id, evento.target.value);
+  }
   if (evento.target.closest?.("#new-company")) { evento.target.removeAttribute("aria-invalid"); $("#erro-form").innerHTML = ""; }
 });
 
@@ -674,11 +687,13 @@ document.addEventListener("change", (evento) => {
     $("#lead-stage")?.focus({ preventScroll: true });
   }
   if (id === "suppression" && estado.painel?.tipo === "detalhe") {
-    const marcado = evento.target.checked;
-    registrar(estado.painel.id, marcado ? "Marcada como não contatar" : "Marcação de não contatar removida", "proibido");
-    atualizarLead(estado.painel.id, { suprimido: marcado });
-    $("#suppression")?.focus({ preventScroll: true });
-    aviso(marcado ? "Empresa marcada: não contatar." : "Marcação removida. Isso não concede consentimento.");
+    const lead = estado.leads.find((x) => x.id === estado.painel.id);
+    if (!evento.target.checked || !podePrepararAbordagem(lead)) { desenharPainel(); return; }
+    rascunhos.delete(lead.id);
+    registrar(lead.id, "Marcada como não contatar", "proibido");
+    atualizarLead(lead.id, { suprimido: true });
+    $('#painel [data-acao="fechar"]')?.focus({ preventScroll: true });
+    aviso("Empresa marcada: não contatar.");
   }
 });
 

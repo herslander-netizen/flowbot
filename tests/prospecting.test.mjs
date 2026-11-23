@@ -101,3 +101,34 @@ test("resumo do funil conta só o que existe e não inventa taxa sem encerrados"
   assert.equal(r.comCoordenadas, 1);
   assert.equal(r.porEtapa.reduce((s, e) => s + e.quantidade, 0), 4);
 });
+
+test("CSV preserva não contatar sem importar opt-in", () => {
+  const lead = validarEmpresa({ nome:"Empresa Fictícia A", suprimido:true, optInWhatsapp:true });
+  const { adicionados, erros } = importarCsv(exportarCsv([lead]));
+  assert.deepEqual(erros, []);
+  assert.equal(adicionados[0].suprimido, true);
+  assert.equal(adicionados[0].optInWhatsapp, false);
+  const carga = importarCsv("nome;suprimido;optInWhatsapp\r\nExemplo A; FALSE ;true\r\nExemplo B; TRUE ;true\r\nExemplo C;1;true\r\nExemplo D;;true");
+  assert.deepEqual(carga.adicionados.map(l => [l.suprimido, l.optInWhatsapp]), [[false,false],[true,false],[false,false]]);
+  assert.equal(carga.erros.length, 1);
+  assert.match(carga.erros[0], /Linha 4:.*suprimido/);
+  assert.equal(carga.adicionados.some(lead => lead.nome === "Exemplo C"), false);
+});
+
+test("duplicata literal true é restritiva; false nunca libera uma empresa", () => {
+  const existente = validarEmpresa({ nome:"Empresa Fictícia A", suprimido:false });
+  const marcada = { ...existente, suprimido:true };
+  const bloqueio = importarCsv("nome;suprimido\r\nEmpresa Fictícia A;true", [existente]);
+  assert.deepEqual(bloqueio.suprimirIds, [existente.id]);
+  assert.equal(existente.suprimido, false, "o domínio prepara mudanças sem mutar a entrada");
+  const liberacao = importarCsv("nome;suprimido\r\nEmpresa Fictícia A;false", [marcada]);
+  assert.deepEqual(liberacao.suprimirIds, []);
+  assert.deepEqual(liberacao.adicionados, []);
+  const mesmaCarga = importarCsv("nome;suprimido\r\nEmpresa Fictícia B;false\r\nEmpresa Fictícia B;true\r\nEmpresa Fictícia B;false");
+  assert.equal(mesmaCarga.adicionados[0].suprimido, true);
+});
+
+test("não cria rascunho de empresa marcada não contatar", () => {
+  assert.throws(() => criarRascunho(validarEmpresa({nome:"Empresa Fictícia",suprimido:true})), /não contatar/);
+  assert.match(criarRascunho(validarEmpresa({nome:"Empresa Fictícia",suprimido:false})), /Empresa Fictícia/);
+});
