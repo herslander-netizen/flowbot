@@ -75,7 +75,7 @@ test("lista de empresas encaminha JWT verificado e filtro por workspace para RLS
   });
   assert.equal(pedidos.length, 2);
   assert.match(pedidos[1].url, /limit=100/);
-  assert.match(pedidos[1].url, new RegExp("workspace_id=eq%5C." + WORKSPACE_A));
+  assert.equal(new URL(pedidos[1].url).searchParams.get("workspace_id"), "eq." + WORKSPACE_A);
   assert.equal(pedidos[1].headers.authorization, headers.authorization);
   assert.equal(pedidos[1].headers.apikey, env.SUPABASE_PUBLISHABLE_KEY);
   assert.equal(JSON.stringify(pedidos).includes("service_role"), false);
@@ -142,7 +142,7 @@ test("tratamento de erro de RLS não revela existência de empresa de outro work
 });
 
 test("código aplica limites e falha fechada quando não configurado", async () => {
-  const x = await resposta(await handleApi(request("/api/v1/prospects?workspaceId=ruim"), {}));
+  const x = await resposta(await handleApi(new Request("https://flowbot.example/api/v1/prospects?workspaceId=ruim", {headers: {authorization: headers.authorization}}), {}));
   assert.equal(x.status, 503);
   await comFetchFalso(async (url) => auth(url) ?? new Response("[]", { status: 200 }),
     async () => {
