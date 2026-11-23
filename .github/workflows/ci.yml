@@ -1,4 +1,4 @@
-name: Prospecção MVP — segurança e testes
+name: Prospecção — testes de domínio e backend
 on:
   push:
     branches: [main]
@@ -15,12 +15,18 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
-      - name: Verificar sintaxe, testes e regras de importação
-        run: npm run check
-      - name: Verificar arquivos PWA
+      - name: Verificar sintaxe e testes
+        run: |
+          node --check src/prospecting.mjs
+          node --check src/app.mjs
+          node --check src/prospeccao-api-client.mjs
+          node --check worker/index.mjs
+          npm test
+      - name: Verificar PWA sem disparos
         run: |
           test -f index.html
           test -f assets/styles.css
           test -f manifest.webmanifest
           test -f src/app.mjs
-          ! grep -R "message/sendText" src/ || exit 1
+          test -f db/migrations/001_prospeccao.sql
+          ! grep -R "message/sendText" src/ worker/

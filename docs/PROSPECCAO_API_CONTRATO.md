@@ -1,54 +1,52 @@
-# Contrato planejado — API de Prospecção v1
+# FlowBot — API Prospecção v1 / Cloudflare Workers + Supabase
 
-Esta é uma especificação para a próxima fase, ainda sem endpoints implementados.
+**Implementação parcial em branch de backend. Não implantada nem integrada ao PWA.**
+Em Cloudflare, o arquivo de entrada é `worker/index.mjs`. O modelo RLS está em
+`db/migrations/001_prospeccao.sql`. Essa estrutura foi **aplicada** em 23/11/2026 ao Supabase isolado `flowbot` (`ydkxhdxrpgbhmwbzreah`); a API Cloudflare ainda não foi implantada.
 
-## Segurança e autorização
+## Arquitetura
 
-- Tenant vem da autenticação verificada no servidor; não aceitar tenant_id enviado pelo navegador.
-- Usar usuário PostgreSQL sem bypass de RLS; aplicar SET LOCAL app.tenant_id dentro da transação.
-- Segmentar toda consulta, escrita, evento e evidência pelo mesmo tenant.
-- Identificar cada usuário e escopo: prospects:read, prospects:write, drafts:write, compliance:write.
-- Registrar ator, data, origem e alteração sem incluir segredos ou dados pessoais desnecessários em logs.
+1. A interface usa Supabase Auth para obter um access token de usuário autenticado.
+2. `src/prospeccao-api-client.mjs` injeta o token por solicitação, sem guardá-lo em localStorage.
+3. O Worker recebe o Bearer JWT e consulta `/auth/v1/user` para validá-lo.
+4. O Worker usa a chave **publicável** do Supabase para chamar o PostgREST, com o Bearer do usuário.
+5. A decisão final de autorização é tomada pelas políticas RLS com `auth.uid()` e `flowbot_workspace_members`.
 
-## Endpoints esperados
+O `workspaceId` é um seletor de espaço, **não é prova de acesso**. Um usuário pode modificar esse parâmetro, mas as políticas RLS devem recusar empresas das quais ele não participa. É proibido configurar `service_role` no frontend ou nas chamadas de usuário do Worker.
 
-GET /api/v1/prospects
-Lista paginada, com filtros de cidade, segmento e etapa.
+**Atenção:** para começar, um administrador precisa cadastrar um workspace e associar o primeiro usuário na tabela de memberships, usando credencial privada e processo administrativo seguro. Usuários comuns não podem criar ou atribuir memberships.
 
-POST /api/v1/prospects
-Cadastro manual com dados estruturados e procedência obrigatória.
+## Rotas implementadas
 
-POST /api/v1/prospects/import
-Importação de CSV com validação, deduplicação por tenant, limite de tamanho e relatório de erros.
+- `GET /api/v1/workspaces` — lista workspaces autorizados.
+- `GET /api/v1/prospects?workspaceId=<uuid>&limit=50&stage=lead` — lista prospects da empresa autenticada.
+- `POST /api/v1/prospects` — `{"workspaceId":"uuid","prospect":{"nome":"Empresa Exemplo","cidade":"Aracaju","uf":"SE"}}`.
+- `PATCH /api/v1/prospects/:id` — etapa, notas ou `suppressed:true` no workspace solicitado.
 
-PATCH /api/v1/prospects/:id
-Alterações de etapa e notas com validação, permissão e trilha de auditoria.
+A resposta contém `{"data": ...}` ou `{"erro": "..."}`. Nenhuma rota envia mensagens, captura contatos, faz scraping ou concede consentimento. O bloqueio de contato é irreversível pela API atual. O SQL também inclui proteção para impedir que uma atualização direta via PostgREST retire `suppressed=true`.
 
-POST /api/v1/prospects/:id/evidence
-Fato verificável, fonte URL, data e política de retenção; não confundir opinião com dado comprovado.
+## Configuração futura do Worker
 
-POST /api/v1/prospects/:id/drafts
-Criar/editar rascunho SEM envio. Necessita revisão humana para aprovação.
+Variáveis/segredos via Cloudflare (não em repositório):
 
-POST /api/v1/prospects/:id/suppress
-Bloquear contatos e cancelar jobs agendados. A operação deve ser idempotente.
+- `SUPABASE_URL`: URL HTTPS do projeto **flowbot** (`*.supabase.co`).
+- `SUPABASE_PUBLISHABLE_KEY`: chave **publicável** do projeto, nunca secret/service_role.
+- `ALLOWED_ORIGINS`: lista separada por vírgula das origens web autorizadas (inclua a origem do PWA de prévia e depois a de produção).
 
-GET /api/v1/prospects/geo
-Somente coordenadas autorizadas do tenant, com paginação ou bounding box; não extrair telefones.
+Configurar Workers Static Assets no deployment quando desejar servir frontend e API na mesma origem. Se não existir binding `ASSETS`, a API devolve 404 fora das rotas `/api/`. Não copiar scripts ou bindings TapFlow antigos para o novo projeto.
 
-## Envio deliberadamente ausente
+## Verificações antes de ativar
 
-Não existe endpoint /send neste contrato. Enviar demanda integração homologada, prova da permissão específica por canal, opt-out e supressão, horário comercial, limites e prevenção de duplicidade, trilha de auditoria e tomada humana segura no motor.
+- **Concluído:** SQL aplicado somente no projeto Supabase FlowBot (`ydkxhdxrpgbhmwbzreah`), nunca em `cortai-prod`, `cortai-preview` ou Alvo OS.
+- Confirmar RLS e escopos reais em Postgres: usuário A vê A; usuário B vê B; sem membership não enxerga dados.
+- Testar escrita, isolamento, fallback 401/403 e bloqueio de contato contra um banco real.
+- **Concluído na instalação inicial:** 7 tabelas com RLS ENABLE + FORCE; advisors de segurança sem alertas; papel `anon` sem grants diretos nestas tabelas. Reexecutar os advisors após mudanças.
+- Validar Auth, URL, permissões CORS e login/expiração da sessão no celular.
+- Integrar PWA depois da implementação da identidade visual do Claude, sem sobrescrever a branch dele.
+- Proteger a aplicação contra abuso de quotas, criar auditoria persistente e política de retenção antes de pilotos externos.
 
-## Testes de aceite antes de produção
+## Limitações intencionais
 
-1. Usuário sem sessão ou sem escopo não lê nem escreve registros.
-2. Tenant A nunca acessa ou modifica registro do tenant B, nem em falhas ou jobs.
-3. Importar duas vezes o mesmo CSV não duplica empresas.
-4. URL maliciosa, CSV irregular e payloads excessivos são rejeitados.
-5. Opt-out impede todas as tentativas futuras do canal e atravessa sessões/processos.
-6. Estado de campanha e rascunho não implicam consentimento ou autorização para enviar.
-7. Requisição idempotente repetida não cria duas operações.
-8. Nenhum dado de cliente é armazenado no navegador sem política de autenticação e armazenamento revisada.
+Testes de `tests/backend.test.mjs` são simulações de HTTP/REST; **não comprovam** isolamento em banco real. Não há ainda importação CSV por API, evidências, drafts persistentes, RBAC operacional completo nem auditoria durável de mudanças. A interface continua com dados em memória. A estrutura SQL está instalada no Supabase dedicado; a implantação da API Cloudflare depende de configurar a origem, os recursos do Worker e a autenticação. Não há clientes nem workspaces provisionados.
 
-A migração em db/migrations/001_prospeccao.sql é apenas um ponto de partida: revisar com testes de banco e políticas antes de executar.
+**Não publicar o Worker nem liberar usuários automaticamente.**
