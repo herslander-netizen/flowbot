@@ -106,7 +106,7 @@ CREATE TABLE IF NOT EXISTS public.flowbot_prospect_events (
   event_data jsonb NOT NULL DEFAULT '{}'::jsonb,
   occurred_at timestamptz NOT NULL DEFAULT now(),
   FOREIGN KEY (workspace_id, prospect_id)
-    REFERENCES public.flowbot_prospects (workspace_id, id) ON DELETE SET NULL
+    REFERENCES public.flowbot_prospects (workspace_id, id)
 );
 CREATE INDEX IF NOT EXISTS flowbot_events_workspace_time_idx
   ON public.flowbot_prospect_events (workspace_id, occurred_at DESC);
@@ -136,32 +136,32 @@ CREATE POLICY flowbot_workspace_read ON public.flowbot_workspaces
   FOR SELECT TO authenticated
   USING (EXISTS (
     SELECT 1 FROM public.flowbot_workspace_members m
-    WHERE m.workspace_id = id AND m.user_id = (SELECT auth.uid())
+    WHERE m.workspace_id = flowbot_workspaces.id AND m.user_id = (SELECT auth.uid())
   ));
 
 CREATE POLICY flowbot_prospect_read ON public.flowbot_prospects
   FOR SELECT TO authenticated
   USING (EXISTS (
     SELECT 1 FROM public.flowbot_workspace_members m
-    WHERE m.workspace_id = workspace_id AND m.user_id = (SELECT auth.uid())
+    WHERE m.workspace_id = flowbot_prospects.workspace_id AND m.user_id = (SELECT auth.uid())
   ));
 CREATE POLICY flowbot_prospect_insert ON public.flowbot_prospects
   FOR INSERT TO authenticated
   WITH CHECK (EXISTS (
     SELECT 1 FROM public.flowbot_workspace_members m
-    WHERE m.workspace_id = workspace_id AND m.user_id = (SELECT auth.uid())
+    WHERE m.workspace_id = flowbot_prospects.workspace_id AND m.user_id = (SELECT auth.uid())
       AND m.role IN ('owner','admin','editor')
   ));
 CREATE POLICY flowbot_prospect_update ON public.flowbot_prospects
   FOR UPDATE TO authenticated
   USING (EXISTS (
     SELECT 1 FROM public.flowbot_workspace_members m
-    WHERE m.workspace_id = workspace_id AND m.user_id = (SELECT auth.uid())
+    WHERE m.workspace_id = flowbot_prospects.workspace_id AND m.user_id = (SELECT auth.uid())
       AND m.role IN ('owner','admin','editor')
   ))
   WITH CHECK (EXISTS (
     SELECT 1 FROM public.flowbot_workspace_members m
-    WHERE m.workspace_id = workspace_id AND m.user_id = (SELECT auth.uid())
+    WHERE m.workspace_id = flowbot_prospects.workspace_id AND m.user_id = (SELECT auth.uid())
       AND m.role IN ('owner','admin','editor')
   ));
 
@@ -169,13 +169,13 @@ CREATE POLICY flowbot_evidence_read ON public.flowbot_prospect_evidence
   FOR SELECT TO authenticated
   USING (EXISTS (
     SELECT 1 FROM public.flowbot_workspace_members m
-    WHERE m.workspace_id = workspace_id AND m.user_id = (SELECT auth.uid())
+    WHERE m.workspace_id = flowbot_prospect_evidence.workspace_id AND m.user_id = (SELECT auth.uid())
   ));
 CREATE POLICY flowbot_evidence_insert ON public.flowbot_prospect_evidence
   FOR INSERT TO authenticated
   WITH CHECK (EXISTS (
     SELECT 1 FROM public.flowbot_workspace_members m
-    WHERE m.workspace_id = workspace_id AND m.user_id = (SELECT auth.uid())
+    WHERE m.workspace_id = flowbot_prospect_evidence.workspace_id AND m.user_id = (SELECT auth.uid())
       AND m.role IN ('owner','admin','editor')
   ));
 
@@ -183,38 +183,38 @@ CREATE POLICY flowbot_drafts_read ON public.flowbot_prospect_drafts
   FOR SELECT TO authenticated
   USING (EXISTS (
     SELECT 1 FROM public.flowbot_workspace_members m
-    WHERE m.workspace_id = workspace_id AND m.user_id = (SELECT auth.uid())
+    WHERE m.workspace_id = flowbot_prospect_drafts.workspace_id AND m.user_id = (SELECT auth.uid())
   ));
 CREATE POLICY flowbot_drafts_insert ON public.flowbot_prospect_drafts
   FOR INSERT TO authenticated
   WITH CHECK (EXISTS (
     SELECT 1 FROM public.flowbot_workspace_members m
-    WHERE m.workspace_id = workspace_id AND m.user_id = (SELECT auth.uid())
+    WHERE m.workspace_id = flowbot_prospect_drafts.workspace_id AND m.user_id = (SELECT auth.uid())
       AND m.role IN ('owner','admin','editor')
   ));
 CREATE POLICY flowbot_drafts_update ON public.flowbot_prospect_drafts
   FOR UPDATE TO authenticated
   USING (EXISTS (
     SELECT 1 FROM public.flowbot_workspace_members m
-    WHERE m.workspace_id = workspace_id AND m.user_id = (SELECT auth.uid())
+    WHERE m.workspace_id = flowbot_prospect_drafts.workspace_id AND m.user_id = (SELECT auth.uid())
       AND m.role IN ('owner','admin','editor')
   ))
   WITH CHECK (EXISTS (
     SELECT 1 FROM public.flowbot_workspace_members m
-    WHERE m.workspace_id = workspace_id AND m.user_id = (SELECT auth.uid())
+    WHERE m.workspace_id = flowbot_prospect_drafts.workspace_id AND m.user_id = (SELECT auth.uid())
       AND m.role IN ('owner','admin','editor')
   ));
 CREATE POLICY flowbot_permissions_read ON public.flowbot_contact_permissions
   FOR SELECT TO authenticated
   USING (EXISTS (
     SELECT 1 FROM public.flowbot_workspace_members m
-    WHERE m.workspace_id = workspace_id AND m.user_id = (SELECT auth.uid())
+    WHERE m.workspace_id = flowbot_contact_permissions.workspace_id AND m.user_id = (SELECT auth.uid())
   ));
 CREATE POLICY flowbot_events_read ON public.flowbot_prospect_events
   FOR SELECT TO authenticated
   USING (EXISTS (
     SELECT 1 FROM public.flowbot_workspace_members m
-    WHERE m.workspace_id = workspace_id AND m.user_id = (SELECT auth.uid())
+    WHERE m.workspace_id = flowbot_prospect_events.workspace_id AND m.user_id = (SELECT auth.uid())
   ));
 
 -- Permissões explícitas. Nenhum acesso anônimo nem criação de memberships via app.
