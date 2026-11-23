@@ -1,0 +1,18 @@
+# Configuração e dados locais
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.sqlite*
+*.db
+*.log
+sessions/
+local-data/
+
+# Dependências e artefatos locais
+node_modules/
+dist/
+coverage/
+.DS_Store
