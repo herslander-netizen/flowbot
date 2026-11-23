@@ -2,7 +2,7 @@
 
 **Implementação parcial em branch de backend. Não implantada nem integrada ao PWA.**
 Em Cloudflare, o arquivo de entrada é `worker/index.mjs`. O modelo RLS está em
-`db/migrations/001_prospeccao.sql`, ainda **não aplicado** em projeto Supabase.
+`db/migrations/001_prospeccao.sql`. Essa estrutura foi **aplicada** em 23/11/2026 ao Supabase isolado `flowbot` (`ydkxhdxrpgbhmwbzreah`); a API Cloudflare ainda não foi implantada.
 
 ## Arquitetura
 
@@ -37,16 +37,16 @@ Configurar Workers Static Assets no deployment quando desejar servir frontend e 
 
 ## Verificações antes de ativar
 
-- Aplicar SQL somente no projeto Supabase FlowBot recém-criado, **não** em `cortai-prod`, `cortai-preview` ou Alvo OS.
+- **Concluído:** SQL aplicado somente no projeto Supabase FlowBot (`ydkxhdxrpgbhmwbzreah`), nunca em `cortai-prod`, `cortai-preview` ou Alvo OS.
 - Confirmar RLS e escopos reais em Postgres: usuário A vê A; usuário B vê B; sem membership não enxerga dados.
 - Testar escrita, isolamento, fallback 401/403 e bloqueio de contato contra um banco real.
-- Executar advisors de segurança Supabase; revisar grants e Data API.
+- **Concluído na instalação inicial:** 7 tabelas com RLS ENABLE + FORCE; advisors de segurança sem alertas; papel `anon` sem grants diretos nestas tabelas. Reexecutar os advisors após mudanças.
 - Validar Auth, URL, permissões CORS e login/expiração da sessão no celular.
 - Integrar PWA depois da implementação da identidade visual do Claude, sem sobrescrever a branch dele.
 - Proteger a aplicação contra abuso de quotas, criar auditoria persistente e política de retenção antes de pilotos externos.
 
 ## Limitações intencionais
 
-Testes de `tests/backend.test.mjs` são simulações de HTTP/REST; **não comprovam** isolamento em banco real. Não há ainda importação CSV por API, evidências, drafts persistentes, RBAC operacional completo nem auditoria durável de mudanças. A interface continua com dados em memória. A implantação depende da criação do Supabase dedicado e da configuração de credenciais.
+Testes de `tests/backend.test.mjs` são simulações de HTTP/REST; **não comprovam** isolamento em banco real. Não há ainda importação CSV por API, evidências, drafts persistentes, RBAC operacional completo nem auditoria durável de mudanças. A interface continua com dados em memória. A estrutura SQL está instalada no Supabase dedicado; a implantação da API Cloudflare depende de configurar a origem, os recursos do Worker e a autenticação. Não há clientes nem workspaces provisionados.
 
-**Não aplicar nem publicar em produção automaticamente.**
+**Não publicar o Worker nem liberar usuários automaticamente.**
