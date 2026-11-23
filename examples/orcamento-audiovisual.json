@@ -1,0 +1,39 @@
+{
+  "kind": "exemplo-sintetico",
+  "version": 1,
+  "channel": "simulacao",
+  "steps": [
+    {
+      "id": "inicio",
+      "type": "mensagem",
+      "text": "Olá! Posso adiantar as informações para a equipe preparar seu orçamento.",
+      "next": "tipo"
+    },
+    {
+      "id": "tipo",
+      "type": "pergunta",
+      "field": "tipoDeProducao",
+      "text": "Que tipo de vídeo você precisa?",
+      "next": "cidade"
+    },
+    {
+      "id": "cidade",
+      "type": "pergunta",
+      "field": "cidade",
+      "text": "Em qual cidade seria a gravação?",
+      "next": "data"
+    },
+    {
+      "id": "data",
+      "type": "pergunta",
+      "field": "dataDesejada",
+      "text": "Para qual data?",
+      "next": "equipe"
+    },
+    {
+      "id": "equipe",
+      "type": "transferencia",
+      "text": "Tudo certo. A equipe vai analisar o pedido e confirmar o orçamento."
+    }
+  ]
+}
