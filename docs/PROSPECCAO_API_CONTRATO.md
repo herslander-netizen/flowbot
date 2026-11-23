@@ -20,7 +20,7 @@ O `workspaceId` é um seletor de espaço, **não é prova de acesso**. Um usuár
 
 - `GET /api/v1/workspaces` — lista workspaces autorizados.
 - `GET /api/v1/prospects?workspaceId=<uuid>&limit=50&stage=lead` — lista prospects da empresa autenticada.
-- `POST /api/v1/prospects` — `{"workspaceId":"uuid","prospect":{"nome":"Empresa Exemplo","cidade":"Aracaju","uf":"SE"}}`.
+- `POST /api/v1/prospects` — `{"workspaceId":"uuid","prospect":{"nome":"Empresa Exemplo","cidade":"Aracaju","uf":"SE","suprimido":true}}`. O booleano opcional `prospect.suprimido:true` cria a empresa como Não contatar. Omissão ou `false` não cria bloqueio; valores não booleanos são rejeitados, e nenhum valor declara consentimento.
 - `PATCH /api/v1/prospects/:id` — etapa, notas ou `suppressed:true` no workspace solicitado.
 
 A resposta contém `{"data": ...}` ou `{"erro": "..."}`. Nenhuma rota envia mensagens, captura contatos, faz scraping ou concede consentimento. O bloqueio de contato é irreversível pela API atual. O SQL também inclui proteção para impedir que uma atualização direta via PostgREST retire `suppressed=true`.

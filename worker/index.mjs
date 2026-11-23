@@ -156,7 +156,7 @@ function corpoProspect(payload) {
     stage: item.etapa,
     source_type: item.origem === "csv_fornecido_pelo_usuario" ? "csv" : "manual",
     notes: item.nota,
-    suppressed: false, // O cliente não pode declarar opt-in ou remover bloqueios.
+    suppressed: payload.suprimido === true, // Só aplica bloqueio explícito; não declara consentimento.
   };
 }
 
@@ -205,6 +205,8 @@ export async function handleApi(request, env) {
       const ws = workspaceId(payload.workspaceId);
       if (!payload.prospect || typeof payload.prospect !== "object")
         return json(400, { erro: "prospect_invalido" }, headers);
+      if (Object.hasOwn(payload.prospect, "suprimido") && typeof payload.prospect.suprimido !== "boolean")
+        return json(400, { erro: "supressao_invalida" }, headers);
       const body = { ...corpoProspect(payload.prospect), workspace_id: ws };
       const r = await consultarSupabase(env, token,
         "/rest/v1/flowbot_prospects?select=id,name,workspace_id,created_at",

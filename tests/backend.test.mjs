@@ -82,7 +82,7 @@ test("lista de empresas encaminha JWT verificado e filtro por workspace para RLS
   assert.equal(JSON.stringify(pedidos).includes("service_role"), false);
 });
 
-test("POST ignora workspace_id do lead e opt-in alegados pelo cliente", async () => {
+test("POST grava supressão explícita e ignora workspace_id do lead e opt-in alegados", async () => {
   let gravado;
   await comFetchFalso(async (url, options) => {
     if (auth(url)) return auth(url);
@@ -103,8 +103,31 @@ test("POST ignora workspace_id do lead e opt-in alegados pelo cliente", async ()
   });
   assert.equal(gravado.workspace_id, WORKSPACE_A);
   assert.equal(gravado.source_type, "manual");
-  assert.equal(gravado.suppressed, false);
+  assert.equal(gravado.suppressed, true);
   assert.equal("optInWhatsapp" in gravado, false);
+});
+
+test("POST só marca supressão com booleano explícito e rejeita valor ambíguo sem INSERT", async () => {
+  const gravados = [];
+  await comFetchFalso(async (url, options) => {
+    const a = auth(url);
+    if (a) return a;
+    gravados.push(JSON.parse(options.body));
+    return new Response(JSON.stringify([{ id: LEAD }]), { status: 201 });
+  }, async () => {
+    const criar = (campos) => handleApi(request("/api/v1/prospects", "POST", {
+      workspaceId: WORKSPACE_A, prospect: { nome: "Empresa Fictícia", ...campos },
+    }), env);
+    assert.equal((await criar({})).status, 201);
+    assert.equal((await criar({ suprimido: false, suppressed: true, opt_in_whatsapp: true })).status, 201);
+    for (const suprimido of ["true", "false", 1, null, {}]) {
+      assert.deepEqual(await resposta(await criar({ suprimido })), {
+        status: 400, body: { erro: "supressao_invalida" },
+      });
+    }
+  });
+  assert.deepEqual(gravados.map((row) => row.suppressed), [false, false]);
+  assert.ok(gravados.every((row) => !Object.hasOwn(row, "opt_in_whatsapp")));
 });
 
 test("não permite retirar supressão", async () => {
