@@ -132,7 +132,6 @@
 @media (min-width: 768px) {
   .main { padding: var(--space-8) var(--space-6) var(--space-12); }
   .page-head__actions { display: flex; flex-wrap: wrap; }
-  .topbar__more { display: none; }
   .kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .table-view { display: block; }
   .lead-cards { display: none; }

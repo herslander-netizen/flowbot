@@ -268,7 +268,7 @@ function iniciarMapa() {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
   }).addTo(mapa);
   camada = L.layerGroup().addTo(mapa);
-  mapa.on("zoomend", () => desenharMarcadores({ enquadrar: false }));
+  mapa.on("zoomend", () => { if (!desenhando) desenharMarcadores({ enquadrar: false }); });
   mapa.on("click", () => { if (estado.marcado) { estado.marcado = null; desenharSelecao(); desenharMarcadores({ enquadrar: false }); } });
 }
 
@@ -284,21 +284,28 @@ function agrupar(pontos) {
 }
 
 let ultimoEnquadramento = "";
-function desenharMarcadores({ enquadrar = true } = {}) {
+let desenhando = false;
+function desenharMarcadores(opcoes = {}) {
+  if (desenhando) return;
+  desenhando = true;
+  try { desenharMarcadoresAgora(opcoes); } finally { desenhando = false; }
+}
+function desenharMarcadoresAgora({ enquadrar = true } = {}) {
   if (!mapa || estado.vista !== "mapa") { desenharRodapeMapa(); return; }
   const pontos = filtrados().filter(temCoordenadas);
+  // Enquadrar antes de limpar: o Leaflet dispara "zoomend" durante setView/fitBounds.
+  const chave = pontos.map((l) => l.id).join(",");
+  if (pontos.length && enquadrar && chave !== ultimoEnquadramento && mapa.getSize().x > 0) {
+    ultimoEnquadramento = chave;
+    if (pontos.length === 1) mapa.setView([pontos[0].latitude, pontos[0].longitude], 13, { animate: false });
+    else mapa.fitBounds(pontos.map((l) => [l.latitude, l.longitude]), { padding: [48, 48], maxZoom: 13, animate: false });
+  }
   camada.clearLayers();
   const vazio = $("#map .map-empty"); vazio?.remove();
   if (!pontos.length) {
     $("#map").insertAdjacentHTML("beforeend", `<div class="map-empty"><div class="empty">${icone("pino", "icon empty__art")}<p class="empty__title">Nenhuma empresa com localização</p><p class="empty__text">As empresas filtradas não têm latitude e longitude. Elas continuam na lista.</p></div></div>`);
     desenharLegenda([]); desenharRodapeMapa(); desenharSelecao();
     return;
-  }
-  const chave = pontos.map((l) => l.id).join(",");
-  if (enquadrar && chave !== ultimoEnquadramento && mapa.getSize().x > 0) {
-    ultimoEnquadramento = chave;
-    if (pontos.length === 1) mapa.setView([pontos[0].latitude, pontos[0].longitude], 13);
-    else mapa.fitBounds(pontos.map((l) => [l.latitude, l.longitude]), { padding: [48, 48], maxZoom: 13 });
   }
   for (const grupo of agrupar(pontos)) {
     if (grupo.itens.length === 1) {
@@ -387,8 +394,7 @@ function verNoMapa(id) {
   estado.vista = "mapa"; estado.aba = "mapa";
   if (estado.filtro !== "todos" && estado.filtro !== l.etapa) estado.filtro = "todos";
   atualizar({ mapaJunto: false });
-  desenharMarcadores({ enquadrar: false });
-  mapa?.setView([l.latitude, l.longitude], Math.max(mapa.getZoom(), 14));
+  mapa?.setView([l.latitude, l.longitude], Math.max(mapa.getZoom(), 14), { animate: false });
   marcar({ tipo: "empresa", id: l.id });
   $("#map-card")?.scrollIntoView({ behavior: "smooth", block: "start" });
 }

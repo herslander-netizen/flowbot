@@ -13,10 +13,19 @@ Status em 23/11/2026: MVP local demonstrável. Ainda não é um SaaS multi-tenan
 - Exportação CSV que neutraliza fórmulas de planilhas.
 - Testes com Node.js 22; nenhum serviço pago necessário para a lógica.
 
+## Interface (design system v1)
+
+- Celular: barra inferior com Resumo, Mapa, Empresas e Adicionar; detalhes e cadastro em folha inferior.
+- Computador: barra lateral com os módulos (os próximos aparecem como "Em breve"), resumo e funil lado a lado, mapa e lista juntos.
+- Resumo calculado dos registros: total, em andamento, taxa de ganho (só quando há negócios encerrados) e não contatar. Tocar numa etapa do funil filtra.
+- Mapa com legenda, agrupamento de pontos próximos, cartão da empresa selecionada e tema escuro. Empresas marcadas como não contatar têm anel vermelho.
+- Detalhes em seções: etapa, pontuação com cada critério, identificação, localização ("Ver no mapa"), evidências, notas, não contatar, rascunho e histórico da sessão.
+- Atalhos: `/` busca, Esc fecha painéis e seleções. Tema claro e escuro.
+
 ## Instruções locais
 
 Execute "npm run dev" com Node.js 22 ou superior e abra http://127.0.0.1:4173.
-Execute "npm run check" para validar sintaxe e testes.
+Execute "npm run check" para validar sintaxe e testes de unidade e "npm run test:e2e" (com o servidor ligado e o Playwright instalado) para os testes de navegador.
 
 O PWA não persiste registros: tudo fica na memória da aba. Após atualizar ou fechar, perde as alterações. Exporte o arquivo CSV antes de sair. Não use dados pessoais sensíveis ou dados reais de clientes nesta versão de demonstração.
 

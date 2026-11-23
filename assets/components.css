@@ -223,6 +223,7 @@ kbd { font: var(--weight-medium) 11px/1 var(--font-mono); color: var(--text-fain
 .nav-item[aria-disabled="true"] { cursor: default; opacity: .62; }
 .nav-item[aria-disabled="true"]:hover { background: none; color: var(--text-muted); }
 .nav-item .badge { margin-left: auto; height: 20px; font-size: 10px; }
+@media (min-width: 768px) { .bottomnav { display: none; } }
 @media (min-width: 1024px) {
   .shell { display: grid; grid-template-columns: var(--sidebar-width) minmax(0, 1fr); }
   .sidebar { display: flex; flex-direction: column; position: sticky; top: 0; height: 100dvh; padding: var(--space-4) var(--space-3); border-right: var(--border-width) solid var(--border-subtle); background: var(--bg); overflow-y: auto; }
