@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72" role="img" aria-label="FlowBot">
+  <rect width="72" height="72" rx="22" fill="#9fbbff"/>
+  <path d="M16 27c0-6 5-11 11-11h18c6 0 11 5 11 11v15c0 6-5 11-11 11H33l-11 8V52c-4-2-6-6-6-10V27Z" fill="#111522"/>
+  <circle cx="29" cy="36" r="4" fill="#b5e98b"/>
+  <circle cx="43" cy="36" r="4" fill="#b5e98b"/>
+</svg>
