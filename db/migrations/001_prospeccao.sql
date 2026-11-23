@@ -117,7 +117,7 @@ CREATE OR REPLACE FUNCTION public.flowbot_guard_prospect()
 RETURNS trigger
 LANGUAGE plpgsql
 SET search_path = ''
-AS $
+AS $flowbot_trigger$
 BEGIN
   IF OLD.suppressed AND NOT NEW.suppressed THEN
     RAISE EXCEPTION 'flowbot_prospect_suppressed';
@@ -125,7 +125,8 @@ BEGIN
   NEW.updated_at = now();
   RETURN NEW;
 END;
-$;
+$flowbot_trigger$;
+REVOKE ALL ON FUNCTION public.flowbot_guard_prospect() FROM PUBLIC;
 DROP TRIGGER IF EXISTS flowbot_guard_prospect_update ON public.flowbot_prospects;
 CREATE TRIGGER flowbot_guard_prospect_update
   BEFORE UPDATE ON public.flowbot_prospects
