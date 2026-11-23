@@ -9,29 +9,23 @@
   <style>
     /* ── TOKENS ──────────────────────────────────────────────────────────── */
     :root {
-      /* Cores */
       --cor-fundo:        #0d1117;
       --cor-fundo-alt:    #161b22;
       --cor-fundo-card:   #1c2230;
       --cor-borda:        #2d3748;
       --cor-texto:        #e2e8f0;
       --cor-texto-muted:  #8892a4;
-      --cor-acento:       #38bdf8;   /* cyan */
+      --cor-acento:       #38bdf8;
       --cor-acento-hover: #7dd3fc;
-      --cor-destaque:     #f59e0b;   /* amber */
-      --cor-transferido:  #34d399;   /* verde */
+      --cor-destaque:     #f59e0b;
+      --cor-transferido:  #34d399;
       --cor-perigo:       #f87171;
       --cor-cta:          #38bdf8;
       --cor-cta-texto:    #0d1117;
-
-      /* Tipografia */
       --fonte:            system-ui, -apple-system, 'Segoe UI', sans-serif;
-      --fonte-mono:       'Menlo', 'Consolas', monospace;
       --peso-normal:      400;
       --peso-medio:       500;
       --peso-bold:        700;
-
-      /* Espaçamento */
       --gap-xs:  0.25rem;
       --gap-sm:  0.5rem;
       --gap-md:  1rem;
@@ -42,19 +36,13 @@
       --raio:    0.75rem;
       --raio-sm: 0.375rem;
       --raio-pill: 999px;
-
-      /* Animações */
       --dur-rapida:  120ms;
       --dur-media:   200ms;
       --dur-lenta:   280ms;
       --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
-
-      /* Layout */
       --largura-max: 1200px;
       --largura-conteudo: 720px;
     }
-
-    /* ── RESET ───────────────────────────────────────────────────────────── */
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
     body {
@@ -69,15 +57,11 @@
     a { color: inherit; text-decoration: none; }
     button { font-family: inherit; cursor: pointer; border: none; background: none; }
     ul { list-style: none; }
-
-    /* ── FOCO VISÍVEL ────────────────────────────────────────────────────── */
     :focus-visible {
       outline: 2px solid var(--cor-acento);
       outline-offset: 3px;
       border-radius: var(--raio-sm);
     }
-
-    /* ── MOVIMENTO REDUZIDO ──────────────────────────────────────────────── */
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
         animation-duration: 0.01ms !important;
@@ -86,8 +70,6 @@
       }
       .animar-entrada { opacity: 1 !important; transform: none !important; }
     }
-
-    /* ── UTILITÁRIOS ─────────────────────────────────────────────────────── */
     .container {
       width: 100%;
       max-width: var(--largura-max);
@@ -119,732 +101,267 @@
         opacity var(--dur-lenta) var(--ease-out),
         transform var(--dur-lenta) var(--ease-out);
     }
-    .animar-entrada.visivel {
-      opacity: 1;
-      transform: none;
-    }
+    .animar-entrada.visivel { opacity: 1; transform: none; }
 
-    /* ── NAVEGAÇÃO ───────────────────────────────────────────────────────── */
+    /* NAV */
     .nav {
-      position: sticky;
-      top: 0;
-      z-index: 100;
+      position: sticky; top: 0; z-index: 100;
       background: color-mix(in srgb, var(--cor-fundo) 85%, transparent);
       backdrop-filter: blur(12px);
       border-bottom: 1px solid var(--cor-borda);
     }
     .nav__inner {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      height: 56px;
-      gap: var(--gap-lg);
+      display: flex; align-items: center; justify-content: space-between;
+      height: 56px; gap: var(--gap-lg);
     }
     .nav__logo {
-      font-weight: var(--peso-bold);
-      font-size: 1.1rem;
+      font-weight: var(--peso-bold); font-size: 1.1rem;
       letter-spacing: -0.02em;
-      display: flex;
-      align-items: center;
-      gap: var(--gap-sm);
+      display: flex; align-items: center; gap: var(--gap-sm);
     }
     .nav__logo-icon {
-      width: 28px; height: 28px;
-      background: var(--cor-acento);
-      border-radius: 6px;
-      display: flex; align-items: center; justify-content: center;
-      color: var(--cor-cta-texto);
-      font-size: 0.85rem;
-      font-weight: var(--peso-bold);
-      flex-shrink: 0;
+      width: 28px; height: 28px; background: var(--cor-acento);
+      border-radius: 6px; display: flex; align-items: center; justify-content: center;
+      color: var(--cor-cta-texto); font-size: 0.85rem; font-weight: var(--peso-bold); flex-shrink: 0;
     }
-    .nav__links {
-      display: flex;
-      gap: var(--gap-lg);
-      align-items: center;
-    }
-    .nav__links a {
-      font-size: 0.875rem;
-      color: var(--cor-texto-muted);
-      transition: color var(--dur-rapida);
-    }
+    .nav__links { display: flex; gap: var(--gap-lg); align-items: center; }
+    .nav__links a { font-size: 0.875rem; color: var(--cor-texto-muted); transition: color var(--dur-rapida); }
     .nav__links a:hover { color: var(--cor-texto); }
-    .nav__cta {
-      flex-shrink: 0;
-    }
-    /* Menu mobile */
+    .nav__cta { flex-shrink: 0; }
     .nav__toggle {
-      display: none;
-      flex-direction: column;
-      gap: 5px;
-      padding: var(--gap-sm);
-      border-radius: var(--raio-sm);
+      display: none; flex-direction: column; gap: 5px;
+      padding: var(--gap-sm); border-radius: var(--raio-sm);
     }
     .nav__toggle span {
-      width: 20px; height: 2px;
-      background: var(--cor-texto);
-      border-radius: 2px;
-      transition: transform var(--dur-media), opacity var(--dur-media);
+      width: 20px; height: 2px; background: var(--cor-texto);
+      border-radius: 2px; transition: transform var(--dur-media), opacity var(--dur-media);
     }
-    .nav__toggle[aria-expanded="true"] span:nth-child(1) {
-      transform: translateY(7px) rotate(45deg);
-    }
-    .nav__toggle[aria-expanded="true"] span:nth-child(2) {
-      opacity: 0;
-    }
-    .nav__toggle[aria-expanded="true"] span:nth-child(3) {
-      transform: translateY(-7px) rotate(-45deg);
-    }
-
+    .nav__toggle[aria-expanded="true"] span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+    .nav__toggle[aria-expanded="true"] span:nth-child(2) { opacity: 0; }
+    .nav__toggle[aria-expanded="true"] span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
     @media (max-width: 680px) {
       .nav__links { display: none; flex-direction: column; }
       .nav__links.aberto {
-        display: flex;
-        position: absolute;
-        top: 56px; left: 0; right: 0;
-        background: var(--cor-fundo-alt);
-        border-bottom: 1px solid var(--cor-borda);
-        padding: var(--gap-lg);
-        gap: var(--gap-md);
+        display: flex; position: absolute; top: 56px; left: 0; right: 0;
+        background: var(--cor-fundo-alt); border-bottom: 1px solid var(--cor-borda);
+        padding: var(--gap-lg); gap: var(--gap-md);
       }
       .nav__links.aberto a { font-size: 1rem; }
       .nav__toggle { display: flex; }
       .nav__cta { display: none; }
     }
 
-    /* ── BOTÕES ──────────────────────────────────────────────────────────── */
+    /* BOTÕES */
     .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: var(--gap-sm);
-      padding: 0.6rem 1.25rem;
-      border-radius: var(--raio);
-      font-size: 0.875rem;
-      font-weight: var(--peso-medio);
-      transition:
-        background var(--dur-rapida),
-        color var(--dur-rapida),
-        transform var(--dur-rapida),
-        box-shadow var(--dur-rapida);
+      display: inline-flex; align-items: center; justify-content: center;
+      gap: var(--gap-sm); padding: 0.6rem 1.25rem; border-radius: var(--raio);
+      font-size: 0.875rem; font-weight: var(--peso-medio);
+      transition: background var(--dur-rapida), color var(--dur-rapida), transform var(--dur-rapida);
     }
     .btn:active { transform: scale(0.97); }
-    .btn-primario {
-      background: var(--cor-cta);
-      color: var(--cor-cta-texto);
-    }
-    .btn-primario:hover {
-      background: var(--cor-acento-hover);
-    }
-    .btn-secundario {
-      background: transparent;
-      color: var(--cor-texto);
-      border: 1px solid var(--cor-borda);
-    }
-    .btn-secundario:hover {
-      background: var(--cor-fundo-card);
-      border-color: var(--cor-acento);
-    }
-    .btn-grande {
-      padding: 0.875rem 2rem;
-      font-size: 1rem;
-      border-radius: calc(var(--raio) + 2px);
-    }
+    .btn-primario { background: var(--cor-cta); color: var(--cor-cta-texto); }
+    .btn-primario:hover { background: var(--cor-acento-hover); }
+    .btn-secundario { background: transparent; color: var(--cor-texto); border: 1px solid var(--cor-borda); }
+    .btn-secundario:hover { background: var(--cor-fundo-card); border-color: var(--cor-acento); }
+    .btn-grande { padding: 0.875rem 2rem; font-size: 1rem; border-radius: calc(var(--raio) + 2px); }
 
-    /* ── HERO ────────────────────────────────────────────────────────────── */
+    /* HERO */
     .hero {
-      padding: var(--gap-3xl) 0 var(--gap-2xl);
-      text-align: center;
-      position: relative;
-      overflow: hidden;
+      padding: var(--gap-3xl) 0 var(--gap-2xl); text-align: center;
+      position: relative; overflow: hidden;
     }
     .hero::before {
-      content: '';
-      position: absolute;
-      top: -120px; left: 50%;
-      transform: translateX(-50%);
-      width: 600px; height: 400px;
+      content: ''; position: absolute; top: -120px; left: 50%;
+      transform: translateX(-50%); width: 600px; height: 400px;
       background: radial-gradient(ellipse, color-mix(in srgb, var(--cor-acento) 12%, transparent), transparent 70%);
       pointer-events: none;
     }
     .hero__tag { margin-bottom: var(--gap-lg); }
     .hero__titulo {
-      font-size: clamp(2rem, 5vw, 3.5rem);
-      font-weight: var(--peso-bold);
-      letter-spacing: -0.03em;
-      line-height: 1.1;
-      margin-bottom: var(--gap-lg);
+      font-size: clamp(2rem, 5vw, 3.5rem); font-weight: var(--peso-bold);
+      letter-spacing: -0.03em; line-height: 1.1; margin-bottom: var(--gap-lg);
     }
-    .hero__titulo em {
-      font-style: normal;
-      color: var(--cor-acento);
-    }
+    .hero__titulo em { font-style: normal; color: var(--cor-acento); }
     .hero__subtitulo {
-      font-size: clamp(1rem, 2vw, 1.2rem);
-      color: var(--cor-texto-muted);
-      max-width: 540px;
-      margin-inline: auto;
-      margin-bottom: var(--gap-xl);
+      font-size: clamp(1rem, 2vw, 1.2rem); color: var(--cor-texto-muted);
+      max-width: 540px; margin-inline: auto; margin-bottom: var(--gap-xl);
     }
-    .hero__acoes {
-      display: flex;
-      gap: var(--gap-md);
-      justify-content: center;
-      flex-wrap: wrap;
-    }
-    .hero__preview {
-      margin-top: var(--gap-2xl);
-      position: relative;
-    }
+    .hero__acoes { display: flex; gap: var(--gap-md); justify-content: center; flex-wrap: wrap; }
+    .hero__preview { margin-top: var(--gap-2xl); position: relative; }
     .hero__preview-badge {
-      position: absolute;
-      top: -12px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: var(--cor-destaque);
-      color: #0d1117;
-      font-size: 0.7rem;
-      font-weight: var(--peso-bold);
-      padding: 2px 10px;
-      border-radius: var(--raio-pill);
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      white-space: nowrap;
+      position: absolute; top: -12px; left: 50%; transform: translateX(-50%);
+      background: var(--cor-destaque); color: #0d1117; font-size: 0.7rem;
+      font-weight: var(--peso-bold); padding: 2px 10px; border-radius: var(--raio-pill);
+      text-transform: uppercase; letter-spacing: 0.06em; white-space: nowrap;
     }
     .hero__preview-frame {
-      border: 1px solid var(--cor-borda);
-      border-radius: calc(var(--raio) + 4px);
-      overflow: hidden;
-      background: var(--cor-fundo-alt);
-      max-width: 480px;
-      margin-inline: auto;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+      border: 1px solid var(--cor-borda); border-radius: calc(var(--raio) + 4px);
+      overflow: hidden; background: var(--cor-fundo-alt);
+      max-width: 480px; margin-inline: auto; box-shadow: 0 20px 60px rgba(0,0,0,0.5);
     }
     .hero__preview-topbar {
-      display: flex;
-      align-items: center;
-      gap: var(--gap-sm);
-      padding: var(--gap-sm) var(--gap-md);
-      background: var(--cor-fundo-card);
+      display: flex; align-items: center; gap: var(--gap-sm);
+      padding: var(--gap-sm) var(--gap-md); background: var(--cor-fundo-card);
       border-bottom: 1px solid var(--cor-borda);
     }
-    .hero__preview-dot {
-      width: 10px; height: 10px;
-      border-radius: 50%;
-      background: var(--cor-borda);
-    }
+    .hero__preview-dot { width: 10px; height: 10px; border-radius: 50%; background: var(--cor-borda); }
     .hero__preview-dot:first-child { background: #f87171; }
     .hero__preview-dot:nth-child(2) { background: var(--cor-destaque); }
     .hero__preview-dot:nth-child(3) { background: var(--cor-transferido); }
-    .hero__preview-titulo {
-      font-size: 0.75rem;
-      color: var(--cor-texto-muted);
-      margin-left: auto;
-      margin-right: auto;
-    }
-    .hero__preview-corpo {
-      padding: var(--gap-md);
-      display: flex;
-      flex-direction: column;
-      gap: var(--gap-sm);
-    }
+    .hero__preview-titulo { font-size: 0.75rem; color: var(--cor-texto-muted); margin-left: auto; margin-right: auto; }
+    .hero__preview-corpo { padding: var(--gap-md); display: flex; flex-direction: column; gap: var(--gap-sm); }
+
+    /* BOLHAS */
     .bolha {
-      display: inline-block;
-      max-width: 85%;
-      padding: var(--gap-sm) var(--gap-md);
-      border-radius: var(--raio);
-      font-size: 0.875rem;
-      line-height: 1.5;
+      display: inline-block; max-width: 85%;
+      padding: var(--gap-sm) var(--gap-md); border-radius: var(--raio);
+      font-size: 0.875rem; line-height: 1.5;
     }
-    .bolha-bot {
-      align-self: flex-start;
-      background: var(--cor-fundo-card);
-      border: 1px solid var(--cor-borda);
-      border-bottom-left-radius: var(--raio-sm);
-    }
-    .bolha-usuario {
-      align-self: flex-end;
-      background: color-mix(in srgb, var(--cor-acento) 20%, transparent);
-      border: 1px solid color-mix(in srgb, var(--cor-acento) 30%, transparent);
-      border-bottom-right-radius: var(--raio-sm);
-    }
-    .bolha-sistema {
-      align-self: center;
-      background: color-mix(in srgb, var(--cor-transferido) 12%, transparent);
-      border: 1px solid color-mix(in srgb, var(--cor-transferido) 25%, transparent);
-      color: var(--cor-transferido);
-      font-size: 0.75rem;
-      text-align: center;
-      max-width: 90%;
-    }
+    .bolha-bot { align-self: flex-start; background: var(--cor-fundo-card); border: 1px solid var(--cor-borda); border-bottom-left-radius: var(--raio-sm); }
+    .bolha-usuario { align-self: flex-end; background: color-mix(in srgb, var(--cor-acento) 20%, transparent); border: 1px solid color-mix(in srgb, var(--cor-acento) 30%, transparent); border-bottom-right-radius: var(--raio-sm); }
+    .bolha-sistema { align-self: center; background: color-mix(in srgb, var(--cor-transferido) 12%, transparent); border: 1px solid color-mix(in srgb, var(--cor-transferido) 25%, transparent); color: var(--cor-transferido); font-size: 0.75rem; text-align: center; max-width: 90%; }
 
-    /* ── PROBLEMA ────────────────────────────────────────────────────────── */
-    .problema {
-      padding: var(--gap-3xl) 0;
-      text-align: center;
-    }
-    .problema__sequencia {
-      display: flex;
-      flex-direction: column;
-      gap: var(--gap-sm);
-      margin-bottom: var(--gap-xl);
-    }
-    .problema__linha {
-      font-size: clamp(1.3rem, 3vw, 2rem);
-      font-weight: var(--peso-bold);
-      letter-spacing: -0.02em;
-      color: var(--cor-texto-muted);
-      transition: color var(--dur-media);
-    }
+    /* PROBLEMA */
+    .problema { padding: var(--gap-3xl) 0; text-align: center; }
+    .problema__sequencia { display: flex; flex-direction: column; gap: var(--gap-sm); margin-bottom: var(--gap-xl); }
+    .problema__linha { font-size: clamp(1.3rem, 3vw, 2rem); font-weight: var(--peso-bold); letter-spacing: -0.02em; color: var(--cor-texto-muted); }
     .problema__linha:last-child { color: var(--cor-perigo); }
-    .problema__texto {
-      font-size: 1.1rem;
-      color: var(--cor-texto-muted);
-      max-width: 480px;
-      margin-inline: auto;
-    }
+    .problema__texto { font-size: 1.1rem; color: var(--cor-texto-muted); max-width: 480px; margin-inline: auto; }
 
-    /* ── COMO FUNCIONA ───────────────────────────────────────────────────── */
-    .como-funciona {
-      padding: var(--gap-3xl) 0;
-      background: var(--cor-fundo-alt);
-    }
-    .secao__cabecalho {
-      text-align: center;
-      margin-bottom: var(--gap-2xl);
-    }
-    .secao__titulo {
-      font-size: clamp(1.5rem, 3vw, 2.2rem);
-      font-weight: var(--peso-bold);
-      letter-spacing: -0.02em;
-      margin-bottom: var(--gap-sm);
-    }
-    .secao__subtitulo {
-      color: var(--cor-texto-muted);
-      font-size: 1.05rem;
-      max-width: 480px;
-      margin-inline: auto;
-    }
-    .passos {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: var(--gap-lg);
-    }
-    .passo {
-      background: var(--cor-fundo-card);
-      border: 1px solid var(--cor-borda);
-      border-radius: var(--raio);
-      padding: var(--gap-lg);
-      position: relative;
-      transition: border-color var(--dur-media), transform var(--dur-media);
-    }
-    .passo:hover {
-      border-color: var(--cor-acento);
-      transform: translateY(-3px);
-    }
-    .passo__num {
-      font-size: 2.5rem;
-      font-weight: var(--peso-bold);
-      color: color-mix(in srgb, var(--cor-acento) 25%, transparent);
-      letter-spacing: -0.04em;
-      line-height: 1;
-      margin-bottom: var(--gap-md);
-      font-variant-numeric: tabular-nums;
-    }
-    .passo__titulo {
-      font-size: 1.1rem;
-      font-weight: var(--peso-bold);
-      margin-bottom: var(--gap-sm);
-    }
+    /* COMO FUNCIONA */
+    .como-funciona { padding: var(--gap-3xl) 0; background: var(--cor-fundo-alt); }
+    .secao__cabecalho { text-align: center; margin-bottom: var(--gap-2xl); }
+    .secao__titulo { font-size: clamp(1.5rem, 3vw, 2.2rem); font-weight: var(--peso-bold); letter-spacing: -0.02em; margin-bottom: var(--gap-sm); }
+    .secao__subtitulo { color: var(--cor-texto-muted); font-size: 1.05rem; max-width: 480px; margin-inline: auto; }
+    .passos { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--gap-lg); }
+    .passo { background: var(--cor-fundo-card); border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: var(--gap-lg); transition: border-color var(--dur-media), transform var(--dur-media); }
+    .passo:hover { border-color: var(--cor-acento); transform: translateY(-3px); }
+    .passo__num { font-size: 2.5rem; font-weight: var(--peso-bold); color: color-mix(in srgb, var(--cor-acento) 25%, transparent); letter-spacing: -0.04em; line-height: 1; margin-bottom: var(--gap-md); }
+    .passo__titulo { font-size: 1.1rem; font-weight: var(--peso-bold); margin-bottom: var(--gap-sm); }
     .passo__texto { color: var(--cor-texto-muted); font-size: 0.9rem; }
 
-    /* ── DEMO ────────────────────────────────────────────────────────────── */
-    .demo {
-      padding: var(--gap-3xl) 0;
-    }
-    .demo__aviso {
-      display: flex;
-      align-items: center;
-      gap: var(--gap-sm);
-      background: color-mix(in srgb, var(--cor-destaque) 10%, transparent);
-      border: 1px solid color-mix(in srgb, var(--cor-destaque) 25%, transparent);
-      border-radius: var(--raio);
-      padding: var(--gap-sm) var(--gap-md);
-      font-size: 0.8rem;
-      color: var(--cor-destaque);
-      margin-bottom: var(--gap-xl);
-    }
-    .demo__layout {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: var(--gap-xl);
-      align-items: start;
-    }
-    .demo__info { }
-    .demo__info-titulo {
-      font-size: 1.5rem;
-      font-weight: var(--peso-bold);
-      letter-spacing: -0.02em;
-      margin-bottom: var(--gap-md);
-    }
-    .demo__info-texto {
-      color: var(--cor-texto-muted);
-      margin-bottom: var(--gap-lg);
-      line-height: 1.7;
-    }
-    .demo__resumo {
-      background: var(--cor-fundo-card);
-      border: 1px solid var(--cor-borda);
-      border-radius: var(--raio);
-      padding: var(--gap-md);
-      font-size: 0.85rem;
-    }
-    .demo__resumo-titulo {
-      font-size: 0.7rem;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: var(--cor-texto-muted);
-      margin-bottom: var(--gap-sm);
-      font-weight: var(--peso-bold);
-    }
-    .demo__resumo-item {
-      display: flex;
-      justify-content: space-between;
-      padding: var(--gap-xs) 0;
-      border-bottom: 1px solid var(--cor-borda);
-      color: var(--cor-texto-muted);
-    }
+    /* DEMO */
+    .demo { padding: var(--gap-3xl) 0; }
+    .demo__aviso { display: flex; align-items: center; gap: var(--gap-sm); background: color-mix(in srgb, var(--cor-destaque) 10%, transparent); border: 1px solid color-mix(in srgb, var(--cor-destaque) 25%, transparent); border-radius: var(--raio); padding: var(--gap-sm) var(--gap-md); font-size: 0.8rem; color: var(--cor-destaque); margin-bottom: var(--gap-xl); }
+    .demo__layout { display: grid; grid-template-columns: 1fr 1fr; gap: var(--gap-xl); align-items: start; }
+    .demo__info-titulo { font-size: 1.5rem; font-weight: var(--peso-bold); letter-spacing: -0.02em; margin-bottom: var(--gap-md); }
+    .demo__info-texto { color: var(--cor-texto-muted); margin-bottom: var(--gap-lg); line-height: 1.7; }
+    .demo__resumo { background: var(--cor-fundo-card); border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: var(--gap-md); font-size: 0.85rem; }
+    .demo__resumo-titulo { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--cor-texto-muted); margin-bottom: var(--gap-sm); font-weight: var(--peso-bold); }
+    .demo__resumo-item { display: flex; justify-content: space-between; padding: var(--gap-xs) 0; border-bottom: 1px solid var(--cor-borda); color: var(--cor-texto-muted); }
     .demo__resumo-item:last-child { border-bottom: none; }
-    .demo__resumo-valor {
-      color: var(--cor-acento);
-      font-weight: var(--peso-medio);
-    }
+    .demo__resumo-valor { color: var(--cor-acento); font-weight: var(--peso-medio); }
     .demo__resumo-vazio { color: var(--cor-borda); font-style: italic; }
-
-    /* Chat da demo */
-    .chat {
-      background: var(--cor-fundo-alt);
-      border: 1px solid var(--cor-borda);
-      border-radius: var(--raio);
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      min-height: 480px;
-    }
-    .chat__topbar {
-      display: flex;
-      align-items: center;
-      gap: var(--gap-md);
-      padding: var(--gap-sm) var(--gap-md);
-      background: var(--cor-fundo-card);
-      border-bottom: 1px solid var(--cor-borda);
-    }
-    .chat__avatar {
-      width: 32px; height: 32px;
-      border-radius: 50%;
-      background: var(--cor-acento);
-      color: var(--cor-cta-texto);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.8rem;
-      font-weight: var(--peso-bold);
-      flex-shrink: 0;
-    }
+    .chat { background: var(--cor-fundo-alt); border: 1px solid var(--cor-borda); border-radius: var(--raio); overflow: hidden; display: flex; flex-direction: column; min-height: 480px; }
+    .chat__topbar { display: flex; align-items: center; gap: var(--gap-md); padding: var(--gap-sm) var(--gap-md); background: var(--cor-fundo-card); border-bottom: 1px solid var(--cor-borda); }
+    .chat__avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--cor-acento); color: var(--cor-cta-texto); display: flex; align-items: center; justify-content: center; font-size: 0.8rem; font-weight: var(--peso-bold); flex-shrink: 0; }
     .chat__nome { font-size: 0.875rem; font-weight: var(--peso-medio); }
-    .chat__status {
-      font-size: 0.7rem;
-      color: var(--cor-transferido);
-      display: flex; align-items: center; gap: 4px;
-    }
-    .chat__status::before {
-      content: '';
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: currentColor;
-      display: inline-block;
-    }
+    .chat__status { font-size: 0.7rem; color: var(--cor-transferido); display: flex; align-items: center; gap: 4px; }
+    .chat__status::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: currentColor; display: inline-block; }
     .chat__status.inativo { color: var(--cor-texto-muted); }
-    .chat__mensagens {
-      flex: 1;
-      padding: var(--gap-md);
-      display: flex;
-      flex-direction: column;
-      gap: var(--gap-sm);
-      overflow-y: auto;
-      max-height: 360px;
-    }
-    .chat__opcoes {
-      padding: var(--gap-sm) var(--gap-md) var(--gap-md);
-      display: flex;
-      flex-direction: column;
-      gap: var(--gap-sm);
-    }
-    .chat__opcao {
-      padding: var(--gap-sm) var(--gap-md);
-      background: var(--cor-fundo-card);
-      border: 1px solid var(--cor-borda);
-      border-radius: var(--raio);
-      font-size: 0.875rem;
-      color: var(--cor-texto);
-      text-align: left;
-      transition:
-        border-color var(--dur-rapida),
-        background var(--dur-rapida),
-        transform var(--dur-rapida);
-    }
-    .chat__opcao:hover, .chat__opcao:focus-visible {
-      border-color: var(--cor-acento);
-      background: color-mix(in srgb, var(--cor-acento) 8%, var(--cor-fundo-card));
-    }
+    .chat__mensagens { flex: 1; padding: var(--gap-md); display: flex; flex-direction: column; gap: var(--gap-sm); overflow-y: auto; max-height: 360px; }
+    .chat__opcoes { padding: var(--gap-sm) var(--gap-md) var(--gap-md); display: flex; flex-direction: column; gap: var(--gap-sm); }
+    .chat__opcao { padding: var(--gap-sm) var(--gap-md); background: var(--cor-fundo-card); border: 1px solid var(--cor-borda); border-radius: var(--raio); font-size: 0.875rem; color: var(--cor-texto); text-align: left; transition: border-color var(--dur-rapida), background var(--dur-rapida), transform var(--dur-rapida); }
+    .chat__opcao:hover, .chat__opcao:focus-visible { border-color: var(--cor-acento); background: color-mix(in srgb, var(--cor-acento) 8%, var(--cor-fundo-card)); }
     .chat__opcao:active { transform: scale(0.98); }
-    .chat__rodape {
-      padding: var(--gap-sm) var(--gap-md);
-      border-top: 1px solid var(--cor-borda);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: var(--gap-sm);
-    }
-    .chat__rodape-info {
-      font-size: 0.75rem;
-      color: var(--cor-texto-muted);
-    }
-    .transferido-banner {
-      margin: var(--gap-sm) var(--gap-md) 0;
-      display: flex;
-      align-items: center;
-      gap: var(--gap-sm);
-      background: color-mix(in srgb, var(--cor-transferido) 10%, transparent);
-      border: 1px solid color-mix(in srgb, var(--cor-transferido) 25%, transparent);
-      border-radius: var(--raio);
-      padding: var(--gap-sm) var(--gap-md);
-      font-size: 0.8rem;
-      color: var(--cor-transferido);
-      display: none;
-    }
+    .chat__rodape { padding: var(--gap-sm) var(--gap-md); border-top: 1px solid var(--cor-borda); display: flex; justify-content: space-between; align-items: center; gap: var(--gap-sm); }
+    .chat__rodape-info { font-size: 0.75rem; color: var(--cor-texto-muted); }
+    .transferido-banner { margin: var(--gap-sm) var(--gap-md) 0; display: none; align-items: center; gap: var(--gap-sm); background: color-mix(in srgb, var(--cor-transferido) 10%, transparent); border: 1px solid color-mix(in srgb, var(--cor-transferido) 25%, transparent); border-radius: var(--raio); padding: var(--gap-sm) var(--gap-md); font-size: 0.8rem; color: var(--cor-transferido); }
     .transferido-banner.visivel { display: flex; }
-
-    /* Digitando */
-    .digitando {
-      display: flex;
-      gap: 4px;
-      align-items: center;
-      padding: var(--gap-sm) var(--gap-md);
-      background: var(--cor-fundo-card);
-      border: 1px solid var(--cor-borda);
-      border-radius: var(--raio);
-      border-bottom-left-radius: var(--raio-sm);
-      align-self: flex-start;
-    }
-    .digitando span {
-      width: 6px; height: 6px;
-      border-radius: 50%;
-      background: var(--cor-texto-muted);
-      animation: pulsar 1.2s infinite ease-in-out;
-    }
+    .digitando { display: flex; gap: 4px; align-items: center; padding: var(--gap-sm) var(--gap-md); background: var(--cor-fundo-card); border: 1px solid var(--cor-borda); border-radius: var(--raio); border-bottom-left-radius: var(--raio-sm); align-self: flex-start; }
+    .digitando span { width: 6px; height: 6px; border-radius: 50%; background: var(--cor-texto-muted); animation: pulsar 1.2s infinite ease-in-out; }
     .digitando span:nth-child(2) { animation-delay: 0.2s; }
     .digitando span:nth-child(3) { animation-delay: 0.4s; }
-    @keyframes pulsar {
-      0%, 80%, 100% { transform: scale(0.7); opacity: 0.4; }
-      40% { transform: scale(1); opacity: 1; }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .digitando span { animation: none; opacity: 0.6; }
-    }
+    @keyframes pulsar { 0%, 80%, 100% { transform: scale(0.7); opacity: 0.4; } 40% { transform: scale(1); opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) { .digitando span { animation: none; opacity: 0.6; } }
+    .msg-entra { animation: entradaMensagem var(--dur-lenta) var(--ease-out) both; }
+    @keyframes entradaMensagem { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+    @media (max-width: 768px) { .demo__layout { grid-template-columns: 1fr; } .demo__info { order: 2; } .chat { order: 1; min-height: 400px; } }
 
-    /* Entrada de mensagem */
-    .msg-entra {
-      animation: entradaMensagem var(--dur-lenta) var(--ease-out) both;
-    }
-    @keyframes entradaMensagem {
-      from { opacity: 0; transform: translateY(8px); }
-      to   { opacity: 1; transform: none; }
-    }
-
-    @media (max-width: 768px) {
-      .demo__layout { grid-template-columns: 1fr; }
-      .demo__info { order: 2; }
-      .chat { order: 1; min-height: 400px; }
-    }
-
-    /* ── DIFERENCIAIS ────────────────────────────────────────────────────── */
-    .diferenciais {
-      padding: var(--gap-3xl) 0;
-      background: var(--cor-fundo-alt);
-    }
-    .cards-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-      gap: var(--gap-lg);
-    }
-    .card {
-      background: var(--cor-fundo-card);
-      border: 1px solid var(--cor-borda);
-      border-radius: var(--raio);
-      padding: var(--gap-lg);
+    /* TIME */
+    .time { padding: var(--gap-3xl) 0; }
+    .time__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--gap-lg); }
+    .agente {
+      background: var(--cor-fundo-card); border: 1px solid var(--cor-borda);
+      border-radius: var(--raio); padding: var(--gap-lg);
       transition: border-color var(--dur-media), transform var(--dur-media);
+      display: flex; flex-direction: column; gap: var(--gap-sm);
     }
-    .card:hover {
-      border-color: color-mix(in srgb, var(--cor-acento) 50%, transparent);
-      transform: translateY(-2px);
+    .agente:hover { border-color: color-mix(in srgb, var(--cor-acento) 50%, transparent); transform: translateY(-2px); }
+    .agente__avatar {
+      width: 44px; height: 44px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.3rem; flex-shrink: 0;
+      border: 2px solid var(--cor-borda);
     }
-    .card__icone {
-      font-size: 1.75rem;
-      margin-bottom: var(--gap-md);
+    .agente__nome { font-weight: var(--peso-bold); font-size: 1rem; }
+    .agente__papel {
+      font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em;
+      color: var(--cor-acento); font-weight: var(--peso-medio);
     }
-    .card__titulo {
-      font-size: 1rem;
-      font-weight: var(--peso-bold);
-      margin-bottom: var(--gap-sm);
+    .agente__descricao { color: var(--cor-texto-muted); font-size: 0.875rem; line-height: 1.6; flex: 1; }
+    .agente__tag {
+      display: inline-flex; align-items: center; gap: 4px;
+      font-size: 0.7rem; color: var(--cor-texto-muted);
+      background: var(--cor-fundo-alt); border: 1px solid var(--cor-borda);
+      border-radius: var(--raio-pill); padding: 2px 8px; align-self: flex-start;
     }
+    .time__criar {
+      background: color-mix(in srgb, var(--cor-acento) 6%, var(--cor-fundo-card));
+      border: 1px dashed color-mix(in srgb, var(--cor-acento) 35%, transparent);
+      border-radius: var(--raio); padding: var(--gap-lg);
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: var(--gap-sm); text-align: center; min-height: 160px;
+    }
+    .time__criar-icone { font-size: 1.5rem; color: var(--cor-acento); }
+    .time__criar-texto { font-size: 0.875rem; color: var(--cor-texto-muted); }
+    .time__criar-label { font-size: 0.8rem; font-weight: var(--peso-medio); color: var(--cor-acento); }
+
+    /* DIFERENCIAIS */
+    .diferenciais { padding: var(--gap-3xl) 0; background: var(--cor-fundo-alt); }
+    .cards-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--gap-lg); }
+    .card { background: var(--cor-fundo-card); border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: var(--gap-lg); transition: border-color var(--dur-media), transform var(--dur-media); }
+    .card:hover { border-color: color-mix(in srgb, var(--cor-acento) 50%, transparent); transform: translateY(-2px); }
+    .card__icone { font-size: 1.75rem; margin-bottom: var(--gap-md); }
+    .card__titulo { font-size: 1rem; font-weight: var(--peso-bold); margin-bottom: var(--gap-sm); }
     .card__texto { color: var(--cor-texto-muted); font-size: 0.875rem; line-height: 1.6; }
 
-    /* ── PARA QUEM ───────────────────────────────────────────────────────── */
-    .para-quem {
-      padding: var(--gap-3xl) 0;
-    }
-    .para-quem__grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: var(--gap-md);
-    }
-    .para-quem__card {
-      background: var(--cor-fundo-card);
-      border: 1px solid var(--cor-borda);
-      border-radius: var(--raio);
-      padding: var(--gap-lg);
-      border-left: 3px solid var(--cor-acento);
-    }
-    .para-quem__papel {
-      font-weight: var(--peso-bold);
-      margin-bottom: var(--gap-sm);
-      font-size: 0.95rem;
-    }
+    /* PARA QUEM */
+    .para-quem { padding: var(--gap-3xl) 0; }
+    .para-quem__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: var(--gap-md); }
+    .para-quem__card { background: var(--cor-fundo-card); border: 1px solid var(--cor-borda); border-radius: var(--raio); padding: var(--gap-lg); border-left: 3px solid var(--cor-acento); }
+    .para-quem__papel { font-weight: var(--peso-bold); margin-bottom: var(--gap-sm); font-size: 0.95rem; }
     .para-quem__uso { color: var(--cor-texto-muted); font-size: 0.875rem; line-height: 1.6; }
 
-    /* ── FAQ ─────────────────────────────────────────────────────────────── */
-    .faq {
-      padding: var(--gap-3xl) 0;
-      background: var(--cor-fundo-alt);
-    }
-    .faq__lista {
-      max-width: 640px;
-      margin-inline: auto;
-      display: flex;
-      flex-direction: column;
-      gap: var(--gap-sm);
-    }
-    .faq__item {
-      border: 1px solid var(--cor-borda);
-      border-radius: var(--raio);
-      overflow: hidden;
-    }
-    .faq__pergunta {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      width: 100%;
-      padding: var(--gap-md) var(--gap-lg);
-      background: var(--cor-fundo-card);
-      text-align: left;
-      font-size: 0.95rem;
-      font-weight: var(--peso-medio);
-      gap: var(--gap-md);
-      transition: background var(--dur-rapida);
-    }
+    /* FAQ */
+    .faq { padding: var(--gap-3xl) 0; background: var(--cor-fundo-alt); }
+    .faq__lista { max-width: 640px; margin-inline: auto; display: flex; flex-direction: column; gap: var(--gap-sm); }
+    .faq__item { border: 1px solid var(--cor-borda); border-radius: var(--raio); overflow: hidden; }
+    .faq__pergunta { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: var(--gap-md) var(--gap-lg); background: var(--cor-fundo-card); text-align: left; font-size: 0.95rem; font-weight: var(--peso-medio); gap: var(--gap-md); transition: background var(--dur-rapida); }
     .faq__pergunta:hover { background: color-mix(in srgb, var(--cor-acento) 6%, var(--cor-fundo-card)); }
-    .faq__seta {
-      flex-shrink: 0;
-      width: 20px; height: 20px;
-      border-radius: 50%;
-      border: 1px solid var(--cor-borda);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 0.75rem;
-      color: var(--cor-texto-muted);
-      transition: transform var(--dur-media), border-color var(--dur-media);
-    }
-    .faq__item[open] .faq__seta {
-      transform: rotate(45deg);
-      border-color: var(--cor-acento);
-      color: var(--cor-acento);
-    }
-    .faq__resposta {
-      padding: var(--gap-md) var(--gap-lg);
-      color: var(--cor-texto-muted);
-      font-size: 0.9rem;
-      line-height: 1.7;
-      border-top: 1px solid var(--cor-borda);
-    }
+    .faq__seta { flex-shrink: 0; width: 20px; height: 20px; border-radius: 50%; border: 1px solid var(--cor-borda); display: flex; align-items: center; justify-content: center; font-size: 0.75rem; color: var(--cor-texto-muted); transition: transform var(--dur-media), border-color var(--dur-media); }
+    .faq__item[open] .faq__seta { transform: rotate(45deg); border-color: var(--cor-acento); color: var(--cor-acento); }
+    .faq__resposta { padding: var(--gap-md) var(--gap-lg); color: var(--cor-texto-muted); font-size: 0.9rem; line-height: 1.7; border-top: 1px solid var(--cor-borda); }
 
-    /* ── CTA FINAL ───────────────────────────────────────────────────────── */
-    .cta-final {
-      padding: var(--gap-3xl) 0;
-      text-align: center;
-      position: relative;
-      overflow: hidden;
-    }
-    .cta-final::before {
-      content: '';
-      position: absolute;
-      bottom: -100px; left: 50%;
-      transform: translateX(-50%);
-      width: 500px; height: 300px;
-      background: radial-gradient(ellipse, color-mix(in srgb, var(--cor-acento) 8%, transparent), transparent 70%);
-      pointer-events: none;
-    }
-    .cta-final__titulo {
-      font-size: clamp(1.5rem, 3.5vw, 2.5rem);
-      font-weight: var(--peso-bold);
-      letter-spacing: -0.02em;
-      margin-bottom: var(--gap-md);
-    }
-    .cta-final__texto {
-      color: var(--cor-texto-muted);
-      font-size: 1.05rem;
-      max-width: 440px;
-      margin-inline: auto;
-      margin-bottom: var(--gap-xl);
-    }
+    /* CTA FINAL */
+    .cta-final { padding: var(--gap-3xl) 0; text-align: center; position: relative; overflow: hidden; }
+    .cta-final::before { content: ''; position: absolute; bottom: -100px; left: 50%; transform: translateX(-50%); width: 500px; height: 300px; background: radial-gradient(ellipse, color-mix(in srgb, var(--cor-acento) 8%, transparent), transparent 70%); pointer-events: none; }
+    .cta-final__titulo { font-size: clamp(1.5rem, 3.5vw, 2.5rem); font-weight: var(--peso-bold); letter-spacing: -0.02em; margin-bottom: var(--gap-md); }
+    .cta-final__texto { color: var(--cor-texto-muted); font-size: 1.05rem; max-width: 440px; margin-inline: auto; margin-bottom: var(--gap-xl); }
 
-    /* ── RODAPÉ ──────────────────────────────────────────────────────────── */
-    .rodape {
-      border-top: 1px solid var(--cor-borda);
-      padding: var(--gap-xl) 0;
-    }
-    .rodape__inner {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: var(--gap-md);
-    }
-    .rodape__marca {
-      font-size: 0.875rem;
-      color: var(--cor-texto-muted);
-    }
+    /* RODAPÉ */
+    .rodape { border-top: 1px solid var(--cor-borda); padding: var(--gap-xl) 0; }
+    .rodape__inner { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--gap-md); }
+    .rodape__marca { font-size: 0.875rem; color: var(--cor-texto-muted); }
     .rodape__marca strong { color: var(--cor-texto); }
-    .rodape__links {
-      display: flex;
-      gap: var(--gap-lg);
-      flex-wrap: wrap;
-    }
-    .rodape__links a {
-      font-size: 0.8rem;
-      color: var(--cor-texto-muted);
-      transition: color var(--dur-rapida);
-    }
+    .rodape__links { display: flex; gap: var(--gap-lg); flex-wrap: wrap; }
+    .rodape__links a { font-size: 0.8rem; color: var(--cor-texto-muted); transition: color var(--dur-rapida); }
     .rodape__links a:hover { color: var(--cor-acento); }
-    .rodape__aviso {
-      width: 100%;
-      font-size: 0.75rem;
-      color: var(--cor-borda);
-      margin-top: var(--gap-sm);
-    }
+    .rodape__aviso { width: 100%; font-size: 0.75rem; color: var(--cor-borda); margin-top: var(--gap-sm); }
   </style>
 </head>
-
 <body>
 
-<!-- ── NAVEGAÇÃO ───────────────────────────────────────────────────────── -->
 <nav class="nav" aria-label="Navegação principal">
   <div class="container">
     <div class="nav__inner">
@@ -852,52 +369,37 @@
         <span class="nav__logo-icon" aria-hidden="true">FB</span>
         FlowBot
       </a>
-
       <button class="nav__toggle" aria-expanded="false" aria-controls="nav-links" aria-label="Abrir menu">
         <span></span><span></span><span></span>
       </button>
-
       <ul class="nav__links" id="nav-links" role="list">
         <li><a href="#como-funciona">Como funciona</a></li>
         <li><a href="#demo">Demo</a></li>
+        <li><a href="#time">O time</a></li>
         <li><a href="#para-quem">Para quem</a></li>
         <li><a href="#duvidas">Dúvidas</a></li>
       </ul>
-
       <a href="#demo" class="btn btn-primario nav__cta">Ver demo</a>
     </div>
   </div>
 </nav>
 
-<!-- ── HERO ────────────────────────────────────────────────────────────── -->
 <section class="hero" aria-labelledby="hero-titulo">
   <div class="container container-estreito">
-    <div class="hero__tag">
-      <span class="tag">Módulo do Nexus · Em desenvolvimento</span>
-    </div>
-
+    <div class="hero__tag"><span class="tag">Módulo do Nexus · Em desenvolvimento</span></div>
     <h1 class="hero__titulo" id="hero-titulo">
-      Monte e simule<br />
-      <em>atendimentos</em><br />
-      antes de publicar.
+      Monte e simule<br /><em>atendimentos</em><br />antes de publicar.
     </h1>
-
-    <p class="hero__subtitulo">
-      Desenhe fluxos de conversa, teste todos os caminhos e só leve para o cliente quando estiver pronto.
-    </p>
-
+    <p class="hero__subtitulo">Desenhe fluxos de conversa, teste todos os caminhos e só leve para o cliente quando estiver pronto.</p>
     <div class="hero__acoes">
       <a href="#demo" class="btn btn-primario btn-grande">Experimentar a demo</a>
       <a href="#como-funciona" class="btn btn-secundario btn-grande">Como funciona</a>
     </div>
-
     <div class="hero__preview" aria-hidden="true">
       <span class="hero__preview-badge">Prévia do conceito</span>
       <div class="hero__preview-frame">
         <div class="hero__preview-topbar">
-          <span class="hero__preview-dot"></span>
-          <span class="hero__preview-dot"></span>
-          <span class="hero__preview-dot"></span>
+          <span class="hero__preview-dot"></span><span class="hero__preview-dot"></span><span class="hero__preview-dot"></span>
           <span class="hero__preview-titulo">FlowBot · Simulação</span>
         </div>
         <div class="hero__preview-corpo">
@@ -913,7 +415,6 @@
   </div>
 </section>
 
-<!-- ── PROBLEMA ────────────────────────────────────────────────────────── -->
 <section class="problema" aria-labelledby="problema-titulo">
   <div class="container container-estreito">
     <div class="problema__sequencia" aria-hidden="true">
@@ -922,14 +423,10 @@
       <p class="problema__linha">Você só descobriu na hora da ligação.</p>
     </div>
     <p class="sr-only" id="problema-titulo">O problema: fluxos testados tarde demais</p>
-    <p class="problema__texto">
-      Testar o fluxo só depois de publicar significa descobrir os erros na frente do cliente.
-      FlowBot inverte isso: você simula antes.
-    </p>
+    <p class="problema__texto">Testar o fluxo só depois de publicar significa descobrir os erros na frente do cliente. FlowBot inverte isso: você simula antes.</p>
   </div>
 </section>
 
-<!-- ── COMO FUNCIONA ───────────────────────────────────────────────────── -->
 <section class="como-funciona" id="como-funciona" aria-labelledby="como-titulo">
   <div class="container">
     <div class="secao__cabecalho animar-entrada">
@@ -956,40 +453,23 @@
   </div>
 </section>
 
-<!-- ── DEMO ────────────────────────────────────────────────────────────── -->
 <section class="demo" id="demo" aria-labelledby="demo-titulo">
   <div class="container">
     <div class="demo__aviso" role="note">
       <span aria-hidden="true">⚠️</span>
       <strong>Simulação:</strong>&nbsp;Esta demo não usa WhatsApp real, não envia mensagens e não armazena dados.
     </div>
-
     <div class="demo__layout">
       <div class="demo__info">
         <h2 class="demo__info-titulo" id="demo-titulo">Orçamento audiovisual</h2>
-        <p class="demo__info-texto">
-          Nesta simulação, o FlowBot coleta tipo de vídeo, cidade e data
-          antes de transferir para a equipe. A equipe é quem confirma o preço — o bot não estima.
-          Escolha uma resposta, siga por caminhos diferentes, peça atendimento humano ou recomece.
-        </p>
-
+        <p class="demo__info-texto">Nesta simulação, o FlowBot coleta tipo de vídeo, cidade e data antes de transferir para a equipe. A equipe é quem confirma o preço — o bot não estima. Escolha uma resposta, siga por caminhos diferentes, peça atendimento humano ou recomece.</p>
         <div class="demo__resumo" aria-live="polite" aria-atomic="true" aria-label="Dados coletados pelo fluxo">
           <div class="demo__resumo-titulo">Dados coletados</div>
-          <div class="demo__resumo-item">
-            <span>Tipo de vídeo</span>
-            <span class="demo__resumo-valor" id="resumo-tipo"><span class="demo__resumo-vazio">—</span></span>
-          </div>
-          <div class="demo__resumo-item">
-            <span>Cidade</span>
-            <span class="demo__resumo-valor" id="resumo-cidade"><span class="demo__resumo-vazio">—</span></span>
-          </div>
-          <div class="demo__resumo-item">
-            <span>Período</span>
-            <span class="demo__resumo-valor" id="resumo-data"><span class="demo__resumo-vazio">—</span></span>
-          </div>
+          <div class="demo__resumo-item"><span>Tipo de vídeo</span><span class="demo__resumo-valor" id="resumo-tipo"><span class="demo__resumo-vazio">—</span></span></div>
+          <div class="demo__resumo-item"><span>Cidade</span><span class="demo__resumo-valor" id="resumo-cidade"><span class="demo__resumo-vazio">—</span></span></div>
+          <div class="demo__resumo-item"><span>Período</span><span class="demo__resumo-valor" id="resumo-data"><span class="demo__resumo-vazio">—</span></span></div>
         </div>
       </div>
-
       <div class="chat" role="region" aria-label="Chat de simulação">
         <div class="chat__topbar">
           <div class="chat__avatar" aria-hidden="true">FB</div>
@@ -998,28 +478,73 @@
             <div class="chat__status" id="chat-status">Simulação ativa</div>
           </div>
         </div>
-
         <div class="transferido-banner" id="transferido-banner" role="status">
           <span aria-hidden="true">👤</span>
           <span>Transferido para a equipe — o bot parou.</span>
         </div>
-
         <div class="chat__mensagens" id="chat-mensagens" aria-live="polite" aria-label="Mensagens da conversa"></div>
-
         <div class="chat__opcoes" id="chat-opcoes" role="group" aria-label="Escolha uma resposta"></div>
-
         <div class="chat__rodape">
           <span class="chat__rodape-info" id="chat-rodape-info">Escolha uma opção acima</span>
-          <button class="btn btn-secundario" id="btn-reiniciar" aria-label="Reiniciar a simulação">
-            ↺ Reiniciar
-          </button>
+          <button class="btn btn-secundario" id="btn-reiniciar" aria-label="Reiniciar a simulação">↺ Reiniciar</button>
         </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- ── DIFERENCIAIS ────────────────────────────────────────────────────── -->
+<section class="time" id="time" aria-labelledby="time-titulo">
+  <div class="container">
+    <div class="secao__cabecalho animar-entrada">
+      <h2 class="secao__titulo" id="time-titulo">Um agente para cada etapa.</h2>
+      <p class="secao__subtitulo">Cada nó do fluxo tem uma função. Você define quem pergunta, quem filtra e quem chama a equipe.</p>
+    </div>
+    <div class="time__grid">
+      <article class="agente animar-entrada">
+        <div class="agente__avatar" style="background: color-mix(in srgb, #38bdf8 15%, var(--cor-fundo-card))" aria-hidden="true">🎙️</div>
+        <div>
+          <div class="agente__nome">Recepcionista</div>
+          <div class="agente__papel">Primeiro contato</div>
+        </div>
+        <p class="agente__descricao">Abre a conversa, apresenta o fluxo e coleta o contexto inicial antes de qualquer pergunta técnica.</p>
+        <span class="agente__tag">mensagem de abertura</span>
+      </article>
+      <article class="agente animar-entrada">
+        <div class="agente__avatar" style="background: color-mix(in srgb, #f59e0b 15%, var(--cor-fundo-card))" aria-hidden="true">🔎</div>
+        <div>
+          <div class="agente__nome">Qualificador</div>
+          <div class="agente__papel">Triagem</div>
+        </div>
+        <p class="agente__descricao">Faz as perguntas certas na ordem certa. Ramifica o caminho conforme a resposta, sem perder nenhum dado.</p>
+        <span class="agente__tag">perguntas + condições</span>
+      </article>
+      <article class="agente animar-entrada">
+        <div class="agente__avatar" style="background: color-mix(in srgb, #34d399 15%, var(--cor-fundo-card))" aria-hidden="true">🤝</div>
+        <div>
+          <div class="agente__nome">Passador</div>
+          <div class="agente__papel">Transferência</div>
+        </div>
+        <p class="agente__descricao">Encerra o bot com uma mensagem clara e entrega o contexto completo para a pessoa da equipe continuar.</p>
+        <span class="agente__tag">transferência + resumo</span>
+      </article>
+      <article class="agente animar-entrada">
+        <div class="agente__avatar" style="background: color-mix(in srgb, #f87171 15%, var(--cor-fundo-card))" aria-hidden="true">🛡️</div>
+        <div>
+          <div class="agente__nome">Guardião</div>
+          <div class="agente__papel">Validação</div>
+        </div>
+        <p class="agente__descricao">Detecta entrada fora do esperado e redireciona sem travar o fluxo. Nenhuma resposta estranha quebra o atendimento.</p>
+        <span class="agente__tag">condição de erro</span>
+      </article>
+      <div class="time__criar animar-entrada" aria-hidden="true">
+        <span class="time__criar-icone">＋</span>
+        <span class="time__criar-label">Crie o seu</span>
+        <span class="time__criar-texto">Qualquer lógica que o seu atendimento precisar</span>
+      </div>
+    </div>
+  </div>
+</section>
+
 <section class="diferenciais" id="diferenciais" aria-labelledby="diferenciais-titulo">
   <div class="container">
     <div class="secao__cabecalho animar-entrada">
@@ -1027,31 +552,14 @@
       <p class="secao__subtitulo">Cada detalhe existe para evitar que o cliente veja um fluxo quebrado.</p>
     </div>
     <div class="cards-grid">
-      <article class="card animar-entrada">
-        <div class="card__icone" aria-hidden="true">🔀</div>
-        <h3 class="card__titulo">Caminhos condicionais</h3>
-        <p class="card__texto">Uma resposta diferente leva para uma sequência diferente. O fluxo segue a lógica que você definiu.</p>
-      </article>
-      <article class="card animar-entrada">
-        <div class="card__icone" aria-hidden="true">👤</div>
-        <h3 class="card__titulo">Tomada de controle</h3>
-        <p class="card__texto">A equipe entra na conversa com um clique. O bot para imediatamente e não volta sem ordem.</p>
-      </article>
-      <article class="card animar-entrada">
-        <div class="card__icone" aria-hidden="true">📋</div>
-        <h3 class="card__titulo">Versão imutável</h3>
-        <p class="card__texto">Cada simulação roda sobre uma versão travada do fluxo. Edições em rascunho não afetam o que está em teste.</p>
-      </article>
-      <article class="card animar-entrada">
-        <div class="card__icone" aria-hidden="true">🔒</div>
-        <h3 class="card__titulo">Sem dados reais</h3>
-        <p class="card__texto">O piloto não conecta WhatsApp, não chama modelos e não envia contatos para terceiros.</p>
-      </article>
+      <article class="card animar-entrada"><div class="card__icone" aria-hidden="true">🔀</div><h3 class="card__titulo">Caminhos condicionais</h3><p class="card__texto">Uma resposta diferente leva para uma sequência diferente. O fluxo segue a lógica que você definiu.</p></article>
+      <article class="card animar-entrada"><div class="card__icone" aria-hidden="true">👤</div><h3 class="card__titulo">Tomada de controle</h3><p class="card__texto">A equipe entra na conversa com um clique. O bot para imediatamente e não volta sem ordem.</p></article>
+      <article class="card animar-entrada"><div class="card__icone" aria-hidden="true">📋</div><h3 class="card__titulo">Versão imutável</h3><p class="card__texto">Cada simulação roda sobre uma versão travada do fluxo. Edições em rascunho não afetam o que está em teste.</p></article>
+      <article class="card animar-entrada"><div class="card__icone" aria-hidden="true">🔒</div><h3 class="card__titulo">Sem dados reais</h3><p class="card__texto">O piloto não conecta WhatsApp, não chama modelos e não envia contatos para terceiros.</p></article>
     </div>
   </div>
 </section>
 
-<!-- ── PARA QUEM ───────────────────────────────────────────────────────── -->
 <section class="para-quem" id="para-quem" aria-labelledby="para-quem-titulo">
   <div class="container">
     <div class="secao__cabecalho animar-entrada">
@@ -1059,27 +567,14 @@
       <p class="secao__subtitulo">Qualquer negócio que precisa coletar informações antes de envolver a equipe.</p>
     </div>
     <div class="para-quem__grid">
-      <article class="para-quem__card animar-entrada">
-        <h3 class="para-quem__papel">Produtor audiovisual</h3>
-        <p class="para-quem__uso">Coleta tipo de vídeo, cidade e data antes de envolver a equipe de orçamento.</p>
-      </article>
-      <article class="para-quem__card animar-entrada">
-        <h3 class="para-quem__papel">Clínica ou consultório</h3>
-        <p class="para-quem__uso">Triagem inicial, especialidade e convênio — transferência só quando o paciente está qualificado.</p>
-      </article>
-      <article class="para-quem__card animar-entrada">
-        <h3 class="para-quem__papel">E-commerce B2B</h3>
-        <p class="para-quem__uso">Volume, prazo e região antes de acionar um vendedor. Sem perder lead por falta de resposta rápida.</p>
-      </article>
-      <article class="para-quem__card animar-entrada">
-        <h3 class="para-quem__papel">Equipe de suporte</h3>
-        <p class="para-quem__uso">Categoriza o chamado e só escalona para especialista quando o autoatendimento não resolve.</p>
-      </article>
+      <article class="para-quem__card animar-entrada"><h3 class="para-quem__papel">Produtor audiovisual</h3><p class="para-quem__uso">Coleta tipo de vídeo, cidade e data antes de envolver a equipe de orçamento.</p></article>
+      <article class="para-quem__card animar-entrada"><h3 class="para-quem__papel">Clínica ou consultório</h3><p class="para-quem__uso">Triagem inicial, especialidade e convênio — transferência só quando o paciente está qualificado.</p></article>
+      <article class="para-quem__card animar-entrada"><h3 class="para-quem__papel">E-commerce B2B</h3><p class="para-quem__uso">Volume, prazo e região antes de acionar um vendedor. Sem perder lead por falta de resposta rápida.</p></article>
+      <article class="para-quem__card animar-entrada"><h3 class="para-quem__papel">Equipe de suporte</h3><p class="para-quem__uso">Categoriza o chamado e só escalona para especialista quando o autoatendimento não resolve.</p></article>
     </div>
   </div>
 </section>
 
-<!-- ── FAQ ─────────────────────────────────────────────────────────────── -->
 <section class="faq" id="duvidas" aria-labelledby="faq-titulo">
   <div class="container">
     <div class="secao__cabecalho animar-entrada">
@@ -1089,243 +584,127 @@
   </div>
 </section>
 
-<!-- ── CTA FINAL ───────────────────────────────────────────────────────── -->
 <section class="cta-final" aria-labelledby="cta-titulo">
   <div class="container container-estreito">
-    <h2 class="cta-final__titulo" id="cta-titulo">
-      Veja o fluxo funcionando<br />antes de mostrar para o cliente.
-    </h2>
-    <p class="cta-final__texto">
-      A demo é aberta, sem cadastro. Explore todos os caminhos agora.
-    </p>
+    <h2 class="cta-final__titulo" id="cta-titulo">Veja o fluxo funcionando<br />antes de mostrar para o cliente.</h2>
+    <p class="cta-final__texto">A demo é aberta, sem cadastro. Explore todos os caminhos agora.</p>
     <a href="#demo" class="btn btn-primario btn-grande">Experimentar a demo</a>
   </div>
 </section>
 
-<!-- ── RODAPÉ ──────────────────────────────────────────────────────────── -->
 <footer class="rodape" role="contentinfo">
   <div class="container">
     <div class="rodape__inner">
-      <p class="rodape__marca">
-        <strong>FlowBot</strong> · módulo do <strong>Nexus</strong>
-      </p>
+      <p class="rodape__marca"><strong>FlowBot</strong> · módulo do <strong>Nexus</strong></p>
       <nav class="rodape__links" aria-label="Links do rodapé">
         <a href="#demo">Demo</a>
         <a href="#duvidas">Dúvidas</a>
         <a href="https://github.com/herslander-netizen/flowbot" target="_blank" rel="noopener">GitHub</a>
       </nav>
-      <p class="rodape__aviso">
-        Esta página apresenta um conceito. O editor visual e as integrações ainda não estão implementados.
-        Empresas, nomes e cenários usados na simulação são fictícios.
-      </p>
+      <p class="rodape__aviso">Esta página apresenta um conceito. O editor visual e as integrações ainda não estão implementados. Empresas, nomes e cenários usados na simulação são fictícios.</p>
     </div>
   </div>
 </footer>
 
 <script type="module">
-// ── CONTEÚDO DA DEMO (inline — sem depender do content.js em file://) ────
 const FLUXO = {
   inicio: 'boas-vindas',
   nos: {
-    'boas-vindas': {
-      tipo: 'mensagem',
-      texto: 'Olá! Vou adiantar as informações para a equipe preparar o seu orçamento.',
-      proximo: 'tipo-video',
-    },
-    'tipo-video': {
-      tipo: 'pergunta',
-      texto: 'Que tipo de vídeo você precisa?',
-      campo: 'tipoDeProducao',
-      opcoes: [
-        { label: 'Vídeo institucional',  valor: 'institucional', proximo: 'cidade' },
-        { label: 'Cobertura de evento',  valor: 'evento',        proximo: 'cidade' },
-        { label: 'Clipe musical',        valor: 'clipe',         proximo: 'cidade' },
-        { label: 'Outro tipo',           valor: 'outro',         proximo: 'tipo-livre' },
-      ],
-    },
-    'tipo-livre': {
-      tipo: 'pergunta',
-      texto: 'Pode descrever brevemente o que você tem em mente?',
-      campo: 'tipoDescricao',
-      opcoes: [
-        { label: 'Documentário curto',       valor: 'documentario', proximo: 'cidade' },
-        { label: 'Conteúdo para redes',      valor: 'redes',        proximo: 'cidade' },
-        { label: 'Treinamento corporativo',  valor: 'treinamento',  proximo: 'cidade' },
-      ],
-    },
-    'cidade': {
-      tipo: 'pergunta',
-      texto: 'Em qual cidade seria a gravação?',
-      campo: 'cidade',
-      opcoes: [
-        { label: 'São Paulo',       valor: 'sp',    proximo: 'data' },
-        { label: 'Rio de Janeiro',  valor: 'rj',    proximo: 'data' },
-        { label: 'Belo Horizonte',  valor: 'bh',    proximo: 'data' },
-        { label: 'Outra cidade',    valor: 'outra', proximo: 'data' },
-      ],
-    },
-    'data': {
-      tipo: 'pergunta',
-      texto: 'Para qual mês você está planejando?',
-      campo: 'dataDesejada',
-      opcoes: [
-        { label: 'Próximo mês',       valor: 'proximo-mes', proximo: 'transferencia' },
-        { label: 'Em 2 a 3 meses',    valor: '2-3-meses',   proximo: 'transferencia' },
-        { label: 'Ainda sem data',    valor: 'sem-data',    proximo: 'transferencia' },
-      ],
-    },
-    'transferencia': {
-      tipo: 'transferencia',
-      texto: 'Tudo certo! A equipe vai analisar o pedido e confirmar o orçamento com você.',
-      detalhe: 'O bot parou. Uma pessoa da equipe dará continuidade.',
-    },
+    'boas-vindas': { tipo: 'mensagem', texto: 'Olá! Vou adiantar as informações para a equipe preparar o seu orçamento.', proximo: 'tipo-video' },
+    'tipo-video': { tipo: 'pergunta', texto: 'Que tipo de vídeo você precisa?', campo: 'tipoDeProducao', opcoes: [
+      { label: 'Vídeo institucional', valor: 'institucional', proximo: 'cidade' },
+      { label: 'Cobertura de evento', valor: 'evento', proximo: 'cidade' },
+      { label: 'Clipe musical', valor: 'clipe', proximo: 'cidade' },
+      { label: 'Outro tipo', valor: 'outro', proximo: 'tipo-livre' },
+    ]},
+    'tipo-livre': { tipo: 'pergunta', texto: 'Pode descrever brevemente o que você tem em mente?', campo: 'tipoDescricao', opcoes: [
+      { label: 'Documentário curto', valor: 'documentario', proximo: 'cidade' },
+      { label: 'Conteúdo para redes', valor: 'redes', proximo: 'cidade' },
+      { label: 'Treinamento corporativo', valor: 'treinamento', proximo: 'cidade' },
+    ]},
+    'cidade': { tipo: 'pergunta', texto: 'Em qual cidade seria a gravação?', campo: 'cidade', opcoes: [
+      { label: 'São Paulo', valor: 'sp', proximo: 'data' },
+      { label: 'Rio de Janeiro', valor: 'rj', proximo: 'data' },
+      { label: 'Belo Horizonte', valor: 'bh', proximo: 'data' },
+      { label: 'Outra cidade', valor: 'outra', proximo: 'data' },
+    ]},
+    'data': { tipo: 'pergunta', texto: 'Para qual mês você está planejando?', campo: 'dataDesejada', opcoes: [
+      { label: 'Próximo mês', valor: 'proximo-mes', proximo: 'transferencia' },
+      { label: 'Em 2 a 3 meses', valor: '2-3-meses', proximo: 'transferencia' },
+      { label: 'Ainda sem data', valor: 'sem-data', proximo: 'transferencia' },
+    ]},
+    'transferencia': { tipo: 'transferencia', texto: 'Tudo certo! A equipe vai analisar o pedido e confirmar o orçamento com você.', detalhe: 'O bot parou. Uma pessoa da equipe dará continuidade.' },
   },
 };
 
 const FAQ = [
-  {
-    pergunta: 'O FlowBot envia mensagens reais pelo WhatsApp?',
-    resposta: 'Não nesta fase. O piloto é uma simulação local — sem WhatsApp, sem custos de API e sem dados de clientes.',
-  },
-  {
-    pergunta: 'Preciso saber programar para montar um fluxo?',
-    resposta: 'Não. Você arrasta blocos e digita os textos. Condições são definidas por escolha, não por código.',
-  },
-  {
-    pergunta: 'O que acontece quando a equipe assume?',
-    resposta: 'O bot para de enviar mensagens automaticamente. A conversa fica disponível para a pessoa continuar manualmente.',
-  },
-  {
-    pergunta: 'Posso testar vários caminhos do mesmo fluxo?',
-    resposta: 'Sim. Reinicie a demo a qualquer momento e escolha respostas diferentes para explorar todos os ramos.',
-  },
-  {
-    pergunta: 'FlowBot é o mesmo que o Flow de agendamentos?',
-    resposta: 'Não. Flow é a plataforma de gestão para negócios de beleza. FlowBot é um módulo independente do Nexus para atendimento conversacional.',
-  },
-  {
-    pergunta: 'Quando o editor visual estará disponível?',
-    resposta: 'O editor ainda não está implementado — esta página apresenta o conceito e o piloto de simulação. Acompanhe as novidades.',
-  },
+  { pergunta: 'O FlowBot envia mensagens reais pelo WhatsApp?', resposta: 'Não nesta fase. O piloto é uma simulação local — sem WhatsApp, sem custos de API e sem dados de clientes.' },
+  { pergunta: 'Preciso saber programar para montar um fluxo?', resposta: 'Não. Você arrasta blocos e digita os textos. Condições são definidas por escolha, não por código.' },
+  { pergunta: 'O que acontece quando a equipe assume?', resposta: 'O bot para de enviar mensagens automaticamente. A conversa fica disponível para a pessoa continuar manualmente.' },
+  { pergunta: 'Posso testar vários caminhos do mesmo fluxo?', resposta: 'Sim. Reinicie a demo a qualquer momento e escolha respostas diferentes para explorar todos os ramos.' },
+  { pergunta: 'FlowBot é o mesmo que o Flow de agendamentos?', resposta: 'Não. Flow é a plataforma de gestão para negócios de beleza. FlowBot é um módulo independente do Nexus para atendimento conversacional.' },
+  { pergunta: 'Quando o editor visual estará disponível?', resposta: 'O editor ainda não está implementado — esta página apresenta o conceito e o piloto de simulação. Acompanhe as novidades.' },
 ];
 
-// ── ESTADO DA DEMO ───────────────────────────────────────────────────────
-const estado = {
-  noAtual: null,
-  dados: {},
-  transferido: false,
-  aguardando: false,
-};
+const estado = { noAtual: null, dados: {}, transferido: false, aguardando: false };
+const elMensagens = document.getElementById('chat-mensagens');
+const elOpcoes = document.getElementById('chat-opcoes');
+const elStatus = document.getElementById('chat-status');
+const elBanner = document.getElementById('transferido-banner');
+const elRodapeInfo = document.getElementById('chat-rodape-info');
+const elReiniciar = document.getElementById('btn-reiniciar');
+const elResumoTipo = document.getElementById('resumo-tipo');
+const elResumoCidade = document.getElementById('resumo-cidade');
+const elResumoData = document.getElementById('resumo-data');
 
-const elMensagens   = document.getElementById('chat-mensagens');
-const elOpcoes      = document.getElementById('chat-opcoes');
-const elStatus      = document.getElementById('chat-status');
-const elBanner      = document.getElementById('transferido-banner');
-const elRodapeInfo  = document.getElementById('chat-rodape-info');
-const elReiniciar   = document.getElementById('btn-reiniciar');
-const elResumoTipo  = document.getElementById('resumo-tipo');
-const elResumoCidade= document.getElementById('resumo-cidade');
-const elResumoData  = document.getElementById('resumo-data');
+const LABELS = { institucional:'Vídeo institucional', evento:'Cobertura de evento', clipe:'Clipe musical', outro:'Outro', documentario:'Documentário curto', redes:'Conteúdo para redes', treinamento:'Treinamento corporativo', sp:'São Paulo', rj:'Rio de Janeiro', bh:'Belo Horizonte', outra:'Outra cidade', 'proximo-mes':'Próximo mês', '2-3-meses':'Em 2 a 3 meses', 'sem-data':'Sem data definida' };
 
-// ── HELPERS ──────────────────────────────────────────────────────────────
 function criarBolha(texto, tipo) {
   const el = document.createElement('div');
   el.className = `bolha bolha-${tipo} msg-entra`;
   el.textContent = texto;
   return el;
 }
-
 function exibirDigitando() {
   const el = document.createElement('div');
-  el.className = 'digitando msg-entra';
-  el.id = 'digitando';
+  el.className = 'digitando msg-entra'; el.id = 'digitando';
   el.setAttribute('aria-label', 'Bot digitando');
   el.innerHTML = '<span></span><span></span><span></span>';
-  elMensagens.appendChild(el);
-  scrollChat();
-  return el;
+  elMensagens.appendChild(el); scrollChat(); return el;
 }
-
-function removerDigitando() {
-  document.getElementById('digitando')?.remove();
-}
-
-function scrollChat() {
-  requestAnimationFrame(() => { elMensagens.scrollTop = elMensagens.scrollHeight; });
-}
-
+function removerDigitando() { document.getElementById('digitando')?.remove(); }
+function scrollChat() { requestAnimationFrame(() => { elMensagens.scrollTop = elMensagens.scrollHeight; }); }
 function atualizarResumo() {
-  const labels = {
-    institucional: 'Vídeo institucional',
-    evento: 'Cobertura de evento',
-    clipe: 'Clipe musical',
-    outro: 'Outro',
-    documentario: 'Documentário curto',
-    redes: 'Conteúdo para redes',
-    treinamento: 'Treinamento corporativo',
-    sp: 'São Paulo',
-    rj: 'Rio de Janeiro',
-    bh: 'Belo Horizonte',
-    outra: 'Outra cidade',
-    'proximo-mes': 'Próximo mês',
-    '2-3-meses': 'Em 2 a 3 meses',
-    'sem-data': 'Sem data definida',
-  };
   const vazio = '<span class="demo__resumo-vazio">—</span>';
-  const tipo  = estado.dados.tipoDeProducao || estado.dados.tipoDescricao;
-  elResumoTipo.innerHTML   = tipo   ? (labels[tipo]   || tipo)   : vazio;
-  elResumoCidade.innerHTML = estado.dados.cidade ? (labels[estado.dados.cidade] || estado.dados.cidade) : vazio;
-  elResumoData.innerHTML   = estado.dados.dataDesejada ? (labels[estado.dados.dataDesejada] || estado.dados.dataDesejada) : vazio;
+  const tipo = estado.dados.tipoDeProducao || estado.dados.tipoDescricao;
+  elResumoTipo.innerHTML = tipo ? (LABELS[tipo] || tipo) : vazio;
+  elResumoCidade.innerHTML = estado.dados.cidade ? (LABELS[estado.dados.cidade] || estado.dados.cidade) : vazio;
+  elResumoData.innerHTML = estado.dados.dataDesejada ? (LABELS[estado.dados.dataDesejada] || estado.dados.dataDesejada) : vazio;
 }
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
 
-// ── MOTOR DA DEMO ────────────────────────────────────────────────────────
 async function irPara(idNo) {
   if (estado.aguardando) return;
-  const no = FLUXO.nos[idNo];
-  if (!no) return;
-  estado.noAtual = idNo;
-  elOpcoes.innerHTML = '';
-  elOpcoes.setAttribute('aria-label', 'Aguarde...');
-
+  const no = FLUXO.nos[idNo]; if (!no) return;
+  estado.noAtual = idNo; elOpcoes.innerHTML = '';
   if (no.tipo === 'mensagem') {
-    estado.aguardando = true;
-    exibirDigitando();
-    await delay(700);
-    removerDigitando();
-    elMensagens.appendChild(criarBolha(no.texto, 'bot'));
-    scrollChat();
-    estado.aguardando = false;
-    irPara(no.proximo);
-
+    estado.aguardando = true; exibirDigitando(); await delay(700); removerDigitando();
+    elMensagens.appendChild(criarBolha(no.texto, 'bot')); scrollChat();
+    estado.aguardando = false; irPara(no.proximo);
   } else if (no.tipo === 'pergunta') {
-    estado.aguardando = true;
-    exibirDigitando();
-    await delay(600);
-    removerDigitando();
-    elMensagens.appendChild(criarBolha(no.texto, 'bot'));
-    scrollChat();
-    estado.aguardando = false;
-    renderOpcoes(no.opcoes);
+    estado.aguardando = true; exibirDigitando(); await delay(600); removerDigitando();
+    elMensagens.appendChild(criarBolha(no.texto, 'bot')); scrollChat();
+    estado.aguardando = false; renderOpcoes(no.opcoes);
     elRodapeInfo.textContent = 'Escolha uma opção acima';
-    elOpcoes.setAttribute('aria-label', 'Escolha uma resposta');
-
   } else if (no.tipo === 'transferencia') {
-    estado.aguardando = true;
-    exibirDigitando();
-    await delay(800);
-    removerDigitando();
+    estado.aguardando = true; exibirDigitando(); await delay(800); removerDigitando();
     elMensagens.appendChild(criarBolha(no.texto, 'bot'));
-    elMensagens.appendChild(criarBolha('✓ ' + no.detalhe, 'sistema'));
-    scrollChat();
-    estado.transferido = true;
-    estado.aguardando = false;
+    elMensagens.appendChild(criarBolha('✓ ' + no.detalhe, 'sistema')); scrollChat();
+    estado.transferido = true; estado.aguardando = false;
     elBanner.classList.add('visivel');
-    elStatus.textContent = 'Transferido para a equipe';
-    elStatus.className = 'chat__status inativo';
-    elRodapeInfo.textContent = 'Simulação encerrada';
-    elOpcoes.innerHTML = '';
+    elStatus.textContent = 'Transferido para a equipe'; elStatus.className = 'chat__status inativo';
+    elRodapeInfo.textContent = 'Simulação encerrada'; elOpcoes.innerHTML = '';
   }
-
   atualizarResumo();
 }
 
@@ -1333,77 +712,46 @@ function renderOpcoes(opcoes) {
   elOpcoes.innerHTML = '';
   opcoes.forEach((op, i) => {
     const btn = document.createElement('button');
-    btn.className = 'chat__opcao';
-    btn.textContent = op.label;
+    btn.className = 'chat__opcao'; btn.textContent = op.label;
     btn.addEventListener('click', () => escolher(op));
-    // foco no primeiro botão ao aparecer
     if (i === 0) requestAnimationFrame(() => btn.focus());
     elOpcoes.appendChild(btn);
   });
-  // opção de atendimento humano
-  const btnHumano = document.createElement('button');
-  btnHumano.className = 'chat__opcao';
-  btnHumano.textContent = '👤 Falar com a equipe agora';
-  btnHumano.addEventListener('click', pedirHumano);
-  elOpcoes.appendChild(btnHumano);
+  const btnH = document.createElement('button');
+  btnH.className = 'chat__opcao'; btnH.textContent = '👤 Falar com a equipe agora';
+  btnH.addEventListener('click', pedirHumano); elOpcoes.appendChild(btnH);
 }
-
 function escolher(opcao) {
   if (estado.aguardando || estado.transferido) return;
   elOpcoes.innerHTML = '';
-  elMensagens.appendChild(criarBolha(opcao.label, 'usuario'));
-  scrollChat();
+  elMensagens.appendChild(criarBolha(opcao.label, 'usuario')); scrollChat();
   const no = FLUXO.nos[estado.noAtual];
   if (no?.campo) estado.dados[no.campo] = opcao.valor;
-  atualizarResumo();
-  irPara(opcao.proximo);
+  atualizarResumo(); irPara(opcao.proximo);
 }
-
 function pedirHumano() {
   if (estado.aguardando || estado.transferido) return;
   elOpcoes.innerHTML = '';
-  elMensagens.appendChild(criarBolha('Falar com a equipe agora', 'usuario'));
-  scrollChat();
+  elMensagens.appendChild(criarBolha('Falar com a equipe agora', 'usuario')); scrollChat();
   irPara('transferencia');
 }
-
-function delay(ms) {
-  return new Promise(r => setTimeout(r, ms));
-}
-
 function reiniciar() {
-  estado.noAtual    = null;
-  estado.dados      = {};
-  estado.transferido = false;
-  estado.aguardando = false;
-  elMensagens.innerHTML = '';
-  elOpcoes.innerHTML    = '';
+  Object.assign(estado, { noAtual: null, dados: {}, transferido: false, aguardando: false });
+  elMensagens.innerHTML = ''; elOpcoes.innerHTML = '';
   elBanner.classList.remove('visivel');
-  elStatus.textContent  = 'Simulação ativa';
-  elStatus.className    = 'chat__status';
+  elStatus.textContent = 'Simulação ativa'; elStatus.className = 'chat__status';
   elRodapeInfo.textContent = 'Escolha uma opção acima';
-  atualizarResumo();
-  irPara(FLUXO.inicio);
+  atualizarResumo(); irPara(FLUXO.inicio);
 }
-
 elReiniciar.addEventListener('click', reiniciar);
 
-// ── FAQ ──────────────────────────────────────────────────────────────────
 const elFaq = document.getElementById('faq-lista');
 FAQ.forEach(item => {
-  const details = document.createElement('details');
-  details.className = 'faq__item';
-  details.innerHTML = `
-    <summary class="faq__pergunta">
-      ${item.pergunta}
-      <span class="faq__seta" aria-hidden="true">+</span>
-    </summary>
-    <div class="faq__resposta">${item.resposta}</div>
-  `;
-  elFaq.appendChild(details);
+  const d = document.createElement('details'); d.className = 'faq__item';
+  d.innerHTML = `<summary class="faq__pergunta">${item.pergunta}<span class="faq__seta" aria-hidden="true">+</span></summary><div class="faq__resposta">${item.resposta}</div>`;
+  elFaq.appendChild(d);
 });
 
-// ── MENU MOBILE ──────────────────────────────────────────────────────────
 const toggle = document.querySelector('.nav__toggle');
 const navLinks = document.getElementById('nav-links');
 toggle?.addEventListener('click', () => {
@@ -1411,29 +759,16 @@ toggle?.addEventListener('click', () => {
   toggle.setAttribute('aria-expanded', aberto);
   toggle.setAttribute('aria-label', aberto ? 'Fechar menu' : 'Abrir menu');
 });
-navLinks.querySelectorAll('a').forEach(a => {
-  a.addEventListener('click', () => {
-    navLinks.classList.remove('aberto');
-    toggle?.setAttribute('aria-expanded', 'false');
-    toggle?.setAttribute('aria-label', 'Abrir menu');
-  });
-});
+navLinks.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+  navLinks.classList.remove('aberto');
+  toggle?.setAttribute('aria-expanded', 'false');
+  toggle?.setAttribute('aria-label', 'Abrir menu');
+}));
 
-// ── ANIMAÇÕES DE ENTRADA (IntersectionObserver) ──────────────────────────
-const observer = new IntersectionObserver(
-  entries => entries.forEach(e => {
-    if (e.isIntersecting) {
-      e.target.classList.add('visivel');
-      observer.unobserve(e.target);
-    }
-  }),
-  { threshold: 0.15 }
-);
-document.querySelectorAll('.animar-entrada').forEach(el => observer.observe(el));
+const obs = new IntersectionObserver(entries => entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visivel'); obs.unobserve(e.target); } }), { threshold: 0.15 });
+document.querySelectorAll('.animar-entrada').forEach(el => obs.observe(el));
 
-// ── INÍCIO ───────────────────────────────────────────────────────────────
 reiniciar();
 </script>
-
 </body>
 </html>
