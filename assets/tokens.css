@@ -1,4 +1,6 @@
-/* FlowBot — tokens de cor. Gerado de tokens.json. Escuro é o padrão; use [data-theme="light"] para o claro. */
+/* FlowBot — tokens do design system. Fonte única de cores, tipografia, espaço, forma, elevação e movimento.
+   Cores geradas de docs/identidade/tokens/tokens.json (contraste conferido em contraste.json).
+   Escuro é o padrão; use data-theme="light" no <html> para o tema claro. */
 :root {
   --neutro-0: #FFFFFF;
   --neutro-50: #FAFAF8;
@@ -59,6 +61,20 @@
 }
 :root, [data-theme="dark"] {
   color-scheme: dark;
+  /* etapas do funil */
+  --stage-pesquisado: #8C8882;
+  --stage-lead: #60A5FA;
+  --stage-qualificado: #A78BFA;
+  --stage-proposta: #FBBF24;
+  --stage-negociacao: #F472B6;
+  --stage-ganho: #34D399;
+  --stage-perdido: #C07A74;
+  --map-marker-ring: #0B0B0B;
+  /* elevação */
+  --shadow-1: 0 1px 2px rgba(0,0,0,.4);
+  --shadow-2: 0 8px 24px -12px rgba(0,0,0,.8), 0 0 0 .5px rgba(245,245,245,.08);
+  --shadow-3: 0 24px 64px -24px rgba(0,0,0,.9), 0 0 0 .5px rgba(245,245,245,.12);
+  --shadow-key: inset 0 1px 0 rgba(255,255,255,.55), inset 0 -1px 0 rgba(0,0,0,.14), 0 1px 2px rgba(0,0,0,.4), 0 10px 20px -12px rgba(0,0,0,.9);
   --bg: #0B0B0B;
   --surface: #141413;
   --surface-sunken: #1C1C1A;
@@ -99,6 +115,18 @@
 }
 [data-theme="light"] {
   color-scheme: light;
+  --stage-pesquisado: #6B6862;
+  --stage-lead: #2563EB;
+  --stage-qualificado: #7C3AED;
+  --stage-proposta: #B45309;
+  --stage-negociacao: #DB2777;
+  --stage-ganho: #047857;
+  --stage-perdido: #9B4A45;
+  --map-marker-ring: #FFFFFF;
+  --shadow-1: 0 1px 2px rgba(11,11,11,.08);
+  --shadow-2: 0 8px 24px -12px rgba(11,11,11,.18), 0 0 0 .5px rgba(11,11,11,.08);
+  --shadow-3: 0 24px 64px -24px rgba(11,11,11,.28), 0 0 0 .5px rgba(11,11,11,.10);
+  --shadow-key: inset 0 1px 0 rgba(255,255,255,.4), 0 1px 2px rgba(11,11,11,.18), 0 8px 18px -10px rgba(11,11,11,.35);
   --bg: #FAFAF8;
   --surface: #FFFFFF;
   --surface-sunken: #F0EFEB;
@@ -136,4 +164,48 @@
   --chat-bot: #F0EFEB;
   --chat-client: #C2410C;
   --chat-team: #E7F6EF;
+}
+
+:root {
+  /* tipografia */
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-display: "Bricolage Grotesque", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --font-wordmark: "Lexend", "Inter", ui-sans-serif, sans-serif;
+  --text-xs: 12px;   --leading-xs: 16px;
+  --text-sm: 13px;   --leading-sm: 18px;
+  --text-md: 14px;   --leading-md: 20px;
+  --text-base: 16px; --leading-base: 24px;
+  --text-lg: 18px;   --leading-lg: 26px;
+  --text-xl: 22px;   --leading-xl: 28px;
+  --text-2xl: 28px;  --leading-2xl: 32px;
+  --text-3xl: 36px;  --leading-3xl: 40px;
+  --weight-regular: 400; --weight-medium: 500; --weight-semibold: 600; --weight-bold: 700;
+  --tracking-tight: -0.02em; --tracking-display: -0.035em; --tracking-label: 0.08em;
+
+  /* espaço (base 4px) */
+  --space-0: 0; --space-1: 4px; --space-2: 8px; --space-3: 12px; --space-4: 16px; --space-5: 20px;
+  --space-6: 24px; --space-8: 32px; --space-10: 40px; --space-12: 48px; --space-16: 64px;
+
+  /* forma */
+  --radius-xs: 6px; --radius-sm: 9px; --radius-md: 13px; --radius-lg: 18px; --radius-xl: 24px; --radius-pill: 999px;
+  --border-width: 1px;
+
+  /* tamanhos de controle e toque */
+  --control-sm: 32px; --control-md: 40px; --control-lg: 48px; --touch-min: 44px;
+  --sidebar-width: 248px; --topbar-height: 56px; --bottomnav-height: 64px; --drawer-width: 480px;
+  --content-max: 1320px;
+
+  /* movimento */
+  --duration-fast: 120ms; --duration-base: 200ms; --duration-slow: 280ms;
+  --ease-out: cubic-bezier(0.2, 0, 0, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+  --ease-emphasized: cubic-bezier(0.32, 0.72, 0, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* camadas */
+  --z-base: 0; --z-sticky: 20; --z-nav: 40; --z-overlay: 60; --z-drawer: 70; --z-menu: 80; --z-toast: 90; --z-tooltip: 100;
+
+  /* breakpoints de referência (use em @media com os mesmos números) */
+  --bp-sm: 360px; --bp-md: 768px; --bp-lg: 1024px; --bp-xl: 1280px;
 }
