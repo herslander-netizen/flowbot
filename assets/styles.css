@@ -114,6 +114,7 @@ h1 { margin: 0; font-size: clamp(30px, 4vw, 52px); line-height: 1.06; letter-spa
 #map { height: 100%; width: 100%; background: #192332; }
 .map-note { font-size: 11px; color: #bac7db; line-height: 1.5; border-top: 1px solid var(--border); padding: 10px 16px; }
 .leaflet-container { background: #1d2534; font-family: "DM Sans", system-ui, sans-serif; }
+.leaflet-tile { filter: brightness(.56) invert(1) contrast(1.2) hue-rotate(178deg) saturate(.55); }
 .leaflet-control-attribution { font-size: 9px !important; }
 .map-empty { height:100%; display:grid; place-items:center; color:#b5c5dd; text-align:center; font-size:12px; padding:32px; }
 .lead-list { display: grid; gap: 10px; padding: 12px; max-height: 565px; overflow-y: auto; }
@@ -189,6 +190,7 @@ h1 { margin: 0; font-size: clamp(30px, 4vw, 52px); line-height: 1.06; letter-spa
   .drawer { max-width: 470px; max-height: 100dvh; border-radius: 24px 0 0 24px; padding: 32px; }
 }
 @media (min-width: 960px) {
+  .workspace.list-mode { grid-template-columns: minmax(0, 1fr); }
   .sidebar {
     position:sticky; top:0; height:100dvh; width: 236px; min-width:236px;
     display:flex; flex-direction:column; justify-content:flex-start;
