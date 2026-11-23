@@ -7,7 +7,8 @@ const WORKSPACE_A = "22222222-2222-4222-8222-222222222222";
 const WORKSPACE_B = "33333333-3333-4333-8333-333333333333";
 const LEAD = "44444444-4444-4444-8444-444444444444";
 const env = {
-  SUPABASE_URL: "https://flowbot-exemplo.supabase.co",
+  SUPABASE_PROJECT_REF: "flowbotfixture000000",
+  SUPABASE_URL: "https://flowbotfixture000000.supabase.co",
   SUPABASE_PUBLISHABLE_KEY: "sb_publishable_example_only",
   ALLOWED_ORIGINS: "https://flowbot.example",
 };
@@ -158,4 +159,50 @@ test("nenhum token, senha ou detalhes internos são retornados em falhas de rede
       assert.equal(res.status, 503);
       assert.equal((await res.text()).includes("segredo_sensivel"), false);
     });
+});
+
+test("a configuração exige a origem HTTPS exata do projeto dedicado", async () => {
+  const endpoint = env.SUPABASE_URL;
+  const variantesInvalidas = [
+    { ...env, SUPABASE_PROJECT_REF: undefined },
+    { ...env, SUPABASE_PROJECT_REF: "inválido" },
+    ...[endpoint + "/rest", endpoint + "/?a=b", endpoint + "/#fragmento",
+      endpoint + ":443", endpoint.replace("https:", "http:"),
+      endpoint.replace("https://", "https://usuario@"),
+      "https://otherproject00000000.supabase.co"].map(SUPABASE_URL => ({...env, SUPABASE_URL})),
+  ];
+  let chamadas = 0;
+  await comFetchFalso(async (url) => {
+    chamadas++;
+    assert.equal(new URL(url).origin, endpoint);
+    return auth(url) ?? new Response("[]");
+  }, async () => {
+    for (const variante of variantesInvalidas) {
+      const result = await resposta(await handleApi(request("/api/v1/workspaces"), variante));
+      assert.deepEqual(result, { status: 503, body: { erro: "backend_nao_configurado" } });
+    }
+    assert.equal(chamadas, 0);
+    const res = await handleApi(request("/api/v1/workspaces"), { ...env, SUPABASE_URL: endpoint + "/" });
+    assert.equal(res.status, 200);
+    assert.equal(chamadas, 2);
+  });
+});
+
+test("Auth e PostgREST não seguem redirecionamentos nem expõem dados da origem", async () => {
+  for (const fase of ["auth", "rest"]) {
+    const chamadas = [];
+    await comFetchFalso(async (url, options) => {
+      chamadas.push(String(url));
+      assert.equal(new URL(url).origin, env.SUPABASE_URL);
+      assert.equal(options.redirect, "error");
+      if (fase === "rest" && chamadas.length === 1) return auth(url);
+      return new Response("conteudo interno", {
+        status: 307, headers: { location: "https://destino.example/" },
+      });
+    }, async () => {
+      const result = await resposta(await handleApi(request("/api/v1/workspaces"), env));
+      assert.deepEqual(result, { status: 503, body: { erro: "servico_indisponivel" } });
+    });
+    assert.equal(chamadas.length, fase === "auth" ? 1 : 2);
+  }
 });

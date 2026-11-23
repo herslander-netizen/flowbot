@@ -81,12 +81,16 @@ function workspaceId(valor) {
 }
 
 function baseUrl(env) {
-  const url = new URL(env.SUPABASE_URL);
-  if (url.protocol !== "https:" || !url.hostname.endsWith(".supabase.co")) {
+  const ref = env.SUPABASE_PROJECT_REF;
+  if (typeof ref !== "string" || !/^[a-z0-9]{20}$/.test(ref) ||
+      typeof env.SUPABASE_PUBLISHABLE_KEY !== "string" || !env.SUPABASE_PUBLISHABLE_KEY.trim()) {
     throw new Error("supabase_config_invalida");
   }
-  if (!env.SUPABASE_PUBLISHABLE_KEY) throw new Error("supabase_config_invalida");
-  return url.origin;
+  const origin = `https://${ref}.supabase.co`;
+  if (env.SUPABASE_URL !== origin && env.SUPABASE_URL !== origin + "/") {
+    throw new Error("supabase_config_invalida");
+  }
+  return origin;
 }
 
 async function consultarSupabase(env, token, path, options = {}) {
@@ -101,8 +105,12 @@ async function consultarSupabase(env, token, path, options = {}) {
       ...(options.prefer ? { prefer: options.prefer } : {}),
     },
     ...(options.body === undefined ? {} : { body: JSON.stringify(options.body) }),
+    redirect: "error",
     signal: AbortSignal.timeout(12_000),
   });
+  if (resposta.redirected || (resposta.status >= 300 && resposta.status < 400)) {
+    throw new Error("supabase_redirecionamento");
+  }
   const raw = await resposta.text();
   let body;
   try { body = raw ? JSON.parse(raw) : null; }
@@ -169,7 +177,7 @@ export async function handleApi(request, env) {
   if (request.method === "OPTIONS") {
     return new Response(null, { status: 204, headers });
   }
-  if (!env.SUPABASE_URL || !env.SUPABASE_PUBLISHABLE_KEY) {
+  try { baseUrl(env); } catch {
     return json(503, { erro: "backend_nao_configurado" }, headers);
   }
   try {

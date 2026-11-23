@@ -29,7 +29,8 @@ A resposta contém `{"data": ...}` ou `{"erro": "..."}`. Nenhuma rota envia mens
 
 Variáveis/segredos via Cloudflare (não em repositório):
 
-- `SUPABASE_URL`: URL HTTPS do projeto **flowbot** (`*.supabase.co`).
+- `SUPABASE_PROJECT_REF`: referência de 20 caracteres minúsculos alfanuméricos do projeto dedicado **flowbot**, conferida independentemente no painel (não derivar de uma URL fornecida pelo cliente).
+- `SUPABASE_URL`: exatamente `https://<SUPABASE_PROJECT_REF>.supabase.co`, com barra final opcional. Caminhos e redirecionamentos são recusados; a configuração inválida falha antes de encaminhar credenciais.
 - `SUPABASE_PUBLISHABLE_KEY`: chave **publicável** do projeto, nunca secret/service_role.
 - `ALLOWED_ORIGINS`: lista separada por vírgula das origens web autorizadas (inclua a origem do PWA de prévia e depois a de produção).
 
