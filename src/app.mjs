@@ -1,6 +1,6 @@
 import {
   ETAPAS, dadosDeDemonstracao, validarEmpresa, chaveEmpresa,
-  importarCsv, criarRascunho, pontuacao, exportarCsv
+  importarCsv, criarRascunho, podePrepararAbordagem, pontuacao, exportarCsv
 } from "./prospecting.mjs";
 
 let leads = dadosDeDemonstracao();
@@ -114,7 +114,7 @@ function renderApp() {
     estatistica("Sem bloqueio", ativos.length, "Envio desativado no MVP"),
     '</section>',
     '<div class="note">', icone("info"),
-    '<span>Este é um <strong>ambiente local de demonstração</strong>: os dados ficam apenas na memória desta aba e se perdem ao atualizar. Os exemplos são fictícios. Nenhum scraping, WhatsApp, e-mail ou IA é executado. Exporte o CSV para guardar as informações.</span></div>',
+    '<span>Este é um <strong>ambiente local de demonstração</strong>: os dados ficam apenas na memória desta aba e se perdem ao atualizar. Os exemplos são fictícios. Nenhum scraping, WhatsApp, e-mail ou IA é executado. O CSV guarda a marcação Não contatar, mas não é um backup completo. Arquivos sem a coluna suprimido não recuperam bloqueios ausentes; nunca comprovam consentimento.</span></div>',
     '<div class="workspace-bar"><div><h2 class="section-label">Território comercial</h2><p class="section-description">Pesquise, filtre e avance cada empresa no funil.</p></div>',
     '<div class="switcher" aria-label="Visualização"><button type="button" data-view="mapa" class="',
     vista === "mapa" ? "active" : '', '">Mapa</button><button type="button" data-view="lista" class="',
@@ -144,7 +144,8 @@ function renderDetalhe() {
   const l = leads.find((x) => x.id === selecionado);
   if (!l) { selecionado = null; return ""; }
   const e = etiqueta(l.etapa);
-  const texto = rascunhos.get(l.id) ?? "";
+  const bloqueado = !podePrepararAbordagem(l);
+  const texto = bloqueado ? "" : rascunhos.get(l.id) ?? "";
   return [
     '<div class="overlay" data-overlay="true"><section class="drawer" role="dialog" aria-modal="true" aria-label="Detalhes da empresa">',
     '<div class="drawer-head"><div><span class="drawer-kicker">Detalhes do prospect</span><h2>',
@@ -171,14 +172,15 @@ function renderDetalhe() {
       'Nenhuma evidência com URL de origem cadastrada. O rascunho não incluirá alegações específicas.',
     '</div>',
     '<label class="checkbox-row"><input type="checkbox" id="suppression" ',
-    l.suprimido ? 'checked' : '', '> Não contatar / excluir de abordagens</label>',
+    l.suprimido ? 'checked disabled' : '', '> Não contatar / excluir de abordagens</label>',
     '<div class="hr"></div><div class="field-title">Mensagem personalizada · Revisão humana</div>',
+    bloqueado ? '<p role="status">Empresa marcada: não contatar. Preparação e cópia bloqueadas.</p>' : [
     '<div class="field"><label for="lead-draft">Rascunho (não é enviado)</label>',
     '<textarea id="lead-draft" rows="8" placeholder="Clique em Preparar rascunho para criar uma sugestão…">',
     html(texto), '</textarea><small>Nenhum contato é autorizado automaticamente. Verifique origem, base legal e política do canal antes de abordar.</small></div>',
     '<div class="drawer-actions"><button class="btn" data-action="generate">', icone("spark"),
     'Preparar rascunho</button><button class="btn btn-primary" data-action="copy">',
-    icone("copy"), 'Copiar texto</button></div>',
+    icone("copy"), 'Copiar texto</button></div>'].join(""),
     '<div class="hr"></div><div class="panel-meta">Criado em ',
     html(new Date(l.criadoEm).toLocaleDateString("pt-BR")), ' · Nenhuma ação enviada</div>',
     '</section></div>'
@@ -277,7 +279,9 @@ async function importarArquivo(arquivo) {
   if (arquivo.size > 1_000_000) { toast("CSV acima de 1 MB. Divida em arquivos menores."); return; }
   try {
     const resposta = importarCsv(await arquivo.text(), leads);
-    leads = [...leads, ...resposta.adicionados];
+    const bloqueios = new Set(resposta.suprimirIds);
+    for (const id of bloqueios) rascunhos.delete(id);
+    leads = [...leads.map(l => bloqueios.has(l.id) ? { ...l, suprimido: true } : l), ...resposta.adicionados];
     renderApp();
     toast(resposta.adicionados.length + " empresas importadas · " + resposta.duplicados +
       " duplicadas · " + resposta.erros.length + " linhas inválidas." +
@@ -302,12 +306,14 @@ document.addEventListener("click", async (evento) => {
   if (acao === "export") baixarCsv();
   if (acao === "generate" && selecionado) {
     const lead = leads.find((x) => x.id === selecionado);
+    if (!podePrepararAbordagem(lead)) return;
     rascunhos.set(selecionado, criarRascunho(lead, "Alvo Digital"));
     const campo = document.querySelector("#lead-draft");
     if (campo) campo.value = rascunhos.get(selecionado);
     toast("Rascunho criado. Confira o texto e as fontes antes de usar.");
   }
   if (acao === "copy" && selecionado) {
+    if (!podePrepararAbordagem(leads.find(l => l.id === selecionado))) return;
     const texto = document.querySelector("#lead-draft")?.value.trim();
     if (!texto) { toast("Prepare ou escreva uma mensagem antes de copiar."); return; }
     try {
@@ -330,7 +336,7 @@ document.addEventListener("input", (evento) => {
     if (l) l.nota = evento.target.value.slice(0, 1000);
   }
   if (evento.target.id === "lead-draft" && selecionado) {
-    rascunhos.set(selecionado, evento.target.value);
+    if (podePrepararAbordagem(leads.find(l => l.id === selecionado))) rascunhos.set(selecionado, evento.target.value);
   }
 });
 document.addEventListener("change", (evento) => {
@@ -342,8 +348,10 @@ document.addEventListener("change", (evento) => {
     atualizarLead(selecionado, { etapa: evento.target.value });
   }
   if (evento.target.id === "suppression" && selecionado) {
-    atualizarLead(selecionado, { suprimido: evento.target.checked });
-    toast(evento.target.checked ? "Empresa marcada: não contatar." : "Marcação removida. Isso não concede consentimento.");
+    if (!evento.target.checked) return;
+    rascunhos.delete(selecionado);
+    atualizarLead(selecionado, { suprimido: true });
+    toast("Empresa marcada: não contatar.");
   }
 });
 document.addEventListener("submit", (evento) => {
