@@ -1,5 +1,7 @@
 # Bot Studio — prévia visual
 
+> **Fase F:** a interface já segue a API de autoria do motor (PRs #19, #20 e #21): revisões, salvamento automático, conflito, aprovação presa à revisão, sessão e permissão. O guia para ligar a fonte real está em `integracao-motor.md`. A auditoria visual desta fase está em `design-system/auditoria-fase-f.md`.
+
 Endereço local: `/estudio/` (rode `npm run dev`). Telas: Agentes, Fluxo, Oficina, Simulador e Versões.
 O motor (`herslander-netizen/flow-bot`) é só referência: nada aqui altera o motor, e a interface não se
 conecta a ele, ao WhatsApp nem à oficina com Claude.

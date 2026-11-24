@@ -113,6 +113,30 @@ Uma ação principal flutuante no celular, acima da barra inferior e da área se
 
 Seções que o usuário abre quando precisa (testes, lacunas, relatórios). O resumo tem 44px e mostra a contagem à direita.
 
+## Faixa de estado — `.strip`, `.strip--warn|danger|script`
+
+Uma linha que explica algo que bloqueia o trabalho (conflito, sessão expirada, sem permissão, sem conexão) e oferece uma ação ao lado. Fica presa no topo enquanto vale. Não use para avisos que não bloqueiam; para esses, `.alert` ou toast.
+
+## Registro de trabalho — `.worklog`, `.log--sugestao|execucao|resultado|aprovacao`
+
+Para ambientes colaborativos (oficina). Cada registro diz o tipo e, à direita, quem fez e de onde veio. Nunca registre como "concluído" algo que não rodou. `.change-list` + `.change-tag(--add|--del)` lista alterações sugeridas.
+
+## Trilho de ciclo — `.cycle`, `.cycle__step[data-estado="feito|atual|depois"]`
+
+Etapas em linha com ponto, nome e a origem do estado. No celular a origem some.
+
+## Busca — `.search-box`, `.search-results`, `.search-hit`
+
+Campo arredondado com ícone e atalho `/`. Resultados em lista suspensa no computador; no celular a busca filtra a própria lista.
+
+## Menu de contexto — `.menu--context`
+
+O mesmo `.menu`, posicionado no ponto do clique (botão direito). No celular, as mesmas ações abrem numa folha (`.sheet-menu`) com toque longo.
+
+## Gestos e teclado — `ligarArrasteDaFolha(gaveta, fechar)`, `observarTeclado()`
+
+Em `src/ui/componentes.mjs`. A folha inferior fecha ao arrastar a alça ou o cabeçalho para baixo (90px ou um gesto rápido). `observarTeclado()` põe `body.teclado` quando o teclado virtual abre, e as barras fixas saem.
+
 ## Ícones — `icone(nome)`
 
 Traço único de 24px. Nomes disponíveis em `src/ui/icones.mjs` (painel, mapa, lista, alvo, mais, importar, exportar, seta, fechar, info, alerta, ok, check, menos, copiar, faisca, escudo, proibido, busca, reticencias, sol, lua, pino, link, relogio, nota, fluxo, conversa, agente, atividade, engrenagem, predio, site, enquadrar, abaixo, esquerda, lixeira, ramo, retorno, play, cadeado, camadas, ajustes, desfazer, arquivo, nuvemoff). Tamanhos: `.icon--xs` 14, `.icon` 18, `.icon--sm` 16, `.icon--lg` 22. Ícone ao lado de texto é decorativo (`aria-hidden` já vem).
