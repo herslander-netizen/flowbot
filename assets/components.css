@@ -206,7 +206,38 @@ kbd { font: var(--weight-medium) 11px/1 var(--font-mono); color: var(--text-fain
 .toast--success > .icon { color: var(--success); }
 .toast--danger > .icon { color: var(--danger); }
 .toast__action { margin-left: auto; border: 0; background: none; color: var(--accent-text); font-weight: var(--weight-semibold); padding: 0 0 0 var(--space-2); }
+@media (max-width: 767px) { body:has(.bottomnav) .toasts { bottom: calc(var(--bottomnav-height) + var(--space-3) + env(safe-area-inset-bottom)); } }
 @keyframes fb-toast { from { opacity: 0; transform: translateY(12px); } }
+
+/* ── Página: área principal, largura e cabeçalho (todos os módulos) ── */
+.main { min-width: 0; padding: var(--space-5) max(var(--space-4), env(safe-area-inset-right)) calc(var(--bottomnav-height) + var(--space-8) + env(safe-area-inset-bottom)) max(var(--space-4), env(safe-area-inset-left)); }
+.page { max-width: var(--content-max); margin: 0 auto; display: grid; gap: var(--space-6); }
+/* Cabeçalho da página */
+.page-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--space-4); }
+.page-head__crumb { margin-bottom: var(--space-2); }
+.page-head__title { font: var(--weight-bold) var(--text-2xl)/var(--leading-2xl) var(--font-display); letter-spacing: var(--tracking-display); }
+.page-head__text { margin-top: var(--space-2); max-width: 60ch; color: var(--text-muted); }
+.page-head__actions { display: none; gap: var(--space-2); }
+@media (min-width: 768px) {
+  .main { padding: var(--space-8) var(--space-6) var(--space-12); }
+  .page-head__actions { display: flex; flex-wrap: wrap; }
+}
+@media (min-width: 1024px) { .main { padding: var(--space-8) var(--space-8) var(--space-12); } }
+
+/* ── Utilitários de composição ─────────────────────────── */
+.stack { display: grid; gap: var(--space-4); align-content: start; }
+.stack--sm { gap: var(--space-2); }
+.plain-list { list-style: none; margin: 0; padding: 0; }
+.link-btn { border: 0; background: none; padding: 0; color: var(--accent-text); font: inherit; font-weight: var(--weight-semibold); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; cursor: pointer; }
+.text-success { color: var(--success); } .text-danger { color: var(--danger); }
+
+/* ── Abas de página (computador); no celular a barra inferior faz o papel ── */
+.tabs { display: none; gap: var(--space-1); border-bottom: var(--border-width) solid var(--border-subtle); }
+.tabs__item { display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--touch-min); padding: 0 var(--space-4); border: 0; border-bottom: 2px solid transparent; margin-bottom: -1px; background: none; color: var(--text-muted); font-size: var(--text-md); font-weight: var(--weight-semibold); }
+.tabs__item:hover { color: var(--text); }
+.tabs__item[aria-current="page"] { color: var(--text); border-bottom-color: var(--accent); }
+.tabs__item[aria-current="page"] .icon { color: var(--accent-text); }
+@media (min-width: 768px) { .tabs { display: flex; } }
 
 /* ── Navegação do aplicativo ───────────────────────────── */
 .shell { min-height: 100dvh; }
