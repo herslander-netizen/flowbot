@@ -21,7 +21,10 @@ test("conexão mostra os dois métodos sem inventar estados, QR ou códigos", ()
 });
 
 test("com navegação desktop e celular para a tela local", () => {
-  const app = read("../src/app.mjs");
-  assert.match(app, /class="nav-item" href="\.\/whatsapp\.html"/);
-  assert.match(app, /class="menu__item" role="menuitem" href="\.\/whatsapp\.html"/);
+  // A navegação de todos os módulos vem do mesmo registro (src/ui/shell.mjs): barra lateral no
+  // computador e seletor de módulo no celular usam a mesma lista.
+  const shell = read("../src/ui/shell.mjs");
+  assert.match(shell, /nome: "Conexão WhatsApp"[^}]*caminho: "whatsapp\.html"/);
+  assert.match(shell, /class="nav-item" href="\$\{href\(m\)\}"/);
+  assert.match(shell, /class="menu__item" role="menuitem" href="\$\{href\(m\)\}"/);
 });

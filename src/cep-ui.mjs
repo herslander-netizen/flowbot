@@ -29,7 +29,9 @@ export function iniciarBuscaCep({ getLeads, onImport, onMessage, fetchImpl = fet
   menuLaunch.className = "menu__item";
   menuLaunch.setAttribute("role", "menuitem");
   menuLaunch.innerHTML = icone("pino") + "Buscar por CEP";
-  menu?.prepend(menuLaunch);
+  // No menu do módulo (seletor do topo), junto das outras ações da Prospecção.
+  const ancora = menu?.querySelector('[data-acao="importar"]');
+  if (ancora) ancora.before(menuLaunch); else menu?.prepend(menuLaunch);
 
   const root = document.createElement("div");
   root.id = "cep-search-root";

@@ -151,3 +151,11 @@
 }
 .overview .card__head { flex-wrap: wrap; row-gap: var(--space-1); }
 
+/* Celular: das ações do cabeçalho, só "Buscar por CEP" aparece (adicionar fica na barra inferior,
+   importar e exportar no menu do módulo). */
+@media (max-width: 767px) {
+  .page-head__actions { display: flex; }
+  .page-head__actions > :not(#buscar-empresas-cep) { display: none; }
+  #buscar-empresas-cep { width: 100%; }
+}
+

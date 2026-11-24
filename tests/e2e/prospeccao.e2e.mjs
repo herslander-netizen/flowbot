@@ -15,7 +15,7 @@ const resultados = [];
 
 async function caso(nome, fn) {
   try { await fn(); resultados.push(["ok", nome]); }
-  catch (erro) { resultados.push(["FALHOU", nome + " — " + erro.message.split("\n")[0]]); }
+  catch (erro) { resultados.push(["FALHOU", nome + " — " + erro.message.split("\n").slice(0, 4).join(" | ")]); }
 }
 
 const navegador = await chromium.launch();
@@ -134,11 +134,15 @@ await caso("detalhes: etapa, notas, bloqueio, rascunho e cópia", async () => {
   await p.click('[data-acao="copiar"]');
   assert.equal(await p.evaluate(() => navigator.clipboard.readText()), texto.trim());
   await p.check("#suppression");
-  assert.equal(await p.isDisabled("#lead-draft"), true, "rascunho bloqueado com não contatar");
+  // Regra das PRs #5/#8: não contatar apaga o rascunho, bloqueia preparar e copiar, e não se desfaz.
+  await p.waitForSelector("#lead-draft", { state: "detached" });
+  assert.equal(await p.isDisabled('[data-acao="gerar"]'), true);
+  assert.equal(await p.isDisabled('[data-acao="copiar"]'), true);
+  assert.equal(await p.isDisabled("#suppression"), true, "não contatar não se desmarca");
   await p.keyboard.press("Escape");
   await p.click('.row-link:text("Studio Aurora")');
   assert.equal(await p.inputValue("#lead-notes"), "Ligar na segunda", "nota mantida");
-  await p.uncheck("#suppression");
+  assert.equal(await p.isChecked("#suppression"), true);
   await p.keyboard.press("Escape");
 });
 
@@ -244,7 +248,7 @@ await caso("busca por CEP no Android e inclusão manual com fonte", async () => 
   await mobile.selectOption("#cep-radius", "1000");
   await mobile.click(".cep-form__submit");
   await mobile.waitForSelector('[data-cep-import="node/771122"]');
-  assert.ok(await mobile.isVisible("text=OpenStreetMap"));
+  assert.ok(await mobile.isVisible("#cep-search-root >> text=OpenStreetMap"));
   await mobile.click('[data-cep-import="node/771122"]');
   await mobile.waitForSelector("text=Empresa adicionada ao funil");
   assert.equal(await mobile.$eval(".kpi__value", (e) => e.textContent), "7");

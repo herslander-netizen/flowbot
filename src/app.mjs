@@ -5,6 +5,7 @@ import {
   pontuacao, explicarPontuacao, resumoFunil, exportarCsv,
 } from "./prospecting.mjs";
 import { icone } from "./ui/icones.mjs";
+import { montarShell, atualizarRotuloTema } from "./ui/shell.mjs";
 import { iniciarBuscaCep } from "./cep-ui.mjs";
 import {
   html, formatar, aviso, prenderFoco, temaAtual, aplicarTema, alternarMenu, fecharMenus, ligarArrasteDaFolha, observarTeclado,
