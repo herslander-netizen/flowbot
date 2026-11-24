@@ -98,6 +98,31 @@ document.getElementById("ds").innerHTML = `
   ${[["rascunho", "Rascunho"], ["revisao", "Em revisão"], ["correcao", "Precisa de correção"], ["aprovado", "Aprovado"], ["publicado", "Publicado"]].map(([e, n]) => `<span class="version-state" data-estado="${e}">${n}</span>`).join("")}</div>
   <p class="t-small t-muted">Cor e texto juntos. Aprovado é contorno (ainda não é definitivo); publicado é preenchido.</p></div></section>
 
+<section class="ds-sec"><h2>Salvamento, conflito e sessão</h2><div class="ds-demo">
+  <p class="t-small t-muted">O estado de salvamento fica no cabeçalho (ponto + texto). Quando algo bloqueia, uma faixa de uma linha explica e oferece uma ação. Nada local se perde.</p>
+  <div class="ds-row" style="flex-wrap:wrap;gap:12px 20px">${estadoOperacional("conectado", "Salvo · r4")}${estadoOperacional("salvando", "Salvando…")}${estadoOperacional("nao-salvo", "Alterações não salvas")}${estadoOperacional("conflito", "Conflito de revisão")}${estadoOperacional("permissao", "Somente leitura")}${estadoOperacional("erro", "Sessão expirada")}${estadoOperacional("indisponivel", "Sem conexão")}</div>
+  <div style="display:grid;gap:8px">
+    <div class="strip strip--script">${icone("ajustes", "icon icon--sm")}<span><strong>Roteiro de homologação:</strong> respostas forçadas para testar a tela.</span></div>
+    <div class="strip strip--danger">${icone("alerta", "icon icon--sm")}<span><strong>Conflito:</strong> a r5 foi salva por outra pessoa enquanto você editava. Suas alterações estão preservadas aqui.</span><button class="btn btn--secondary btn--sm">Resolver</button></div>
+    <div class="strip strip--warn">${icone("cadeado", "icon icon--sm")}<span><strong>Somente leitura.</strong> Peça acesso a quem administra.</span><button class="btn btn--ghost btn--sm">${icone("exportar", "icon icon--sm")}Baixar minhas alterações</button></div>
+  </div></div></section>
+
+<section class="ds-sec"><h2>Registro de trabalho</h2><div class="ds-demo">
+  <p class="t-small t-muted">Quatro tipos, sempre com a origem à direita: sugestão (IA), execução (código), resultado e aprovação (pessoa). Exemplo ilustrativo.</p>
+  <div class="worklog">
+    <article class="log log--sugestao"><header class="log__head"><span class="log__kind">${icone("faisca", "icon icon--sm")}Sugestão</span><span class="log__who">Arquiteto · exemplo</span></header><h3 class="log__title">Proposta: 13 passos</h3>
+      <ul class="change-list"><li><span class="change-tag change-tag--add">novo</span><span>Texto <code>horarios</code></span></li><li><span class="change-tag">muda</span><span><code>menu</code> · options</span></li><li><span class="change-tag change-tag--del">sai</span><code>antigo</code></li></ul></article>
+    <article class="log log--execucao"><header class="log__head"><span class="log__kind">${icone("engrenagem", "icon icon--sm")}Execução</span><span class="log__who">Simulador · motor</span></header><h3 class="log__title">Cenários independentes</h3></article>
+    <article class="log log--resultado"><header class="log__head"><span class="log__kind">${icone("ok", "icon icon--sm")}Resultado</span><span class="log__who">r4</span></header><h3 class="log__title">5 de 5 passaram</h3></article>
+    <article class="log log--aprovacao"><header class="log__head"><span class="log__kind">${icone("check", "icon icon--sm")}Aprovação</span><span class="log__who">Pessoa</span></header><h3 class="log__title">Revisão humana da r4</h3></article>
+  </div></div></section>
+
+<section class="ds-sec"><h2>Trilho de ciclo e busca</h2><div class="ds-demo">
+  <ol class="cycle" style="max-width:640px">${[["Rascunho", "feito"], ["Em revisão", "atual"], ["Aprovado", "depois"], ["Publicado", "depois"]].map(([n, e]) => `<li class="cycle__step" data-estado="${e}"><span class="cycle__dot">${e === "feito" ? icone("check", "icon icon--xs") : ""}</span><span class="cycle__text"><span class="cycle__name">${n}</span><span class="cycle__src">origem do estado</span></span></li>`).join("")}</ol>
+  <div class="search-box" style="max-width:360px">${icone("busca")}<input class="input input--bare" type="search" placeholder="Buscar passo" aria-label="Exemplo de busca"><kbd>/</kbd></div>
+  <p class="t-small t-muted">Estados de trabalho dos agentes: ${["Desligado", "Aguardando o motor", "Pronto", "Trabalhando", "Concluído", "Falhou", "Depende de uma pessoa"].map((t, i) => estadoOperacional(["desconectado", "desconectado", "vazio", "carregando", "conectado", "erro", "vazio"][i], t)).join(" ")}. Na demonstração, nenhum agente aparece trabalhando ou concluído.</p>
+</div></section>
+
 <section class="ds-sec"><h2>Movimento</h2><div class="ds-demo">
   <div class="ds-row" style="flex-wrap:wrap">${[["fast", "120 ms", "toque, hover, cor"], ["base", "200 ms", "troca de conteúdo, dobra"], ["slow", "280 ms", "gavetas e folhas"]].map(([t, ms, uso]) => `<div class="card card--pad" style="min-width:180px"><p class="t-label">--duration-${t}</p><p class="t-heading">${ms}</p><p class="t-small t-muted">${uso}</p></div>`).join("")}</div>
   <div class="ds-row"><button class="btn btn--secondary" data-acao="ver-entrada">Ver entrada de conteúdo</button><span class="card card--pad" id="demo-entrada">Conteúdo</span></div>

@@ -59,3 +59,20 @@ export const ESTADO_DO_AGENTE = {
   personagem: { estado: "demonstracao", texto: "Só no rascunho de demonstração" },
 };
 export const NOME_DO_TIPO = { codigo: "Código do motor", ia: "Claude (opcional)", pessoa: "Pessoa" };
+
+// Estados de trabalho de um agente, para quando o motor relatar execuções (individuais ou em cadeia).
+// Na demonstração nenhum agente trabalha: todos ficam em "desligado" ou "aguardando", nunca "concluído".
+export const ESTADOS_DE_TRABALHO = {
+  desligado: { rotulo: "Desligado", op: "desconectado" },
+  aguardando: { rotulo: "Aguardando o motor", op: "desconectado" },
+  pronto: { rotulo: "Pronto", op: "vazio" },
+  trabalhando: { rotulo: "Trabalhando", op: "carregando" },
+  concluido: { rotulo: "Concluído", op: "conectado" },
+  falhou: { rotulo: "Falhou", op: "erro" },
+  pessoa: { rotulo: "Depende de uma pessoa", op: "vazio" },
+};
+export function estadoDeTrabalho(agente) {
+  if (agente.tipo === "pessoa") return "pessoa";
+  if (agente.tipo === "ia") return "desligado";
+  return "aguardando";
+}

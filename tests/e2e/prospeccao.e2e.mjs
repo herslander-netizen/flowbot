@@ -198,6 +198,21 @@ await caso("galeria do design system abre", async () => {
   await g.context().close();
 });
 
+await caso("celular: folha de detalhes fecha arrastando e a aba volta ao recarregar", async () => {
+  const m = await pagina(390, 844, { hasTouch: true, isMobile: true });
+  await m.click('.bottomnav__item[data-aba="lista"]');
+  await m.locator("[data-acao=abrir]:visible").first().click();
+  await m.waitForSelector(".drawer"); await m.waitForTimeout(350);
+  const h = await m.$eval(".drawer__head", (e) => { const b = e.getBoundingClientRect(); return { x: b.x + 40, y: b.y + 16 }; });
+  await m.dispatchEvent(".drawer__head", "pointerdown", { pointerType: "touch", clientX: h.x, clientY: h.y, pointerId: 5, isPrimary: true });
+  await m.dispatchEvent(".drawer__head", "pointermove", { pointerType: "touch", clientX: h.x, clientY: h.y + 170, pointerId: 5 });
+  await m.dispatchEvent(".drawer__head", "pointerup", { pointerType: "touch", clientX: h.x, clientY: h.y + 170, pointerId: 5 });
+  await m.waitForSelector(".drawer", { state: "detached", timeout: 2000 });
+  await m.reload({ waitUntil: "networkidle" });
+  assert.equal(await m.getAttribute('.bottomnav__item[data-aba="lista"]', "aria-current"), "page");
+  await m.context().close();
+});
+
 await caso("sem erros no console", async () => { assert.deepEqual(erros, []); });
 
 await navegador.close();
