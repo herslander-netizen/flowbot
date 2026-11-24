@@ -1,6 +1,7 @@
 import { createServer } from "node:http";
 import { readFile, stat } from "node:fs/promises";
 import { extname, join, resolve, sep } from "node:path";
+import { consultarEmpresasCep, CepErro, validarBuscaCep } from "../server/cep-lookup.mjs";
 
 const raiz = resolve(import.meta.dirname, "..");
 const tipos = {
@@ -14,6 +15,24 @@ const tipos = {
   ".webmanifest": "application/manifest+json",
 };
 const porta = Number(process.env.PORT || 4173);
+const consultaCache = new Map();
+let proximaGeocodificacao = 0;
+async function limitarGeocodificacao() {
+  const agora = Date.now();
+  const inicio = Math.max(agora, proximaGeocodificacao);
+  proximaGeocodificacao = inicio + 1200; // respeitar teto global da instância local: <= 1 req/s
+  if (inicio > agora) await new Promise((resolve) => setTimeout(resolve, inicio - agora));
+}
+function json(res, status, data) {
+  res.writeHead(status, {
+    "content-type": "application/json; charset=utf-8",
+    "cache-control": "no-store",
+    "x-content-type-options": "nosniff",
+    "referrer-policy": "no-referrer",
+  });
+  res.end(JSON.stringify(data));
+}
+
 
 const servidor = createServer(async (req, res) => {
   if (req.method !== "GET" && req.method !== "HEAD") {
@@ -22,6 +41,26 @@ const servidor = createServer(async (req, res) => {
   let caminho;
   try { caminho = decodeURIComponent(new URL(req.url ?? "/", "http://localhost").pathname); }
   catch { res.writeHead(400); res.end(); return; }
+  if (caminho === "/api/prospeccao/cep") {
+    if (req.method !== "GET") { json(res, 405, { erro: "metodo_invalido" }); return; }
+    try {
+      const params = validarBuscaCep(Object.fromEntries(new URL(req.url, "http://localhost").searchParams));
+      const key = params.cep + ":" + params.raio + ":" + params.segmento;
+      const cached = consultaCache.get(key);
+      if (cached && cached.expires > Date.now()) {
+        json(res, 200, cached.data); return;
+      }
+      // A aplicação local escuta apenas 127.0.0.1. Hospedagem pública usa Pages Function com quota.
+      const data = await consultarEmpresasCep(params, { beforeGeocode: limitarGeocodificacao });
+      if (consultaCache.size > 80) consultaCache.clear();
+      consultaCache.set(key, { data, expires: Date.now() + 10 * 60_000 });
+      json(res, 200, data);
+    } catch (err) {
+      const safe = err instanceof CepErro ? err : new CepErro("consulta_indisponivel", 503, "Não foi possível completar a consulta.");
+      json(res, safe.status, { erro: safe.codigo, mensagem: safe.message });
+    }
+    return;
+  }
   const arquivo = resolve(join(raiz, caminho.endsWith("/") ? "." + caminho + "index.html" : "." + caminho));
   if (arquivo !== raiz && !arquivo.startsWith(raiz + sep)) {
     res.writeHead(403); res.end(); return;
