@@ -20,6 +20,7 @@ export function validarBuscaCep(params) {
 function origemDaFonte(url) {
   if (url.startsWith("https://nominatim.openstreetmap.org/")) return "nominatim";
   if (url.startsWith("https://overpass-api.de/")) return "overpass";
+  if (url.startsWith("https://overpass.private.coffee/")) return "overpass_fallback";
   if (url.startsWith("https://viacep.com.br/")) return "viacep";
   if (url.startsWith("https://brasilapi.com.br/")) return "brasilapi";
   if (url.startsWith("https://opencep.com/")) return "opencep";
@@ -196,10 +197,20 @@ export async function consultarEmpresasCep(input, { fetchFn = fetch, beforeGeoco
     throw new CepErro("geocodificacao_inexistente", 422,
       "Nenhuma fonte conseguiu localizar esse CEP no mapa.");
   }
-  const osm = await obterJSON("https://overpass-api.de/api/interpreter", {
-    fetchFn, method: "POST",
-    body: "data=" + encodeURIComponent(queryOverpass(centro, raio)), timeout: 25000,
-  });
+  const overpassBody = "data=" + encodeURIComponent(queryOverpass(centro, raio));
+  let osm;
+  try {
+    osm = await obterJSON("https://overpass-api.de/api/interpreter", {
+      fetchFn, method: "POST", body: overpassBody, timeout: 25000,
+    });
+  } catch (error) {
+    // Apenas erros indisponíveis: não contornar HTTP 429 ou bloqueios de quota.
+    if (!(error instanceof CepErro) || error.codigo !== "fonte_indisponivel_overpass")
+      throw error;
+    osm = await obterJSON("https://overpass.private.coffee/api/interpreter", {
+      fetchFn, method: "POST", body: overpassBody, timeout: 25000,
+    });
+  }
   if (!osm || !Array.isArray(osm.elements))
     throw new CepErro("mapa_indisponivel", 502, "Dados do mapa inválidos.");
   return {
