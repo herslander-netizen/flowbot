@@ -17,6 +17,14 @@ export function validarBuscaCep(params) {
     throw new CepErro("segmento_invalido", 400, "Segmento inválido.");
   return { cep, raio, segmento };
 }
+function origemDaFonte(url) {
+  if (url.startsWith("https://nominatim.openstreetmap.org/")) return "nominatim";
+  if (url.startsWith("https://overpass-api.de/")) return "overpass";
+  if (url.startsWith("https://viacep.com.br/")) return "viacep";
+  if (url.startsWith("https://brasilapi.com.br/")) return "brasilapi";
+  if (url.startsWith("https://opencep.com/")) return "opencep";
+  return "desconhecida";
+}
 async function obterJSON(url, { fetchFn, method = "GET", body, timeout = 15000 }) {
   let response;
   try {
@@ -34,10 +42,10 @@ async function obterJSON(url, { fetchFn, method = "GET", body, timeout = 15000 }
       ...(body ? { body } : {}),
     });
   } catch {
-    throw new CepErro("fonte_indisponivel", 503, "Serviço público indisponível no momento.");
+    throw new CepErro("fonte_indisponivel_" + origemDaFonte(url), 503, "Serviço público indisponível no momento.");
   }
   if (response.status === 429) throw new CepErro("fonte_limitada", 429, "Limite da fonte pública. Tente mais tarde.");
-  if (!response.ok) throw new CepErro("fonte_indisponivel", 503, "Fonte pública indisponível no momento.");
+  if (!response.ok) throw new CepErro("fonte_indisponivel_" + origemDaFonte(url), 503, "Fonte pública indisponível no momento.");
   try { return await response.json(); }
   catch { throw new CepErro("resposta_invalida", 502, "Dados inválidos na fonte pública."); }
 }
