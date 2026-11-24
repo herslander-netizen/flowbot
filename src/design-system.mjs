@@ -1,6 +1,7 @@
 // Galeria viva do design system: tudo aqui usa as mesmas classes dos módulos.
 import { icone } from "./ui/icones.mjs";
-import { aviso, prenderFoco, temaAtual, aplicarTema, alternarMenu, fecharMenus } from "./ui/componentes.mjs";
+import { aviso, prenderFoco, temaAtual, aplicarTema, alternarMenu, fecharMenus, ESTADOS, estadoOperacional, blocoDeEstado } from "./ui/componentes.mjs";
+import { MODULOS } from "./ui/shell.mjs";
 
 const cores = [
   ["bg", "Fundo"], ["surface", "Cartão"], ["surface-sunken", "Rebaixado"], ["surface-raised", "Elevado"],
@@ -72,10 +73,39 @@ document.getElementById("ds").innerHTML = `
   <p class="t-small t-muted">Gaveta à direita no computador e folha inferior no celular, com foco preso e Esc para fechar.</p></div></section>
 
 <section class="ds-sec"><h2>Navegação</h2><div class="ds-grid ds-grid--wide"><div class="card card--pad nav-group">
-  <span class="t-label nav-group__label">Comercial</span><a class="nav-item" href="#" aria-current="page">${icone("alvo")}Prospecção</a>
-  <span class="t-label nav-group__label">Próximos módulos</span><span class="nav-item" aria-disabled="true">${icone("fluxo")}Bot Studio<span class="badge">Em breve</span></span></div>
+  ${[...new Set(MODULOS.map((m) => m.grupo))].map((g) => `<span class="t-label nav-group__label">${g}</span>${MODULOS.filter((m) => m.grupo === g).map((m, i) => `<a class="nav-item" href="#" ${m.id === "prospeccao" ? 'aria-current="page"' : ""}>${icone(m.icone)}${m.nome}${m.selo ? `<span class="nav-item__tag">${m.selo}</span>` : ""}</a>`).join("")}`).join("")}
+  <p class="t-small t-muted" style="padding:8px 12px 0">Só módulos com tela aparecem. Atendimento, Agentes de IA, Operações e Administração entram em <code>MODULOS</code> (src/ui/shell.mjs) quando existirem.</p></div>
   <div class="card" style="position:relative;min-height:120px;overflow:hidden"><nav class="bottomnav" style="position:absolute;display:grid" aria-label="Exemplo de barra inferior">
-    <button class="bottomnav__item" aria-current="page">${icone("painel")}Resumo</button><button class="bottomnav__item">${icone("mapa")}Mapa</button><button class="bottomnav__item">${icone("lista")}Empresas</button><button class="bottomnav__item">${icone("mais")}Adicionar</button></nav></div></div></section>
+    <button class="bottomnav__item" aria-current="page">${icone("painel")}Resumo</button><button class="bottomnav__item">${icone("mapa")}Mapa</button><button class="bottomnav__item">${icone("lista")}Empresas</button><button class="bottomnav__item">${icone("mais")}Adicionar</button></nav></div>
+  <div class="card card--pad"><p class="t-label">Seletor de módulo (celular)</p><div class="menu-anchor" style="margin-top:8px"><button type="button" class="topbar__module" aria-haspopup="menu" aria-expanded="false" aria-controls="m2"><span>Bot Studio</span><span class="nav-item__tag">Prévia</span>${icone("abaixo", "icon icon--sm")}</button>
+    <div class="menu" id="m2" role="menu" hidden style="left:0;right:auto"><p class="menu__label">Módulos</p>${MODULOS.map((m) => `<a class="menu__item" role="menuitem" href="#">${icone(m.icone)}${m.nome}</a>`).join("")}</div></div></div></div></section>
+
+<section class="ds-sec"><h2>Estados operacionais</h2><div class="ds-demo">
+  <p class="t-small t-muted">Como uma integração está agora. Ponto + texto, sem pílula. Use só estes estados (<code>ESTADOS</code> em src/ui/componentes.mjs).</p>
+  <div class="ds-row" style="flex-wrap:wrap;gap:12px 20px">${Object.keys(ESTADOS).map((k) => estadoOperacional(k)).join("")}</div>
+  <div class="ds-grid ds-grid--wide">
+    ${blocoDeEstado({ estado: "carregando", titulo: "Carregando o espaço", texto: "Mostre o que está sendo carregado." })}
+    ${blocoDeEstado({ estado: "desconectado", titulo: "Motor não conectado", texto: "Diga o que falta e o que ainda dá para fazer." })}
+    ${blocoDeEstado({ estado: "nao-salvo", titulo: "Alterações não salvas", texto: "O rascunho só existe nesta aba." })}
+    ${blocoDeEstado({ estado: "conflito", titulo: "Conflito de versão", texto: "Outra pessoa salvou antes. Compare antes de sobrescrever." })}
+    ${blocoDeEstado({ estado: "validacao", titulo: "Precisa de correção", texto: "2 saídas sem ligação." })}
+    ${blocoDeEstado({ estado: "permissao", titulo: "Sem permissão", texto: "Peça acesso a quem administra o espaço." })}
+    ${blocoDeEstado({ estado: "indisponivel", titulo: "Serviço indisponível", texto: "Nada foi perdido. Tente de novo em instantes." })}
+    ${blocoDeEstado({ estado: "vazio", titulo: "Sem dados", texto: "Explique como o primeiro dado aparece." })}
+  </div></div></section>
+
+<section class="ds-sec"><h2>Estados de versão</h2><div class="ds-demo"><div class="ds-row" style="flex-wrap:wrap">
+  ${[["rascunho", "Rascunho"], ["revisao", "Em revisão"], ["correcao", "Precisa de correção"], ["aprovado", "Aprovado"], ["publicado", "Publicado"]].map(([e, n]) => `<span class="version-state" data-estado="${e}">${n}</span>`).join("")}</div>
+  <p class="t-small t-muted">Cor e texto juntos. Aprovado é contorno (ainda não é definitivo); publicado é preenchido.</p></div></section>
+
+<section class="ds-sec"><h2>Movimento</h2><div class="ds-demo">
+  <div class="ds-row" style="flex-wrap:wrap">${[["fast", "120 ms", "toque, hover, cor"], ["base", "200 ms", "troca de conteúdo, dobra"], ["slow", "280 ms", "gavetas e folhas"]].map(([t, ms, uso]) => `<div class="card card--pad" style="min-width:180px"><p class="t-label">--duration-${t}</p><p class="t-heading">${ms}</p><p class="t-small t-muted">${uso}</p></div>`).join("")}</div>
+  <div class="ds-row"><button class="btn btn--secondary" data-acao="ver-entrada">Ver entrada de conteúdo</button><span class="card card--pad" id="demo-entrada">Conteúdo</span></div>
+  <p class="t-small t-muted">Só <code>transform</code> e <code>opacity</code>. Classes: <code>.pressable</code> (toque), <code>.view-enter</code> (troca de tela), <code>.reveal</code> (expansão), <code>.pulse-once</code> (algo novo apareceu). Com movimento reduzido, tudo dura 1 ms.</p></div></section>
+
+<section class="ds-sec"><h2>Painel lateral e ação do polegar</h2><div class="ds-grid ds-grid--wide">
+  <aside class="side-panel" style="animation:none"><div class="side-panel__head"><div><p class="t-label">Contexto</p><p class="t-heading">Painel lateral</p></div></div><div class="side-panel__body"><p class="t-small t-muted">Edição ao lado do trabalho, sem cobrir a tela, no computador. No celular o mesmo conteúdo vai para a folha inferior.</p></div></aside>
+  <div class="card" style="position:relative;min-height:140px;overflow:hidden"><button class="fab" style="position:absolute;bottom:16px;right:16px;display:inline-flex">${icone("mais")}Passo</button></div></div></section>
 <div id="sobre"></div>`;
 
 const sobre = document.getElementById("sobre");
@@ -98,6 +128,7 @@ document.addEventListener("click", (e) => {
   if (a === "modal") abrir(`<div class="modal" role="dialog" aria-modal="true" aria-labelledby="mt"><h2 class="modal__title" id="mt">Publicar este fluxo?</h2><p class="t-muted">Confirmação de ação sensível: diga o que acontece e o que não volta atrás.</p><div class="modal__actions"><button class="btn btn--ghost" data-acao="fechar">Cancelar</button><button class="btn btn--primary" data-acao="fechar">Publicar</button></div></div>`);
   if (a === "gaveta") abrir(`<section class="drawer" role="dialog" aria-modal="true" aria-labelledby="gt"><span class="drawer__grab"></span><div class="drawer__head"><div style="flex:1"><span class="t-label">Exemplo</span><h2 class="drawer__title" id="gt">Gaveta de detalhes</h2></div><button class="btn btn--ghost btn--icon" data-acao="fechar" aria-label="Fechar">${icone("fechar")}</button></div><div class="drawer__body"><section class="section"><h3 class="section__title">Seção</h3><dl class="dl"><div><dt>Campo</dt><dd>Valor</dd></div><div><dt>Campo</dt><dd>Valor</dd></div></dl></section></div><div class="drawer__foot"><button class="btn btn--secondary" data-acao="fechar" style="flex:1">Fechar</button><button class="btn btn--primary" data-acao="fechar" style="flex:1">Salvar</button></div></section>`);
   if (a === "fechar") fechar();
+  if (a === "ver-entrada") { const d = document.getElementById("demo-entrada"); d.classList.remove("view-enter"); void d.offsetWidth; d.classList.add("view-enter"); }
 });
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") { fecharMenus(); fechar(); } });
 aplicarTema(temaAtual());

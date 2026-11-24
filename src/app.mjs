@@ -5,6 +5,7 @@ import {
   pontuacao, explicarPontuacao, resumoFunil, exportarCsv,
 } from "./prospecting.mjs";
 import { icone } from "./ui/icones.mjs";
+import { montarShell, atualizarRotuloTema } from "./ui/shell.mjs";
 import {
   html, formatar, aviso, prenderFoco, temaAtual, aplicarTema, alternarMenu, fecharMenus,
 } from "./ui/componentes.mjs";
@@ -52,45 +53,14 @@ function filtrados() {
 
 /* ───────────────────────── Estrutura ───────────────────────── */
 function montarEstrutura() {
-  const modulos = [
-    ["conversa", "Atendimento"], ["agente", "Agentes de IA"],
-    ["atividade", "Operações"], ["engrenagem", "Administração"],
-  ];
-  document.body.innerHTML = `
-  <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
-  <div class="shell">
-    <aside class="sidebar" aria-label="Menu do FlowBot">
-      <a class="brand" href="./"><img src="./assets/flowbot-symbol.svg" alt="" width="26" height="26">flowbot</a>
-      <nav aria-label="Módulos" class="nav-group">
-        <span class="t-label nav-group__label">Comercial</span>
-        <a class="nav-item" href="./" aria-current="page">${icone("alvo")}Prospecção</a>
-        <span class="t-label nav-group__label">Automação · prévia</span>
-        <a class="nav-item" href="./estudio/">${icone("fluxo")}Bot Studio</a>
-        <span class="t-label nav-group__label">Em breve</span>
-        ${modulos.map(([i, n]) => `<button type="button" class="nav-item" aria-disabled="true" data-acao="em-breve" data-modulo="${n}">${icone(i)}${n}</button>`).join("")}
-      </nav>
-      <div class="sidebar__foot">
-        <div class="alert">${icone("escudo")}<span>Pesquisa separada de envio. Nada é disparado nesta versão.</span></div>
-        <button type="button" class="nav-item" data-acao="tema">${icone(temaAtual() === "light" ? "lua" : "sol")}<span data-rotulo-tema>Tema ${temaAtual() === "light" ? "escuro" : "claro"}</span></button>
-        <a class="nav-item" href="./landing/">${icone("link")}Site do FlowBot</a>
-      </div>
-    </aside>
-    <div>
-      <header class="topbar">
-        <a class="brand" href="./"><img src="./assets/flowbot-symbol.svg" alt="" width="26" height="26">flowbot</a>
-        <span class="topbar__module">Prospecção</span>
-        <div class="menu-anchor topbar__more">
-          <button type="button" class="btn btn--ghost btn--icon" aria-label="Mais ações" aria-haspopup="menu" aria-expanded="false" aria-controls="menu-topo">${icone("reticencias")}</button>
-          <div class="menu" id="menu-topo" role="menu" hidden>
-            <button type="button" class="menu__item" role="menuitem" data-acao="importar">${icone("importar")}Importar CSV</button>
-            <button type="button" class="menu__item" role="menuitem" data-acao="exportar">${icone("exportar")}Exportar CSV</button>
-            <div class="menu__sep"></div>
-            <button type="button" class="menu__item" role="menuitem" data-acao="tema">${icone("sol")}<span data-rotulo-tema>Tema ${temaAtual() === "light" ? "escuro" : "claro"}</span></button>
-            <a class="menu__item" role="menuitem" href="./estudio/">${icone("fluxo")}Bot Studio (prévia)</a>
-            <a class="menu__item" role="menuitem" href="./landing/">${icone("link")}Site do FlowBot</a>
-          </div>
-        </div>
-      </header>
+  document.body.innerHTML = montarShell({
+    ativo: "prospeccao",
+    nota: "Pesquisa separada de envio. Nada é disparado nesta versão.",
+    acoes: [
+      { acao: "importar", icone: "importar", rotulo: "Importar CSV" },
+      { acao: "exportar", icone: "exportar", rotulo: "Exportar CSV" },
+    ],
+    conteudo: `
       <main class="main" id="conteudo" data-aba="${estado.aba}" tabindex="-1">
         <div class="page">
           <header class="page-head">
@@ -150,9 +120,8 @@ function montarEstrutura() {
           </section>
           <footer class="page-foot">FlowBot · Alvo Digital · Prospecção responsável · Sem integração com o motor de atendimento nesta versão</footer>
         </div>
-      </main>
-    </div>
-  </div>
+      </main>`,
+    inferior: `
   <nav class="bottomnav" aria-label="Seções da prospecção">
     <button type="button" class="bottomnav__item" data-aba="resumo">${icone("painel")}Resumo</button>
     <button type="button" class="bottomnav__item" data-aba="mapa">${icone("mapa")}Mapa</button>
@@ -160,7 +129,8 @@ function montarEstrutura() {
     <button type="button" class="bottomnav__item" data-acao="novo">${icone("mais")}Adicionar</button>
   </nav>
   <input class="sr-only" id="csv-file" type="file" accept=".csv,text/csv" tabindex="-1" aria-label="Arquivo CSV de empresas">
-  <div id="painel"></div>`;
+  <div id="painel"></div>`,
+  });
 }
 
 /* ───────────────────────── Regiões ───────────────────────── */
@@ -599,7 +569,7 @@ async function importarArquivo(arquivo) {
 function trocarTema() {
   const novo = temaAtual() === "light" ? "dark" : "light";
   aplicarTema(novo);
-  document.querySelectorAll("[data-rotulo-tema]").forEach((s) => { s.textContent = "Tema " + (novo === "light" ? "escuro" : "claro"); });
+  atualizarRotuloTema();
   desenharMarcadores({ enquadrar: false });
 }
 
@@ -631,7 +601,6 @@ document.addEventListener("click", async (evento) => {
   else if (acao === "legenda") { estado.legendaAberta = !estado.legendaAberta; desenharMarcadores({ enquadrar: false }); $(".map-legend__toggle")?.focus(); }
   else if (acao === "limpar-filtros") { estado.filtro = "todos"; estado.busca = ""; $("#search").value = ""; atualizar(); }
   else if (acao === "ver-no-mapa") verNoMapa(alvo.dataset.id);
-  else if (acao === "em-breve") aviso(alvo.dataset.modulo + " ainda não existe nesta versão. A navegação já está reservada para ele.");
   else if (acao === "gerar" && estado.painel?.tipo === "detalhe") {
     const lead = estado.leads.find((x) => x.id === estado.painel.id);
     rascunhos.set(lead.id, criarRascunho(lead, REMETENTE));
