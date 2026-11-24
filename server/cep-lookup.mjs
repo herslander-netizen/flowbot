@@ -24,7 +24,7 @@ async function obterJSON(url, { fetchFn, method = "GET", body, timeout = 15000 }
       method, redirect: "error", signal: AbortSignal.timeout(timeout),
       headers: {
         accept: "application/json",
-        "user-agent": "FlowBot-Prospecção/0.1 (https://github.com/herslander-netizen/flowbot)",
+        "user-agent": "FlowBot-Prospeccao/0.1 (https://github.com/herslander-netizen/flowbot)",
         ...(body ? { "content-type": "application/x-www-form-urlencoded" } : {}),
       },
       ...(body ? { body } : {}),
