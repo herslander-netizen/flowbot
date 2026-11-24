@@ -43,10 +43,10 @@ async function obterJSON(url, { fetchFn, method = "GET", body, timeout = 15000 }
       ...(body ? { body } : {}),
     });
   } catch {
-    throw new CepErro("fonte_indisponivel_" + origemDaFonte(url), 503, "Serviço público indisponível no momento.");
+    throw new CepErro("fonte_rede_" + origemDaFonte(url), 503, "Serviço público indisponível no momento.");
   }
   if (response.status === 429) throw new CepErro("fonte_limitada", 429, "Limite da fonte pública. Tente mais tarde.");
-  if (!response.ok) throw new CepErro("fonte_indisponivel_" + origemDaFonte(url), 503, "Fonte pública indisponível no momento.");
+  if (!response.ok) throw new CepErro("fonte_http_" + response.status + "_" + origemDaFonte(url), 503, "Fonte pública indisponível no momento.");
   try { return await response.json(); }
   catch { throw new CepErro("resposta_invalida", 502, "Dados inválidos na fonte pública."); }
 }
@@ -205,7 +205,7 @@ export async function consultarEmpresasCep(input, { fetchFn = fetch, beforeGeoco
     });
   } catch (error) {
     // Apenas erros indisponíveis: não contornar HTTP 429 ou bloqueios de quota.
-    if (!(error instanceof CepErro) || error.codigo !== "fonte_indisponivel_overpass")
+    if (!(error instanceof CepErro) || !["fonte_rede_overpass", "fonte_http_502_overpass", "fonte_http_503_overpass", "fonte_http_504_overpass"].includes(error.codigo))
       throw error;
     osm = await obterJSON("https://overpass.private.coffee/api/interpreter", {
       fetchFn, method: "POST", body: overpassBody, timeout: 25000,
