@@ -20,6 +20,7 @@
 .btn:hover { background: color-mix(in srgb, var(--btn-bg) 88%, var(--text)); color: var(--btn-fg); }
 .btn:active { transform: scale(.97); }
 .btn:disabled, .btn[aria-disabled="true"] { opacity: .5; cursor: not-allowed; transform: none; }
+.btn--primary:disabled, .btn--primary[aria-disabled="true"] { opacity: 1; background: var(--surface-sunken); color: var(--text-faint); box-shadow: none; border-color: var(--border-subtle); }
 .btn--primary { --btn-bg: var(--accent); --btn-fg: var(--on-accent); --btn-border: transparent; box-shadow: var(--shadow-1); }
 .btn--primary:hover { background: var(--accent-hover); color: var(--on-accent); }
 .btn--secondary { --btn-bg: transparent; --btn-border: var(--border-strong); }
@@ -239,6 +240,67 @@ kbd { font: var(--weight-medium) 11px/1 var(--font-mono); color: var(--text-fain
 .tabs__item[aria-current="page"] .icon { color: var(--accent-text); }
 @media (min-width: 768px) { .tabs { display: flex; } }
 
+/* ── Movimento: uma linguagem para todos os módulos ───────
+   Rápido (120ms) para toque e hover, base (200ms) para trocar de conteúdo, lento (280ms) para painéis.
+   Só transform e opacity; prefers-reduced-motion corta tudo em base.css. */
+.pressable { transition: transform var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out); -webkit-tap-highlight-color: transparent; }
+.pressable:active { transform: scale(.98); }
+.view-enter { animation: fb-view var(--duration-base) var(--ease-out); }
+.reveal { animation: fb-reveal var(--duration-base) var(--ease-out); }
+.pulse-once { animation: fb-pulse 600ms var(--ease-out); }
+@keyframes fb-view { from { opacity: 0; transform: translateY(6px); } }
+@keyframes fb-reveal { from { opacity: 0; transform: translateY(-4px); } }
+@keyframes fb-pulse { 0% { box-shadow: 0 0 0 0 color-mix(in srgb, var(--accent) 45%, transparent); } 100% { box-shadow: 0 0 0 10px transparent; } }
+
+/* ── Estado operacional: como uma integração está agora ───
+   Um ponto e um texto, sem pílula. data-estado: conectado, desconectado, demonstracao, carregando,
+   salvando, nao-salvo, conflito, validacao, permissao, indisponivel, erro, vazio. */
+.op-state { display: inline-flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); color: var(--text-muted); white-space: nowrap; }
+.op-state::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: var(--op, var(--text-faint)); flex: 0 0 auto; }
+.op-state[data-estado="conectado"] { --op: var(--success); }
+.op-state[data-estado="demonstracao"] { --op: var(--warning); }
+.op-state[data-estado="carregando"], .op-state[data-estado="salvando"] { --op: var(--info); }
+.op-state[data-estado="carregando"]::before, .op-state[data-estado="salvando"]::before { animation: fb-blink 1s var(--ease-out) infinite alternate; }
+.op-state[data-estado="nao-salvo"], .op-state[data-estado="validacao"] { --op: var(--warning); }
+.op-state[data-estado="conflito"], .op-state[data-estado="erro"], .op-state[data-estado="permissao"] { --op: var(--danger); }
+.op-state[data-estado="desconectado"], .op-state[data-estado="indisponivel"], .op-state[data-estado="vazio"] { --op: var(--text-faint); }
+@keyframes fb-blink { to { opacity: .25; } }
+
+/* Bloco de estado: vazio, erro, sem permissão, indisponível. Ícone, título, texto e no máximo uma ação. */
+.state-block { display: grid; justify-items: start; gap: var(--space-2); padding: var(--space-5); border-radius: var(--radius-md); background: var(--surface-sunken); }
+.state-block > .icon { width: 22px; height: 22px; color: var(--op, var(--text-faint)); }
+.state-block__title { font-weight: var(--weight-semibold); }
+.state-block__text { font-size: var(--text-sm); line-height: var(--leading-sm); color: var(--text-muted); max-width: 56ch; }
+.state-block[data-estado="erro"], .state-block[data-estado="conflito"], .state-block[data-estado="permissao"] { --op: var(--danger); }
+.state-block[data-estado="validacao"], .state-block[data-estado="nao-salvo"] { --op: var(--warning); }
+.state-block[data-estado="conectado"] { --op: var(--success); }
+
+/* Estado de versão: cor + texto, nunca só cor. */
+.version-state { display: inline-flex; align-items: center; gap: 6px; height: 24px; padding: 0 var(--space-2); border-radius: var(--radius-xs); font-size: var(--text-xs); font-weight: var(--weight-semibold); background: var(--surface-sunken); color: var(--text-muted); white-space: nowrap; }
+.version-state::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: currentColor; }
+.version-state[data-estado="revisao"] { background: var(--info-subtle); color: var(--info); }
+.version-state[data-estado="correcao"] { background: var(--danger-subtle); color: var(--danger); }
+.version-state[data-estado="aprovado"] { background: transparent; color: var(--success); box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--success) 50%, transparent); }
+.version-state[data-estado="publicado"] { background: var(--success-subtle); color: var(--success); }
+
+/* Painel lateral não modal (computador): edição contextual sem cobrir o trabalho. */
+.side-panel { display: flex; flex-direction: column; min-width: 0; background: var(--surface); border: var(--border-width) solid var(--border-subtle); border-radius: var(--radius-lg); overflow: hidden; animation: fb-slide-left var(--duration-slow) var(--ease-emphasized); }
+.side-panel__head { display: flex; align-items: flex-start; gap: var(--space-3); padding: var(--space-4); border-bottom: var(--border-width) solid var(--border-subtle); }
+.side-panel__body { flex: 1; overflow-y: auto; overscroll-behavior: contain; padding: var(--space-4); display: grid; align-content: start; gap: var(--space-5); }
+.side-panel__foot { display: flex; gap: var(--space-2); padding: var(--space-3) var(--space-4); border-top: var(--border-width) solid var(--border-subtle); }
+
+/* Botão flutuante de ação principal no celular (alcance do polegar). */
+.fab { position: fixed; z-index: var(--z-sticky); right: max(var(--space-4), env(safe-area-inset-right)); bottom: calc(var(--bottomnav-height) + var(--space-4) + env(safe-area-inset-bottom)); display: inline-flex; align-items: center; gap: var(--space-2); min-height: 52px; padding: 0 var(--space-5); border: 0; border-radius: var(--radius-pill); background: var(--accent); color: var(--on-accent); font-weight: var(--weight-semibold); box-shadow: var(--shadow-key), var(--shadow-3); transition: transform var(--duration-fast) var(--ease-out); }
+.fab:active { transform: scale(.96); }
+@media (min-width: 1024px) { .fab { display: none; } }
+
+/* Toque: no celular, todo alvo interativo tem pelo menos 44px, mesmo nas variações compactas. */
+@media (pointer: coarse), (max-width: 767px) {
+  .btn--sm, .select--sm { min-height: var(--touch-min); }
+  .btn--icon.btn--sm { width: var(--touch-min); }
+  .segmented button { min-height: 40px; }
+}
+
 /* ── Navegação do aplicativo ───────────────────────────── */
 .shell { min-height: 100dvh; }
 .sidebar { display: none; }
@@ -246,11 +308,27 @@ kbd { font: var(--weight-medium) 11px/1 var(--font-mono); color: var(--text-fain
 .brand { display: inline-flex; align-items: center; gap: var(--space-2); color: var(--text); text-decoration: none; font: var(--weight-regular) 20px/1 var(--font-wordmark); letter-spacing: -0.02em; }
 .brand:hover { color: var(--text); }
 .brand img { width: 26px; height: 26px; }
-.topbar__module { margin-left: auto; font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--text-muted); }
+.topbar__switch { margin-left: auto; }
+.topbar__module { display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--touch-min); padding: 0 var(--space-2) 0 var(--space-3); border: 0; border-radius: var(--radius-pill); background: transparent; color: var(--text); font-size: var(--text-md); font-weight: var(--weight-semibold); transition: background var(--duration-fast) var(--ease-out); }
+.topbar__module:hover, .topbar__module[aria-expanded="true"] { background: var(--state-hover); }
+.topbar__module > .icon { color: var(--text-faint); transition: transform var(--duration-base) var(--ease-out); }
+.topbar__module[aria-expanded="true"] > .icon { transform: rotate(180deg); }
+.menu__label { padding: var(--space-2) var(--space-3) var(--space-1); font: var(--weight-medium) var(--text-xs)/var(--leading-xs) var(--font-mono); letter-spacing: var(--tracking-label); text-transform: uppercase; color: var(--text-faint); }
+.menu__item[aria-current="page"] { color: var(--text); font-weight: var(--weight-semibold); }
+.menu__check { margin-left: auto; color: var(--accent-text); }
+.nav-item__tag { margin-left: auto; font: var(--weight-medium) 10px/1 var(--font-mono); letter-spacing: var(--tracking-label); text-transform: uppercase; color: var(--text-muted); }
+.topbar__module .nav-item__tag { margin-left: 0; }
+.sidebar__note { display: flex; gap: var(--space-2); align-items: flex-start; padding: 0 var(--space-3); font-size: var(--text-xs); line-height: var(--leading-xs); color: var(--text-faint); }
+.sidebar__note .icon { margin-top: 1px; color: var(--success); }
+.shell__main { min-width: 0; }
 .bottomnav { position: fixed; z-index: var(--z-nav); left: 0; right: 0; bottom: 0; display: grid; grid-auto-flow: column; grid-auto-columns: 1fr; padding: 0 max(var(--space-2), env(safe-area-inset-right)) env(safe-area-inset-bottom) max(var(--space-2), env(safe-area-inset-left)); background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-top: var(--border-width) solid var(--border-subtle); }
 .bottomnav__item { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: var(--bottomnav-height); border: 0; background: none; color: var(--text-faint); font-size: 11px; font-weight: var(--weight-semibold); -webkit-tap-highlight-color: transparent; }
 .bottomnav__item[aria-current="page"], .bottomnav__item[aria-pressed="true"] { color: var(--accent-text); }
-.bottomnav__item .icon { width: 22px; height: 22px; }
+.bottomnav__item .icon { width: 22px; height: 22px; transition: transform var(--duration-fast) var(--ease-out); }
+.bottomnav__item:active .icon { transform: scale(.88); }
+.bottomnav__item[aria-current="page"] .icon, .bottomnav__item[aria-pressed="true"] .icon { animation: fb-pop-icon var(--duration-base) var(--ease-spring); }
+@keyframes fb-pop-icon { from { transform: scale(.85); } }
+.chip:active, .menu__item:active, .nav-item:active { transform: scale(.98); }
 .nav-group { display: grid; gap: 2px; }
 .nav-group__label { padding: var(--space-4) var(--space-3) var(--space-2); }
 .nav-item { display: flex; align-items: center; gap: var(--space-3); min-height: 38px; padding: 0 var(--space-3); border-radius: var(--radius-sm); color: var(--text-muted); text-decoration: none; font-size: var(--text-md); font-weight: var(--weight-medium); border: 0; background: none; width: 100%; text-align: left; }

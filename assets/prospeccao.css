@@ -142,3 +142,12 @@
   .views[data-vista="mapa"] .table-view { display: none; }
   .views[data-vista="mapa"] .lead-cards { display: grid; }
 }
+
+/* 320–359px: rótulos dos indicadores numa linha e cabeçalho do funil quebrando com folga */
+@media (max-width: 359px) {
+  .kpi { padding: var(--space-3); }
+  .kpi__label { font-size: var(--text-xs); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .kpi__label .icon { display: none; }
+}
+.overview .card__head { flex-wrap: wrap; row-gap: var(--space-1); }
+

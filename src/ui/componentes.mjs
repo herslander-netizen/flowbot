@@ -80,3 +80,28 @@ export function fecharMenus(excecao = null) {
     if (b !== excecao) alternarMenu(b, false);
   });
 }
+
+// ── Estados operacionais (ver assets/components.css: .op-state e .state-block) ──
+// Textos padrão; cada tela pode trocar o texto, mas não inventar estados novos.
+export const ESTADOS = {
+  conectado: { icone: "ok", texto: "Conectado" },
+  desconectado: { icone: "nuvemoff", texto: "Não conectado" },
+  demonstracao: { icone: "info", texto: "Demonstração" },
+  carregando: { icone: "relogio", texto: "Carregando" },
+  salvando: { icone: "relogio", texto: "Salvando" },
+  "nao-salvo": { icone: "alerta", texto: "Alterações não salvas" },
+  conflito: { icone: "alerta", texto: "Conflito de versão" },
+  validacao: { icone: "alerta", texto: "Precisa de correção" },
+  permissao: { icone: "cadeado", texto: "Sem permissão" },
+  indisponivel: { icone: "nuvemoff", texto: "Serviço indisponível" },
+  erro: { icone: "alerta", texto: "Erro" },
+  vazio: { icone: "info", texto: "Sem dados" },
+};
+export function estadoOperacional(estado, texto) {
+  const e = ESTADOS[estado] ?? ESTADOS.vazio;
+  return `<span class="op-state" data-estado="${estado}">${html(texto ?? e.texto)}</span>`;
+}
+export function blocoDeEstado({ estado = "vazio", titulo, texto = "", acao = "" }) {
+  const e = ESTADOS[estado] ?? ESTADOS.vazio;
+  return `<div class="state-block" data-estado="${estado}" role="${["erro", "conflito", "permissao"].includes(estado) ? "alert" : "status"}">${icone(e.icone)}<p class="state-block__title">${html(titulo ?? e.texto)}</p>${texto ? `<p class="state-block__text">${html(texto)}</p>` : ""}${acao}</div>`;
+}
