@@ -64,6 +64,55 @@ test("filtro geográfico aplica categoria e distância à lista, sem duplicatas"
   assert.equal(converterEmpresasOSM([], { lat: 0, lon: 0 }, { raio: 500, segmento: "todos", cidade: "X", uf: "SE" }).length, 0);
 });
 
+test("fallback BrasilAPI preserva endereço e prospecção sem dados pessoais", async () => {
+  const requests = [];
+  const fetchFn = async (url, options) => {
+    requests.push({ url: String(url), options });
+    if (String(url).includes("viacep.com.br")) throw new Error("ViaCEP inacessível no edge");
+    if (String(url).includes("brasilapi.com.br")) {
+      return new Response(JSON.stringify({
+        cep: "01001000", street: "Praça da Sé", neighborhood: "Sé",
+        city: "São Paulo", state: "SP",
+      }), { status: 200 });
+    }
+    if (String(url).includes("nominatim.openstreetmap.org")) {
+      return new Response(JSON.stringify([{ lat: "-23.55", lon: "-46.63" }]));
+    }
+    if (String(url).includes("overpass-api.de")) {
+      return new Response(JSON.stringify({ elements: [{
+        type: "node", id: 98123, lat: -23.5501, lon: -46.6301,
+        tags: { name: "Loja Pública", shop: "convenience" },
+      }] }));
+    }
+    throw new Error("Fonte inesperada");
+  };
+  const result = await consultarEmpresasCep({ cep: "01001000", raio: 500 },
+    { fetchFn });
+  assert.equal(result.empresas.length, 1);
+  assert.match(result.endereco, /São Paulo/);
+  assert.equal(result.empresas[0].fonte, "https://www.openstreetmap.org/node/98123");
+  assert.ok(requests.some((r) => r.url.includes("brasilapi.com.br")));
+  assert.equal(requests[0].options.redirect, "follow");
+  assert.equal(requests[0].options.headers["user-agent"], undefined);
+  assert.ok(requests.some((r) => r.url.includes("nominatim.openstreetmap.org") &&
+    r.options.headers["user-agent"].includes("FlowBot")));
+  assert.ok(result.empresas.every((item) => !("whatsapp" in item) && !("telefone" in item)));
+});
+
+test("fontes públicas indisponíveis devolvem erro explícito e não consultam geolocalização", async () => {
+  const visited = [];
+  const fetchFn = async (url) => {
+    visited.push(String(url));
+    throw new Error("provider down");
+  };
+  await assert.rejects(
+    () => consultarEmpresasCep({ cep: "01001000" }, { fetchFn }),
+    (e) => e instanceof CepErro && e.codigo === "cep_fontes_indisponiveis" && e.status === 503,
+  );
+  assert.equal(visited.length, 3);
+  assert.ok(visited.every((url) => !url.includes("nominatim")));
+});
+
 test("CEP inexistente não aciona serviços geográficos", async () => {
   const api = simularAPIs({ viacep: { erro: true } });
   await assert.rejects(
