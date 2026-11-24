@@ -20,11 +20,15 @@ export function validarBuscaCep(params) {
 async function obterJSON(url, { fetchFn, method = "GET", body, timeout = 15000 }) {
   let response;
   try {
+    const trustedCepSource = /^https:\/\/(?:viacep\.com\.br|brasilapi\.com\.br|opencep\.com)\//.test(url);
     response = await fetchFn(url, {
-      method, redirect: "error", signal: AbortSignal.timeout(timeout),
+      method, redirect: trustedCepSource ? "follow" : "error", signal: AbortSignal.timeout(timeout),
       headers: {
         accept: "application/json",
-        "user-agent": "FlowBot-Prospeccao/0.1 (https://github.com/herslander-netizen/flowbot)",
+        ...(!trustedCepSource ? {
+          "user-agent": "FlowBot-Prospeccao/0.1 (https://github.com/herslander-netizen/flowbot)",
+          referer: "https://github.com/herslander-netizen/flowbot",
+        } : {}),
         ...(body ? { "content-type": "application/x-www-form-urlencoded" } : {}),
       },
       ...(body ? { body } : {}),
@@ -104,9 +108,37 @@ export function queryOverpass(centro, raio) {
 /** beforeGeocode deve aplicar cota Nominatim global de <= 1 solicitação/s. */
 export async function consultarEmpresasCep(input, { fetchFn = fetch, beforeGeocode = async () => {} } = {}) {
   const { cep, raio, segmento } = validarBuscaCep(input);
-  const endereco = await obterJSON("https://viacep.com.br/ws/" + cep + "/json/", { fetchFn, timeout: 7000 });
-  if (!endereco || endereco.erro === true || !endereco.localidade || !endereco.uf)
-    throw new CepErro("cep_nao_encontrado", 404, "CEP não encontrado.");
+  // Fontes alternativas reduzem falhas temporárias no edge sem aumentar
+  // o escopo dos dados: somente endereço público de CEP, nunca contatos.
+  const provedores = [
+    { nome: "ViaCEP", url: "https://viacep.com.br/ws/" + cep + "/json/" },
+    { nome: "BrasilAPI", url: "https://brasilapi.com.br/api/cep/v1/" + cep },
+    { nome: "OpenCEP", url: "https://opencep.com/v1/" + cep },
+  ];
+  let endereco = null;
+  for (const p of provedores) {
+    try {
+      const item = await obterJSON(p.url, { fetchFn, timeout: 7000 });
+      if (item?.erro === true)
+        throw new CepErro("cep_nao_encontrado", 404, "CEP não encontrado.");
+      const normalizado = p.nome === "BrasilAPI" ? {
+        logradouro: item?.street,
+        bairro: item?.neighborhood,
+        localidade: item?.city,
+        uf: item?.state,
+      } : item;
+      if (normalizado?.localidade && normalizado?.uf) {
+        endereco = normalizado;
+        break;
+      }
+    } catch (error) {
+      if (error instanceof CepErro && error.codigo === "cep_nao_encontrado") throw error;
+      // Não repetir a mesma fonte: pode ter aplicado quota ou respondido parcialmente.
+    }
+  }
+  if (!endereco)
+    throw new CepErro("cep_fontes_indisponiveis", 503,
+      "As fontes públicas de CEP não responderam. Tente mais tarde.");
   const cidade = String(endereco.localidade).slice(0, 100);
   const uf = String(endereco.uf).toUpperCase().slice(0, 2);
   const rua = String(endereco.logradouro ?? "").trim();
