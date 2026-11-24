@@ -2,8 +2,9 @@
 
 /* Resumo: indicadores e funil */
 .overview { display: grid; gap: var(--space-4); }
-.kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
-.kpis .card { min-width: 0; }
+/* Indicadores numa superfície só, separados por filetes (sem um cartão por número). */
+.kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; overflow: hidden; border-radius: var(--radius-lg); border: var(--border-width) solid var(--border-subtle); background: var(--border-subtle); align-content: start; align-self: start; }
+.kpis .kpi { min-width: 0; background: var(--surface); }
 .funnel__rows { display: grid; gap: var(--space-1); padding: var(--space-2); }
 .funnel__row { display: grid; grid-template-columns: minmax(96px, 128px) minmax(0, 1fr) 72px; align-items: center; gap: var(--space-3); width: 100%; min-height: var(--touch-min); padding: 0 var(--space-3); border: 0; border-radius: var(--radius-sm); background: transparent; color: var(--text); text-align: left; transition: background var(--duration-fast); }
 .funnel__row:hover { background: var(--state-hover); }

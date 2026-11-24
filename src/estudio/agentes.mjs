@@ -76,3 +76,13 @@ export function estadoDeTrabalho(agente) {
   if (agente.tipo === "ia") return "desligado";
   return "aguardando";
 }
+
+// Agentes de outros produtos da Alvo Digital que poderão trabalhar com o FlowBot. Nenhum está conectado:
+// o contrato de integração ainda não existe, então não têm permissões nem histórico. Só aparecem para a
+// equipe saber o que está previsto; nada aqui chama esses serviços.
+export const AGENTES_EXTERNOS = [
+  { id: "alvo-hub", nome: "Alvo Hub", origem: "Alvo Digital" },
+  { id: "hermes", nome: "Hermes", origem: "Alvo Digital" },
+  { id: "openclaw", nome: "OpenClaw", origem: "Alvo Digital" },
+  { id: "mausbot", nome: "MausBot", origem: "Alvo Digital" },
+];

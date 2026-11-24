@@ -68,11 +68,16 @@ function montarEstrutura() {
             <div>
               <p class="t-label page-head__crumb">Comercial · Prospecção</p>
               <h1 class="page-head__title">Prospecção</h1>
-              <p class="page-head__text">Organize empresas, acompanhe o funil e prepare abordagens com fatos verificáveis. A decisão de contato é sempre de uma pessoa.</p>
+              <p class="page-head__text">Funil, território e abordagens com fatos verificáveis. Quem decide o contato é sempre uma pessoa.</p>
             </div>
             <div class="page-head__actions">
-              <button class="btn btn--secondary" type="button" data-acao="exportar">${icone("exportar")}Exportar CSV</button>
-              <button class="btn btn--secondary" type="button" data-acao="importar">${icone("importar")}Importar CSV</button>
+              <div class="menu-anchor">
+                <button class="btn btn--ghost btn--icon" type="button" aria-label="Importar e exportar CSV" aria-haspopup="menu" aria-expanded="false" aria-controls="menu-csv" data-tip="CSV">${icone("reticencias")}</button>
+                <div class="menu" id="menu-csv" role="menu" hidden>
+                  <button class="menu__item" type="button" role="menuitem" data-acao="importar">${icone("importar")}Importar CSV</button>
+                  <button class="menu__item" type="button" role="menuitem" data-acao="exportar">${icone("exportar")}Exportar CSV</button>
+                </div>
+              </div>
               <button class="btn btn--primary" type="button" data-acao="novo">${icone("mais")}Adicionar empresa</button>
             </div>
           </header>
@@ -136,7 +141,7 @@ function montarEstrutura() {
 
 /* ───────────────────────── Regiões ───────────────────────── */
 function kpi(rotulo, valor, dica, nomeIcone) {
-  return `<article class="card kpi"><span class="kpi__label">${icone(nomeIcone, "icon icon--sm")}${html(rotulo)}</span><span class="kpi__value">${valor}</span><span class="kpi__hint">${html(dica)}</span></article>`;
+  return `<div class="kpi"><span class="kpi__label">${icone(nomeIcone, "icon icon--sm")}${html(rotulo)}</span><span class="kpi__value">${valor}</span><span class="kpi__hint">${html(dica)}</span></div>`;
 }
 
 function desenharResumo() {
@@ -158,8 +163,8 @@ function desenharResumo() {
   $("#funil-meta").textContent = r.total ? formatar.numero(r.total) + " empresa(s) nesta sessão" : "Sem empresas";
 
   $("#aviso-demo").innerHTML = r.demonstracao
-    ? `<div class="alert alert--warning">${icone("info")}<span><strong>Demonstração:</strong> ${r.demonstracao} empresa(s) fictícia(s). Os dados ficam só nesta aba. O CSV guarda “Não contatar”, mas não é backup e nunca comprova consentimento.</span></div>`
-    : `<div class="alert">${icone("info")}<span>Os dados ficam só nesta aba. O CSV guarda “Não contatar”, mas não é backup e nunca comprova consentimento.</span></div>`;
+    ? `<div class="strip strip--warn">${icone("info", "icon icon--sm")}<span><strong>Demonstração:</strong> ${r.demonstracao} empresa(s) fictícia(s), só nesta aba. O CSV guarda “Não contatar”, mas não é backup nem prova consentimento.</span></div>`
+    : `<div class="strip strip--script">${icone("info", "icon icon--sm")}<span>Os dados ficam só nesta aba. O CSV guarda “Não contatar”, mas não é backup nem prova consentimento.</span></div>`;
 }
 
 function desenharChips() {

@@ -157,7 +157,7 @@ await caso("importação CSV com duplicada e linha inválida", async () => {
 });
 
 await caso("exportação CSV com todas as empresas e fórmulas neutralizadas", async () => {
-  const [download] = await Promise.all([p.waitForEvent("download"), p.click('.page-head [data-acao="exportar"]')]);
+  const [download] = await Promise.all([p.waitForEvent("download"), p.click('.page-head [aria-controls="menu-csv"]').then(() => p.click('#menu-csv [data-acao="exportar"]'))]);
   assert.equal(download.suggestedFilename(), "flowbot-prospeccao.csv");
   const caminho = await download.path();
   const conteudo = (await import("node:fs")).readFileSync(caminho, "utf8");

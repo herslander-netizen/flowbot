@@ -2,7 +2,7 @@
 import { TIPOS, PAPEIS, nomeDaPorta, resumoDoNo, PORTAS_DE_ERRO } from "./catalogo.mjs";
 import { compararVersoes, noPorId } from "./fluxo.mjs";
 import { arvoreDoFluxo } from "./edicao.mjs";
-import { PERSONAGENS, AGENTES_DA_OFICINA, ESTADO_DO_AGENTE, NOME_DO_TIPO, ESTADOS_DE_TRABALHO, estadoDeTrabalho } from "./agentes.mjs";
+import { PERSONAGENS, AGENTES_DA_OFICINA, AGENTES_EXTERNOS, ESTADO_DO_AGENTE, NOME_DO_TIPO, ESTADOS_DE_TRABALHO, estadoDeTrabalho } from "./agentes.mjs";
 import { ERROS_DA_PONTE, ROTEIROS, NOMES_DE_AUTOR } from "./dados.mjs";
 import { MENSAGENS, cenariosAprovaveis } from "./contrato.mjs";
 import { estado, publicada, problemas, alterado, REVISAO, estadoDeRevisao, revisaoAtual, aprovacaoInvalidada } from "./estado.mjs";
@@ -103,6 +103,10 @@ export function telaAgentes() {
     <section aria-labelledby="t-oficina" class="block">
       <div class="block__head"><h2 class="block__title" id="t-oficina">Agentes da oficina</h2>${estadoOperacional("desconectado", "Nenhum trabalhando")}</div>
       <ol class="plain-list chain">${oficina}</ol>
+    </section>
+    <section aria-labelledby="t-externos" class="block">
+      <div class="block__head"><h2 class="block__title" id="t-externos">Agentes de outros produtos</h2>${estadoOperacional("desconectado", "Nenhum conectado")}</div>
+      <ul class="plain-list list-surface">${AGENTES_EXTERNOS.map((a) => `<li class="ext-row"><span class="agent-mark" data-tipo="externo" aria-hidden="true">${icone("link")}</span><span class="ext-row__text"><span class="ext-row__name">${html(a.nome)}</span><span class="ext-row__meta">${html(a.origem)} · contrato de integração a definir · sem permissões</span></span>${estadoOperacional("desconectado", "Não conectado")}</li>`).join("")}</ul>
     </section>
     <section aria-labelledby="t-bots" class="block">
       <div class="block__head"><h2 class="block__title" id="t-bots">Bots do espaço</h2><span class="block__meta">${estado.espaco.bots.length} de demonstração</span></div>

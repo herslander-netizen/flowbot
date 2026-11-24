@@ -19,10 +19,10 @@ fi
 if node -e "require.resolve('playwright', { paths: [process.env.NODE_PATH || ''] })" 2>/dev/null \
    || NODE_PATH="$(npm root -g)" node -e "require('playwright')" 2>/dev/null; then
   export NODE_PATH="${NODE_PATH:-$(npm root -g)}"
-  for arquivo in tests/e2e/prospeccao.e2e.mjs tests/e2e/estudio.e2e.mjs tests/e2e/contraste.e2e.mjs; do
+  for arquivo in tests/e2e/prospeccao.e2e.mjs tests/e2e/estudio.e2e.mjs tests/e2e/contraste.e2e.mjs tests/e2e/suppression-roundtrip.e2e.mjs; do
     echo "== Navegador: $arquivo"
     saida=$(FLOWBOT_URL="$URL" node "$arquivo" 2>&1) || falhou=1
-    echo "$saida" | grep -E "FALHOU|passaram|AA|^(dark|light) "
+    echo "$saida" | grep -E "FALHOU|passaram|AA|PASS|^(dark|light) "
   done
 else
   echo "== Navegador: Playwright não encontrado; testes de navegador não rodaram."

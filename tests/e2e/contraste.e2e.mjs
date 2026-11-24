@@ -5,9 +5,11 @@ const require = createRequire(import.meta.url);
 const { chromium } = require("playwright");
 const BASE = process.env.FLOWBOT_URL ?? "http://127.0.0.1:4173/";
 (async () => { const b = await chromium.launch(); const ruins = [];
- for (const tema of ["dark","light"]) for (const [url, prep] of [["", null], ["estudio/#agentes", null], ["estudio/#fluxo", "passos"], ["estudio/#oficina", "oficina"], ["estudio/#simulador", "sim"], ["estudio/#versoes", null]]) {
+ for (const tema of ["dark","light"]) for (const [url, prep] of [["", null], ["whatsapp.html", null], ["landing/", null], ["estudio/#agentes", null], ["estudio/#fluxo", "passos"], ["estudio/#oficina", "oficina"], ["estudio/#simulador", "sim"], ["estudio/#versoes", null]]) {
   const c = await b.newContext({ viewport:{width:1280,height:900} }); await c.addInitScript(t => localStorage.setItem("flowbot-tema", t), tema);
   const p = await c.newPage(); await p.goto(BASE + url, {waitUntil:"networkidle"}); await p.waitForTimeout(400);
+  // Landing: rola a página inteira para acender as frases que aparecem com a rolagem, como a pessoa vê.
+  if (url.startsWith("landing")) { for (let y = 0; y < 20000; y += 400) { await p.evaluate((v) => scrollTo(0, v), y); await p.waitForTimeout(60); } await p.waitForTimeout(1200); }
   if (prep==="passos") await p.click('[data-vista="passos"]');
   if (prep==="oficina") { await p.click('[data-acao="exemplo-oficina"]'); await p.waitForTimeout(300); }
   if (prep==="sim") { await p.click('[data-dizer="oi"]'); await p.waitForTimeout(300); }

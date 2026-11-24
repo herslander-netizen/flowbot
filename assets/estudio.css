@@ -1,10 +1,7 @@
 /* FlowBot — Bot Studio. Só layout do módulo; cores, tipos, movimento e componentes vêm do design system.
    Celular primeiro: a base é 320–767px; telas maiores acrescentam colunas. */
 
-code { font-family: var(--font-mono); font-size: .9em; }
-.icon--xs { width: 14px; height: 14px; }
 .persona { flex: 0 0 auto; display: block; }
-.text-warning { color: var(--warning); }
 .main--studio { padding-top: var(--space-4); }
 .page--studio { gap: var(--space-4); }
 #tela { min-width: 0; display: grid; }
@@ -77,10 +74,6 @@ button.save-state .op-state { text-decoration: underline; text-underline-offset:
 .agent-mark[data-tipo="pessoa"] { color: var(--success); background: var(--success-subtle); }
 .drawer__head > .agent-mark { width: 48px; height: 48px; }
 .lead-text { font-size: var(--text-base); line-height: var(--leading-base, 1.5); color: var(--text); }
-.kv { display: grid; gap: var(--space-2); margin: 0; }
-.kv > div { display: flex; justify-content: space-between; gap: var(--space-3); padding: var(--space-3) 0; border-bottom: var(--border-width) solid var(--border-subtle); }
-.kv dt { color: var(--text-faint); font-size: var(--text-sm); }
-.kv dd { margin: 0; }
 .tool-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; }
 .tool-list li { display: flex; justify-content: space-between; gap: var(--space-3); padding: var(--space-2) var(--space-3); border-radius: var(--radius-sm); background: var(--surface-sunken); font-size: var(--text-sm); }
 .tool-list code { color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; }
@@ -91,6 +84,13 @@ button.save-state .op-state { text-decoration: underline; text-underline-offset:
 .dep-chip:hover { border-color: var(--border-strong); }
 .dep-chip .agent-mark { width: 24px; height: 24px; border-radius: 50%; }
 .dep-chip .agent-mark .icon { width: 14px; height: 14px; }
+
+.ext-row { display: flex; align-items: center; gap: var(--space-3); min-height: 60px; padding: var(--space-3) var(--space-4); }
+.ext-row__text { display: grid; flex: 1; min-width: 0; }
+.ext-row__name { font-weight: var(--weight-semibold); }
+.ext-row__meta { font-size: var(--text-sm); color: var(--text-faint); }
+.ext-row .op-state { display: none; }
+@media (min-width: 768px) { .ext-row .op-state { display: inline-flex; } }
 
 /* 2. Fluxo */
 .flow-layout { display: grid; gap: var(--space-4); min-width: 0; }
@@ -215,22 +215,8 @@ button.save-state .op-state { text-decoration: underline; text-underline-offset:
 .fact__name { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px var(--space-2); font-size: var(--text-sm); }
 .fact__name code { color: var(--text-muted); }
 .fact__name span { color: var(--text-faint); font-size: var(--text-xs); }
-.empty-art { display: grid; justify-items: center; text-align: center; gap: var(--space-2); padding: var(--space-8) var(--space-5); border-radius: var(--radius-lg); background: var(--surface-sunken); }
-.empty-art .empty__text { color: var(--text-muted); }
 .proposal { display: grid; gap: var(--space-3); }
 .proposal__stats { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-2) var(--space-4); font-size: var(--text-sm); color: var(--text-muted); }
-.fold { border-radius: var(--radius-md); background: var(--surface); border: var(--border-width) solid var(--border-subtle); }
-.fold > summary { display: flex; align-items: center; gap: var(--space-2); min-height: var(--touch-min); padding: 0 var(--space-4); cursor: pointer; font-weight: var(--weight-semibold); list-style: none; }
-.fold > summary::-webkit-details-marker { display: none; }
-.fold > summary::after { content: ""; margin-left: var(--space-2); width: 8px; height: 8px; border-right: 1.75px solid var(--text-faint); border-bottom: 1.75px solid var(--text-faint); transform: rotate(45deg) translateY(-2px); transition: transform var(--duration-base) var(--ease-out); }
-.fold[open] > summary::after { transform: rotate(225deg) translateY(-2px); }
-.fold > :not(summary) { padding: 0 var(--space-4) var(--space-4); }
-.fold > summary + * { animation: fb-reveal var(--duration-base) var(--ease-out); }
-.fold__count { margin-left: auto; font: var(--weight-medium) 12px/1 var(--font-mono); color: var(--text-faint); }
-.fold--flat { border: 0; background: none; }
-.fold--flat > summary { padding: 0; }
-.fold--flat > :not(summary) { padding: 0 0 var(--space-3); }
-.bullet-list { margin: 0; padding-left: var(--space-5); display: grid; gap: var(--space-2); font-size: var(--text-sm); line-height: var(--leading-sm); color: var(--text-muted); }
 .test-row { display: flex; align-items: center; gap: var(--space-2); padding: 4px 0; font-size: var(--text-sm); }
 .proposal__diff { display: flex; flex-wrap: wrap; justify-content: space-between; gap: var(--space-2); padding: var(--space-3) 0; font-size: var(--text-sm); color: var(--text-muted); }
 .proposal__using { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); color: var(--success); }
@@ -355,7 +341,6 @@ button.save-state .op-state { text-decoration: underline; text-underline-offset:
 .menu__item:disabled { opacity: .5; cursor: default; }
 .sheet-menu { display: grid; gap: 2px; }
 .sheet-menu .menu__item { min-height: 52px; font-size: var(--text-base); }
-.drawer__sub { font-size: var(--text-sm); line-height: var(--leading-sm); color: var(--text-muted); }
 
 /* ── Fase F: agentes ───────────────────────────────────── */
 .agent-hero { display: grid; place-items: center; width: 72px; height: 72px; border-radius: 22px; flex: 0 0 auto; background: color-mix(in srgb, var(--papel) 16%, var(--surface-sunken)); }

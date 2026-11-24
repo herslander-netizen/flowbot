@@ -1,16 +1,22 @@
-.wa-page {
-  display: grid;
-  gap: var(--space-6);
-  max-width: 64rem;
-  margin: 0 auto;
-  padding: var(--space-5) max(var(--space-4), env(safe-area-inset-right))
-    max(var(--space-5), env(safe-area-inset-bottom)) max(var(--space-4), env(safe-area-inset-left));
-  overflow-wrap: anywhere;
-}
-.wa-page h1 { font: var(--weight-bold) var(--text-2xl)/var(--leading-2xl) var(--font-display); }
-.wa-page h2, .wa-page h3 { font-weight: var(--weight-semibold); }
-.wa-stack, .wa-methods { display: grid; gap: var(--space-3); min-width: 0; }
+/* Conexão WhatsApp — página estática (sem script). Usa tokens e componentes do design system. */
+.wa-bar { position: sticky; top: 0; z-index: var(--z-nav); display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); height: calc(var(--topbar-height) + env(safe-area-inset-top)); padding: env(safe-area-inset-top) max(var(--space-4), env(safe-area-inset-right)) 0 max(var(--space-4), env(safe-area-inset-left)); background: color-mix(in srgb, var(--bg) 86%, transparent); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); border-bottom: var(--border-width) solid var(--border-subtle); }
+.wa-brand__mark { width: 26px; height: 26px; background: url("./flowbot-symbol.svg") center / contain no-repeat; }
+.wa-back { display: inline-flex; align-items: center; gap: var(--space-2); min-height: var(--touch-min); padding: 0 var(--space-3); border-radius: var(--radius-pill); color: var(--text); font-size: var(--text-md); font-weight: var(--weight-semibold); text-decoration: none; }
+.wa-back:hover { background: var(--state-hover); color: var(--text); }
+.wa-page { display: grid; gap: var(--space-6); max-width: 56rem; margin: 0 auto; padding: var(--space-5) max(var(--space-4), env(safe-area-inset-right)) calc(var(--space-8) + env(safe-area-inset-bottom)) max(var(--space-4), env(safe-area-inset-left)); overflow-wrap: anywhere; }
+.wa-head { display: grid; gap: var(--space-2); }
+.wa-head h1 { font: var(--weight-bold) var(--text-2xl)/var(--leading-2xl) var(--font-display); letter-spacing: var(--tracking-display); }
+.wa-head p:last-child { color: var(--text-muted); max-width: 60ch; }
+.wa-status { display: grid; gap: var(--space-2); padding: var(--space-4) var(--space-5); border-radius: var(--radius-lg); background: var(--surface); border: var(--border-width) solid var(--border-subtle); }
+.wa-status__row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-2) var(--space-4); }
+.wa-status h2, .wa-method h3 { font-size: var(--text-md); font-weight: var(--weight-semibold); }
+.wa-status > p, .wa-method p { color: var(--text-muted); font-size: var(--text-sm); line-height: var(--leading-sm); }
+.wa-stack { display: grid; gap: var(--space-3); min-width: 0; }
+.wa-section-title { font: var(--weight-medium) var(--text-xs)/var(--leading-xs) var(--font-mono); letter-spacing: var(--tracking-label); text-transform: uppercase; color: var(--text-faint); }
+.wa-methods { display: grid; gap: 1px; overflow: hidden; border-radius: var(--radius-lg); border: var(--border-width) solid var(--border-subtle); background: var(--border-subtle); }
+.wa-method { display: grid; gap: var(--space-3); align-content: start; padding: var(--space-5); background: var(--surface); min-width: 0; }
 .wa-page .btn { white-space: normal; text-align: center; }
 @media (min-width: 48rem) {
-  .wa-methods { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+  .wa-methods { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .wa-page { padding-top: var(--space-8); }
 }

@@ -7,7 +7,7 @@ import { temaAtual } from "./componentes.mjs";
 export const MODULOS = [
   { id: "prospeccao", nome: "Prospecção", grupo: "Comercial", icone: "alvo", caminho: "" },
   { id: "estudio", nome: "Bot Studio", grupo: "Automação", icone: "fluxo", caminho: "estudio/", selo: "Prévia" },
-  { id: "whatsapp", nome: "Conexão WhatsApp", grupo: "Integrações", icone: "conversa", caminho: "whatsapp.html", selo: "Prévia" },
+  { id: "whatsapp", nome: "WhatsApp", grupo: "Integrações", icone: "conversa", caminho: "whatsapp.html", selo: "Prévia" },
 ];
 
 const rotuloTema = () => "Tema " + (temaAtual() === "light" ? "escuro" : "claro");

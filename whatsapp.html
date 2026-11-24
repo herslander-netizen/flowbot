@@ -6,6 +6,7 @@
   <meta name="referrer" content="no-referrer">
   <meta name="theme-color" content="#0B0B0B">
   <link rel="icon" href="./assets/flowbot-symbol.svg" type="image/svg+xml">
+  <link rel="manifest" href="./manifest.webmanifest">
   <link rel="stylesheet" href="./assets/tokens.css">
   <link rel="stylesheet" href="./assets/base.css">
   <link rel="stylesheet" href="./assets/components.css">
@@ -14,34 +15,40 @@
 </head>
 <body>
   <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+  <!-- Página estática de propósito: sem script, sem formulário, sem consulta à Evolution e sem recursos externos além do painel. -->
+  <header class="wa-bar">
+    <a class="brand wa-brand" href="./" aria-label="FlowBot, voltar à Prospecção"><span class="wa-brand__mark" aria-hidden="true"></span>flowbot</a>
+    <a class="wa-back" href="./"><span aria-hidden="true">←</span> Prospecção</a>
+  </header>
   <main id="conteudo" class="wa-page" tabindex="-1">
-    <nav aria-label="FlowBot"><a class="btn btn--secondary" href="./">Voltar à Prospecção</a></nav>
-    <header class="wa-stack">
-      <p class="t-label">Integrações</p>
+    <header class="wa-head">
+      <p class="t-label">Integrações · Prévia</p>
       <h1>Conexão WhatsApp</h1>
       <p>Consulte a conexão de teste do FlowBot no painel privado da Evolution Alvo. O pareamento não foi ativado nem homologado.</p>
     </header>
-    <section class="card wa-stack" aria-labelledby="wa-status">
-      <h2 id="wa-status">Status da conexão</h2>
-      <p><span class="badge">Não verificado aqui</span></p>
+    <section class="wa-status" aria-labelledby="wa-status">
+      <div class="wa-status__row">
+        <h2 id="wa-status">Status da conexão</h2>
+        <p><span class="op-state" data-estado="desconectado">Não verificado aqui</span></p>
+      </div>
       <p>Esta tela não consulta a conexão. Confira o estado do projeto FlowBot no painel privado, sem gerar um QR ou iniciar o pareamento.</p>
     </section>
     <section aria-labelledby="wa-metodos" class="wa-stack">
-      <h2 id="wa-metodos">Métodos de pareamento</h2>
+      <h2 id="wa-metodos" class="wa-section-title">Métodos de pareamento</h2>
       <div class="wa-methods">
-        <article class="card wa-stack" aria-labelledby="wa-qr">
+        <article class="wa-method" aria-labelledby="wa-qr">
           <h3 id="wa-qr">QR Code</h3>
           <p>A geração e a leitura do QR aguardam a validação de segurança do servidor. Por enquanto, abra o painel privado e selecione o projeto FlowBot apenas para consulta.</p>
-          <p><a class="btn btn--primary" href="https://evolution-alvo.regalbrink4.chatgpt.site" target="_blank" rel="noopener noreferrer">Consultar painel Evolution Alvo (nova aba)</a></p>
+          <p><a class="btn btn--primary" href="https://evolution-alvo.regalbrink4.chatgpt.site" target="_blank" rel="noopener noreferrer">Consultar painel Evolution Alvo<span class="sr-only"> (abre em nova aba)</span></a></p>
         </article>
-        <article class="card wa-stack" aria-labelledby="wa-code">
+        <article class="wa-method" aria-labelledby="wa-code">
           <h3 id="wa-code">Código de pareamento</h3>
-          <p><span class="badge">Indisponível nesta prévia</span></p>
+          <p><span class="op-state" data-estado="indisponivel">Indisponível nesta prévia</span></p>
           <p>O fluxo por código ainda precisa de suporte no servidor e homologação. Quando disponível, digite o código no WhatsApp, nunca nesta página nem no chat.</p>
         </article>
       </div>
     </section>
-    <p class="alert">Prévia sem envio de mensagens. Não use número de produção nesta etapa.</p>
+    <p class="strip strip--warn">Prévia sem envio de mensagens. Não use número de produção nesta etapa.</p>
   </main>
 </body>
 </html>
