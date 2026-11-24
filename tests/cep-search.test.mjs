@@ -200,8 +200,28 @@ test("falha do Overpass não é registrada como zero empresas", async () => {
   };
   await assert.rejects(
     () => consultarEmpresasCep({ cep: "49000000" }, { fetchFn }),
-    (error) => error instanceof CepErro && error.codigo === "fonte_indisponivel_overpass",
+    (error) => error instanceof CepErro && error.codigo === "fonte_indisponivel_overpass_fallback",
   );
+});
+
+test("Overpass comunitário retorna empresas após falha da instância principal", async () => {
+  const original = simularAPIs();
+  let alternatives = 0;
+  const fetchFn = async (url, opts) => {
+    if (String(url).includes("overpass-api.de")) throw new Error("principal indisponível");
+    if (String(url).includes("overpass.private.coffee")) {
+      alternatives++;
+      return new Response(JSON.stringify({ elements: [
+        { type: "node", id: 31312, lat: -10.9001, lon: -37.0501,
+          tags: { name: "Padaria Autorizada", shop: "bakery" } },
+      ] }));
+    }
+    return original.fetchFn(url, opts);
+  };
+  const result = await consultarEmpresasCep({ cep: "49000000" }, { fetchFn });
+  assert.equal(alternatives, 1);
+  assert.equal(result.empresas.length, 1);
+  assert.equal(result.empresas[0].fonte, "https://www.openstreetmap.org/node/31312");
 });
 
 test("limite 429 do Overpass se propaga e não aparece como resultado vazio", async () => {
