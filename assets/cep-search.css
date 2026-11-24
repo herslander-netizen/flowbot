@@ -1,0 +1,26 @@
+/* Descoberta de empresas por CEP — usa os mesmos tokens da Prospecção. */
+#cep-search-root .drawer { min-width: 0; }
+.cep-drawer__body { gap: var(--space-5); }
+.cep-form { display: grid; gap: var(--space-4); }
+.cep-form .field { min-width: 0; }
+.cep-form__submit { width: 100%; min-height: var(--touch-min); }
+.cep-results { display: grid; gap: var(--space-3); min-width: 0; }
+.cep-results__list { list-style: none; padding: 0; margin: 0; display: grid; gap: var(--space-2); }
+.cep-result {
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
+  background: var(--surface-sunken); border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md); padding: var(--space-3);
+}
+.cep-result__main { min-width: 0; display: grid; gap: 4px; overflow-wrap: anywhere; }
+.cep-result__main strong { font-size: var(--text-md); font-weight: var(--weight-semibold); }
+.cep-result__main a { width: fit-content; }
+.cep-result__add { flex: none; min-height: var(--touch-min); }
+#cep-status .alert { margin: 0; }
+#cep-status:empty { display: none; }
+@media (max-width: 420px) {
+  .cep-result { align-items: stretch; flex-direction: column; }
+  .cep-result__add { width: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #cep-search-root .drawer, #cep-search-root .overlay { animation: none; }
+}
