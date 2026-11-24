@@ -1,15 +1,5 @@
 /* FlowBot — Modo Prospecção. Só layout do módulo; cores, tipografia e componentes vêm do design system. */
 
-.main { min-width: 0; padding: var(--space-5) max(var(--space-4), env(safe-area-inset-right)) calc(var(--bottomnav-height) + var(--space-8) + env(safe-area-inset-bottom)) max(var(--space-4), env(safe-area-inset-left)); }
-.page { max-width: var(--content-max); margin: 0 auto; display: grid; gap: var(--space-6); }
-
-/* Cabeçalho da página */
-.page-head { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: var(--space-4); }
-.page-head__crumb { margin-bottom: var(--space-2); }
-.page-head__title { font: var(--weight-bold) var(--text-2xl)/var(--leading-2xl) var(--font-display); letter-spacing: var(--tracking-display); }
-.page-head__text { margin-top: var(--space-2); max-width: 60ch; color: var(--text-muted); }
-.page-head__actions { display: none; gap: var(--space-2); }
-
 /* Resumo: indicadores e funil */
 .overview { display: grid; gap: var(--space-4); }
 .kpis { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
@@ -135,15 +125,12 @@
 }
 @media (min-width: 480px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (min-width: 768px) {
-  .main { padding: var(--space-8) var(--space-6) var(--space-12); }
-  .page-head__actions { display: flex; flex-wrap: wrap; }
   .kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .table-view { display: block; }
   .lead-cards { display: none; }
   .map-select { left: auto; width: 340px; }
 }
 @media (min-width: 1024px) {
-  .main { padding: var(--space-8) var(--space-8) var(--space-12); }
   .overview { grid-template-columns: minmax(0, 1fr); }
 }
 @media (min-width: 1280px) {

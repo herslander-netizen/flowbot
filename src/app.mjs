@@ -53,7 +53,7 @@ function filtrados() {
 /* ───────────────────────── Estrutura ───────────────────────── */
 function montarEstrutura() {
   const modulos = [
-    ["fluxo", "Bot Studio"], ["conversa", "Atendimento"], ["agente", "Agentes de IA"],
+    ["conversa", "Atendimento"], ["agente", "Agentes de IA"],
     ["atividade", "Operações"], ["engrenagem", "Administração"],
   ];
   document.body.innerHTML = `
@@ -64,6 +64,8 @@ function montarEstrutura() {
       <nav aria-label="Módulos" class="nav-group">
         <span class="t-label nav-group__label">Comercial</span>
         <a class="nav-item" href="./" aria-current="page">${icone("alvo")}Prospecção</a>
+        <span class="t-label nav-group__label">Automação · prévia</span>
+        <a class="nav-item" href="./estudio/">${icone("fluxo")}Bot Studio</a>
         <span class="t-label nav-group__label">Em breve</span>
         ${modulos.map(([i, n]) => `<button type="button" class="nav-item" aria-disabled="true" data-acao="em-breve" data-modulo="${n}">${icone(i)}${n}</button>`).join("")}
       </nav>
@@ -84,6 +86,7 @@ function montarEstrutura() {
             <button type="button" class="menu__item" role="menuitem" data-acao="exportar">${icone("exportar")}Exportar CSV</button>
             <div class="menu__sep"></div>
             <button type="button" class="menu__item" role="menuitem" data-acao="tema">${icone("sol")}<span data-rotulo-tema>Tema ${temaAtual() === "light" ? "escuro" : "claro"}</span></button>
+            <a class="menu__item" role="menuitem" href="./estudio/">${icone("fluxo")}Bot Studio (prévia)</a>
             <a class="menu__item" role="menuitem" href="./landing/">${icone("link")}Site do FlowBot</a>
           </div>
         </div>
