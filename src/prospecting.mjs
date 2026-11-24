@@ -158,6 +158,14 @@ const CAMPOS = {
   suprimido: ["suprimido"],
 };
 
+const LIMITES_COORDENADAS = Object.freeze({ latitude: 90, longitude: 180 });
+
+function coordenadaDeCsv(valor) {
+  // Versões anteriores prefixavam um apóstrofo até em números negativos.
+  // Só lemos essa forma legada se o valor inteiro após o prefixo for numérico.
+  return /^'-[0-9]+(?:\.[0-9]+)?(?:e[+-]?[0-9]+)?$/i.test(valor) ? valor.slice(1) : valor;
+}
+
 export function importarCsv(texto, existentes = []) {
   const [cabecalho, ...linhas] = lerCsv(texto);
   const posicoes = {};
@@ -178,6 +186,7 @@ export function importarCsv(texto, existentes = []) {
       if (supressao !== "" && supressao !== "true" && supressao !== "false") {
         throw new Error("A coluna suprimido aceita apenas true, false ou vazio.");
       }
+      for (const campo of Object.keys(LIMITES_COORDENADAS)) dados[campo] = coordenadaDeCsv(dados[campo]);
       const lead = validarEmpresa({ ...dados, suprimido: supressao === "true", origem: "csv_fornecido_pelo_usuario" });
       const chave = chaveEmpresa(lead);
       const anterior = chaves.get(chave);
@@ -227,7 +236,14 @@ export function exportarCsv(leads) {
   const colunas = ["nome", "cidade", "uf", "categoria", "cnpj", "site", "latitude",
     "longitude", "etapa", "suprimido", "origem"];
   return "\uFEFF" + colunas.join(";") + "\r\n" + leads.map((lead) =>
-    colunas.map((campo) => celulaCsv(lead[campo])).join(";")).join("\r\n");
+    colunas.map((campo) => {
+      const valor = lead[campo];
+      if (Object.hasOwn(LIMITES_COORDENADAS, campo) &&
+          Number.isFinite(valor) && Math.abs(valor) <= LIMITES_COORDENADAS[campo]) {
+        return '"' + String(valor) + '"';
+      }
+      return celulaCsv(valor);
+    }).join(";")).join("\r\n");
 }
 
 export function dadosDeDemonstracao() {
