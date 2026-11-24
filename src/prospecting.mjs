@@ -103,7 +103,7 @@ export function validarEmpresa(dados) {
     fonteFato,
     origem: String(dados.origem ?? "cadastro_manual").slice(0, 100),
     etapa: ETAPAS.some((etapa) => etapa.id === dados.etapa) ? dados.etapa : "pesquisado",
-    suprimido: Boolean(dados.suprimido),
+    suprimido: dados.suprimido === true,
     optInWhatsapp: Boolean(dados.optInWhatsapp),
     nota: String(dados.nota ?? "").slice(0, 1000),
     criadoEm: dados.criadoEm || new Date().toISOString(),
@@ -155,7 +155,16 @@ const CAMPOS = {
   longitude: ["longitude", "lng", "lon"],
   fato: ["fato", "evidencia", "observacao publica"],
   fonteFato: ["fonte fato", "url fonte", "fonte evidencia"],
+  suprimido: ["suprimido"],
 };
+
+const LIMITES_COORDENADAS = Object.freeze({ latitude: 90, longitude: 180 });
+
+function coordenadaDeCsv(valor) {
+  // Versões anteriores prefixavam um apóstrofo até em números negativos.
+  // Só lemos essa forma legada se o valor inteiro após o prefixo for numérico.
+  return /^'-[0-9]+(?:\.[0-9]+)?(?:e[+-]?[0-9]+)?$/i.test(valor) ? valor.slice(1) : valor;
+}
 
 export function importarCsv(texto, existentes = []) {
   const [cabecalho, ...linhas] = lerCsv(texto);
@@ -164,7 +173,8 @@ export function importarCsv(texto, existentes = []) {
     posicoes[campo] = cabecalho.findIndex((valor) => nomes.includes(normalizar(valor)));
   }
   if (posicoes.nome === -1) throw new Error("CSV precisa da coluna 'empresa' ou 'nome'.");
-  const chaves = new Set(existentes.map(chaveEmpresa));
+  const chaves = new Map(existentes.map(lead => [chaveEmpresa(lead), lead]));
+  const suprimirIds = new Set();
   const adicionados = []; const erros = []; let duplicados = 0;
   for (const [i, linha] of linhas.entries()) {
     const dados = {};
@@ -172,19 +182,34 @@ export function importarCsv(texto, existentes = []) {
       dados[campo] = posicoes[campo] === -1 ? "" : (linha[posicoes[campo]] ?? "");
     }
     try {
-      const lead = validarEmpresa({ ...dados, origem: "csv_fornecido_pelo_usuario" });
+      const supressao = dados.suprimido.trim().toLowerCase();
+      if (supressao !== "" && supressao !== "true" && supressao !== "false") {
+        throw new Error("A coluna suprimido aceita apenas true, false ou vazio.");
+      }
+      for (const campo of Object.keys(LIMITES_COORDENADAS)) dados[campo] = coordenadaDeCsv(dados[campo]);
+      const lead = validarEmpresa({ ...dados, suprimido: supressao === "true", origem: "csv_fornecido_pelo_usuario" });
       const chave = chaveEmpresa(lead);
-      if (chaves.has(chave)) { duplicados++; continue; }
-      chaves.add(chave); adicionados.push(lead);
+      const anterior = chaves.get(chave);
+      if (anterior) {
+        if (lead.suprimido && !anterior.suprimido) suprimirIds.add(anterior.id);
+        duplicados++; continue;
+      }
+      chaves.set(chave, lead); adicionados.push(lead);
     } catch (erro) {
       erros.push("Linha " + (i + 2) + ": " + erro.message);
     }
   }
-  return { adicionados, duplicados, erros };
+  return { adicionados: adicionados.map(lead => suprimirIds.has(lead.id) ? { ...lead, suprimido: true } : lead),
+    duplicados, erros, suprimirIds: [...suprimirIds] };
 }
 
 // Nunca afirma ter verificado informação que não tem URL de fonte.
+export function podePrepararAbordagem(lead) {
+  return lead != null && (lead.suprimido === false || lead.suprimido === undefined);
+}
+
 export function criarRascunho(lead, remetente = "nossa equipe") {
+  if (!podePrepararAbordagem(lead)) throw new Error("Empresa marcada: não contatar.");
   const empresa = String(lead.nome ?? "").trim();
   if (!empresa) throw new Error("Lead sem empresa.");
   const equipe = String(remetente ?? "").trim().slice(0, 100) || "nossa equipe";
@@ -211,7 +236,14 @@ export function exportarCsv(leads) {
   const colunas = ["nome", "cidade", "uf", "categoria", "cnpj", "site", "latitude",
     "longitude", "etapa", "suprimido", "origem"];
   return "\uFEFF" + colunas.join(";") + "\r\n" + leads.map((lead) =>
-    colunas.map((campo) => celulaCsv(lead[campo])).join(";")).join("\r\n");
+    colunas.map((campo) => {
+      const valor = lead[campo];
+      if (Object.hasOwn(LIMITES_COORDENADAS, campo) &&
+          Number.isFinite(valor) && Math.abs(valor) <= LIMITES_COORDENADAS[campo]) {
+        return '"' + String(valor) + '"';
+      }
+      return celulaCsv(valor);
+    }).join(";")).join("\r\n");
 }
 
 export function dadosDeDemonstracao() {

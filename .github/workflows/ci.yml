@@ -5,7 +5,7 @@ on:
   pull_request:
 jobs:
   check:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     permissions:
       contents: read
     steps:
@@ -32,3 +32,18 @@ jobs:
           test -f src/app.mjs
           test -f db/migrations/001_prospeccao.sql
           ! grep -R "message/sendText" src/ worker/
+      - name: Instalar Playwright fixado
+        run: |
+          npm ci --ignore-scripts
+          npx --no-install playwright install --with-deps chromium
+      - name: Verificar supressão no navegador móvel (somente dados fictícios)
+        run: |
+          npm run dev > /tmp/flowbot-prospeccao.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for attempt in {1..20}; do
+            if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then break; fi
+            sleep 1
+          done
+          curl --fail --silent http://127.0.0.1:4173/ > /dev/null
+          npm run test:e2e:suppression
