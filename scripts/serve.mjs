@@ -68,7 +68,8 @@ const servidor = createServer(async (req, res) => {
   // Não servir arquivos internos de desenvolvimento / repositório.
   if (caminho.includes("/.") || caminho.startsWith("/tests/") ||
     caminho.startsWith("/scripts/") || caminho.startsWith("/docs/") ||
-    caminho.startsWith("/db/") || caminho === "/package.json") {
+    caminho.startsWith("/db/") || caminho.startsWith("/server/") ||
+    caminho.startsWith("/functions/") || caminho === "/package.json") {
     res.writeHead(404); res.end(); return;
   }
   try {
