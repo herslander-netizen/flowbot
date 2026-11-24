@@ -7,7 +7,7 @@ import {
 import { icone } from "./ui/icones.mjs";
 import { montarShell, atualizarRotuloTema } from "./ui/shell.mjs";
 import {
-  html, formatar, aviso, prenderFoco, temaAtual, aplicarTema, alternarMenu, fecharMenus,
+  html, formatar, aviso, prenderFoco, temaAtual, aplicarTema, alternarMenu, fecharMenus, ligarArrasteDaFolha, observarTeclado,
 } from "./ui/componentes.mjs";
 
 const REMETENTE = "Alvo Digital";
@@ -402,6 +402,7 @@ function desenharPainel() {
   if (!gaveta) { estado.painel = null; raiz.innerHTML = ""; return; }
   if (jaAberto) { gaveta.style.animation = "none"; raiz.querySelector(".overlay").style.animation = "none"; raiz.querySelector(".overlay").style.opacity = "1"; gaveta.querySelector(".drawer__body").scrollTop = rolagem; }
   soltarFoco = prenderFoco(gaveta);
+  if (!jaAberto) ligarArrasteDaFolha(gaveta, fecharPainel);
   if (!jaAberto) (gaveta.querySelector("[data-foco-inicial]") ?? gaveta.querySelector('[data-acao="fechar"]'))?.focus({ preventScroll: true });
 }
 
@@ -587,6 +588,7 @@ document.addEventListener("click", async (evento) => {
   if (alvo.dataset.vista) { estado.vista = alvo.dataset.vista; estado.marcado = null; atualizar(); return; }
   if (alvo.dataset.aba) {
     estado.aba = alvo.dataset.aba;
+    try { sessionStorage.setItem("flowbot-prospeccao-aba", estado.aba); } catch { /* sem armazenamento */ }
     if (estado.aba !== "resumo") estado.vista = estado.aba;
     atualizar(); window.scrollTo({ top: 0 }); return;
   }
@@ -694,5 +696,8 @@ document.addEventListener("keydown", (evento) => {
 });
 
 aplicarTema(temaAtual());
+// Celular: volta para a aba em que a pessoa estava nesta sessão.
+try { const aba = sessionStorage.getItem("flowbot-prospeccao-aba"); if (matchMedia("(max-width: 767px)").matches && ["resumo", "mapa", "lista"].includes(aba)) { estado.aba = aba; if (aba !== "resumo") estado.vista = aba; } } catch { /* sem armazenamento */ }
 montarEstrutura();
+observarTeclado();
 atualizar();

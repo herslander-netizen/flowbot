@@ -105,3 +105,33 @@ export function blocoDeEstado({ estado = "vazio", titulo, texto = "", acao = "" 
   const e = ESTADOS[estado] ?? ESTADOS.vazio;
   return `<div class="state-block" data-estado="${estado}" role="${["erro", "conflito", "permissao"].includes(estado) ? "alert" : "status"}">${icone(e.icone)}<p class="state-block__title">${html(titulo ?? e.texto)}</p>${texto ? `<p class="state-block__text">${html(texto)}</p>` : ""}${acao}</div>`;
 }
+
+// ── Folha inferior (celular): arrastar a alça ou o cabeçalho para baixo fecha, como nos apps nativos ──
+export function ligarArrasteDaFolha(gaveta, fechar) {
+  if (!gaveta || matchMedia("(min-width: 768px)").matches) return;
+  const alvos = [gaveta.querySelector(".drawer__grab"), gaveta.querySelector(".drawer__head")].filter(Boolean);
+  let inicio = null;
+  const mover = (e) => { if (!inicio) return; const dy = Math.max(0, e.clientY - inicio.y); gaveta.style.transform = `translateY(${dy}px)`; inicio.dy = dy; };
+  const soltar = () => {
+    if (!inicio) return; const { dy, t } = inicio; inicio = null;
+    gaveta.style.transition = "transform var(--duration-base) var(--ease-out)";
+    const rapido = dy / Math.max(1, Date.now() - t) > 0.6;
+    if (dy > 90 || (rapido && dy > 30)) { gaveta.style.transform = "translateY(100%)"; setTimeout(fechar, matchMedia("(prefers-reduced-motion: reduce)").matches ? 0 : 180); }
+    else { gaveta.style.transform = ""; setTimeout(() => { gaveta.style.transition = ""; }, 220); }
+  };
+  for (const a of alvos) {
+    a.addEventListener("pointerdown", (e) => {
+      if (e.target.closest("button, a, input, select, textarea")) return;
+      inicio = { y: e.clientY, dy: 0, t: Date.now() }; gaveta.style.transition = "none";
+      try { a.setPointerCapture(e.pointerId); } catch { /* ponteiro sintético */ }
+    });
+    a.addEventListener("pointermove", mover); a.addEventListener("pointerup", soltar); a.addEventListener("pointercancel", soltar);
+  }
+}
+
+// ── Teclado virtual: marca o body para esconder barras fixas e dar espaço ao campo ──
+export function observarTeclado() {
+  window.visualViewport?.addEventListener("resize", () => {
+    document.body.classList.toggle("teclado", innerHeight - visualViewport.height > 150);
+  });
+}
