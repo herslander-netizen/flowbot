@@ -198,6 +198,63 @@ await caso("galeria do design system abre", async () => {
   await g.context().close();
 });
 
+await caso("busca por CEP no Android e inclusão manual com fonte", async () => {
+  const mobile = await pagina(390, 844, { hasTouch: true, isMobile: true });
+  await mobile.route("**/api/prospeccao/cep?*", async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({
+        cep: "49000000",
+        endereco: "Centro, Aracaju, SE",
+        observacao: "Localização aproximada por município.",
+        empresas: [{
+          id: "node/771122",
+          nome: "Mercearia da Rua",
+          categoria: "Comércio",
+          cidade: "Aracaju",
+          uf: "SE",
+          latitude: -10.92,
+          longitude: -37.05,
+          distanciaMetros: 120,
+          site: "https://exemplo.test",
+          fonte: "https://www.openstreetmap.org/node/771122",
+        }],
+      }),
+    });
+  });
+  await mobile.click("#buscar-empresas-cep");
+  assert.ok(await mobile.isVisible("#cep-title"));
+  await mobile.fill("#cep-input", "49000-000");
+  await mobile.selectOption("#cep-radius", "1000");
+  await mobile.click(".cep-form__submit");
+  await mobile.waitForSelector('[data-cep-import="node/771122"]');
+  assert.ok(await mobile.isVisible("text=OpenStreetMap"));
+  await mobile.click('[data-cep-import="node/771122"]');
+  await mobile.waitForSelector("text=Empresa adicionada ao funil");
+  assert.equal(await mobile.$eval(".kpi__value", (e) => e.textContent), "7");
+  const noOverflow = await mobile.evaluate(() => document.documentElement.scrollWidth <= 390);
+  assert.ok(noOverflow, "a busca criou rolagem horizontal no Android");
+  await mobile.context().close();
+});
+
+await caso("CEP inválido não consulta fonte pública", async () => {
+  const mobile = await pagina(360, 800, { hasTouch: true, isMobile: true });
+  let chamados = 0;
+  await mobile.route("**/api/prospeccao/cep?*", (route) => {
+    chamados++;
+    return route.fulfill({ status: 500, body: "{}" });
+  });
+  await mobile.click("#buscar-empresas-cep");
+  await mobile.fill("#cep-input", "123");
+  await mobile.click(".cep-form__submit");
+  assert.ok(await mobile.isVisible("text=Informe um CEP com 8 números."));
+  assert.equal(chamados, 0);
+  await mobile.keyboard.press("Escape");
+  assert.equal(await mobile.locator("#cep-title").count(), 0);
+  await mobile.context().close();
+});
+
 await caso("sem erros no console", async () => { assert.deepEqual(erros, []); });
 
 await navegador.close();
