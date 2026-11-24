@@ -147,7 +147,7 @@ test("falha do Nominatim é distinta de ausência de empresas", async () => {
   };
   await assert.rejects(
     () => consultarEmpresasCep({ cep: "49000000" }, { fetchFn }),
-    (error) => error instanceof CepErro && error.codigo === "fonte_indisponivel_nominatim",
+    (error) => error instanceof CepErro && error.codigo === "fonte_rede_nominatim",
   );
 });
 
@@ -187,7 +187,7 @@ test("BrasilAPI v2 sem coordenadas ou divergente não cria posições fictícias
     };
     await assert.rejects(
       () => consultarEmpresasCep({ cep: "49000000" }, { fetchFn }),
-      (err) => err instanceof CepErro && err.codigo === "fonte_indisponivel_nominatim",
+      (err) => err instanceof CepErro && err.codigo === "fonte_rede_nominatim",
     );
   }
 });
@@ -200,7 +200,7 @@ test("falha do Overpass não é registrada como zero empresas", async () => {
   };
   await assert.rejects(
     () => consultarEmpresasCep({ cep: "49000000" }, { fetchFn }),
-    (error) => error instanceof CepErro && error.codigo === "fonte_indisponivel_overpass_fallback",
+    (error) => error instanceof CepErro && error.codigo === "fonte_rede_overpass_fallback",
   );
 });
 
@@ -222,6 +222,24 @@ test("Overpass comunitário retorna empresas após falha da instância principal
   assert.equal(alternatives, 1);
   assert.equal(result.empresas.length, 1);
   assert.equal(result.empresas[0].fonte, "https://www.openstreetmap.org/node/31312");
+});
+
+test("Overpass HTTP 403 não é contornado por fallback automático", async () => {
+  const base = simularAPIs();
+  let fallbackCalled = false;
+  const fetchFn = async (url, options) => {
+    if (String(url).includes("overpass-api.de")) return new Response("Forbidden", { status: 403 });
+    if (String(url).includes("overpass.private.coffee")) {
+      fallbackCalled = true;
+      return new Response(JSON.stringify({ elements: [] }));
+    }
+    return base.fetchFn(url, options);
+  };
+  await assert.rejects(
+    () => consultarEmpresasCep({ cep: "49000000" }, { fetchFn }),
+    (e) => e instanceof CepErro && e.codigo === "fonte_http_403_overpass",
+  );
+  assert.equal(fallbackCalled, false);
 });
 
 test("limite 429 do Overpass se propaga e não aparece como resultado vazio", async () => {
