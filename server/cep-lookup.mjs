@@ -50,7 +50,8 @@ async function obterJSON(url, { fetchFn, method = "GET", body, timeout = 15000 }
   catch { throw new CepErro("resposta_invalida", 502, "Dados inválidos na fonte pública."); }
 }
 function coordenada(p) {
-  const lat = Number(p?.lat), lon = Number(p?.lon);
+  if (p?.lat == null || p?.lon == null || p.lat === "" || p.lon === "") return null;
+  const lat = Number(p.lat), lon = Number(p.lon);
   return Number.isFinite(lat) && Number.isFinite(lon) &&
     Math.abs(lat) <= 90 && Math.abs(lon) <= 180 ? { lat, lon } : null;
 }
@@ -156,14 +157,45 @@ export async function consultarEmpresasCep(input, { fetchFn = fetch, beforeGeoco
     ...(rua ? [[cidade, uf, "Brasil"].join(", ")] : []),
   ];
   let centro = null, precisao = "logradouro";
+  let falhaGeocodificacao = null;
   for (let i = 0; i < options.length; i++) {
-    await beforeGeocode();
-    const params = new URLSearchParams({ q: options[i], format: "jsonv2", countrycodes: "br", limit: "1" });
-    const geo = await obterJSON("https://nominatim.openstreetmap.org/search?" + params, { fetchFn, timeout: 10000 });
-    centro = coordenada(geo?.[0]);
-    if (centro) { if (i !== 0 || !rua) precisao = "municipio"; break; }
+    try {
+      await beforeGeocode();
+      const params = new URLSearchParams({ q: options[i], format: "jsonv2", countrycodes: "br", limit: "1" });
+      const geo = await obterJSON("https://nominatim.openstreetmap.org/search?" + params, { fetchFn, timeout: 10000 });
+      centro = coordenada(geo?.[0]);
+      if (centro) { if (i !== 0 || !rua) precisao = "municipio"; break; }
+    } catch (error) {
+      // Evitar insistir na mesma fonte indisponível; preferir uma segunda
+      // fonte pública de coordenadas obtidas diretamente pelo CEP.
+      falhaGeocodificacao = error;
+      break;
+    }
   }
-  if (!centro) throw new CepErro("geocodificacao_inexistente", 422, "Não foi possível localizar esse CEP no mapa.");
+  if (!centro) {
+    try {
+      const v2 = await obterJSON("https://brasilapi.com.br/api/cep/v2/" + cep, {
+        fetchFn, timeout: 10000,
+      });
+      const raw = v2?.location?.coordinates;
+      const candidate = coordenada({ lat: raw?.latitude, lon: raw?.longitude });
+      if (candidate &&
+          String(v2?.cep ?? "").replace(/\\D/g, "") === cep &&
+          String(v2?.state ?? "").toUpperCase() === uf &&
+          candidate.lat >= -35 && candidate.lat <= 6 &&
+          candidate.lon >= -75 && candidate.lon <= -30) {
+        centro = candidate;
+        precisao = "cep_aproximado";
+      }
+    } catch {
+      // A falta de coordenadas não autoriza criar um centro fictício.
+    }
+  }
+  if (!centro) {
+    if (falhaGeocodificacao instanceof CepErro) throw falhaGeocodificacao;
+    throw new CepErro("geocodificacao_inexistente", 422,
+      "Nenhuma fonte conseguiu localizar esse CEP no mapa.");
+  }
   const osm = await obterJSON("https://overpass-api.de/api/interpreter", {
     fetchFn, method: "POST",
     body: "data=" + encodeURIComponent(queryOverpass(centro, raio)), timeout: 25000,
@@ -175,7 +207,9 @@ export async function consultarEmpresasCep(input, { fetchFn = fetch, beforeGeoco
     empresas: converterEmpresasOSM(osm.elements, centro, { raio, segmento, cidade, uf }),
     observacao: precisao === "municipio"
       ? "Busca aproximada a partir do município, não do endereço exato do CEP."
-      : "Busca aproximada a partir do logradouro; não representa a localização exata de cada imóvel.",
+      : precisao === "cep_aproximado"
+        ? "Coordenadas aproximadas do CEP pela BrasilAPI; a posição pode diferir do endereço exato."
+        : "Busca aproximada a partir do logradouro; não representa a localização exata de cada imóvel.",
     fonte: "OpenStreetMap / Overpass", consultadoEm: new Date().toISOString(),
   };
 }
