@@ -82,6 +82,8 @@
 .lead-card:hover { border-color: var(--border-strong); }
 .lead-card__top { display: flex; align-items: center; gap: var(--space-3); }
 .lead-card__top > .icon { margin-left: auto; color: var(--text-faint); }
+.lead-card__text { min-width: 0; }
+.form-grid--city { grid-template-columns: minmax(0, 1fr) 88px; }
 .lead-card__name { font-weight: var(--weight-semibold); font-size: var(--text-base); line-height: var(--leading-base); }
 .lead-card__sub { color: var(--text-muted); font-size: var(--text-sm); }
 .lead-card__bottom { display: flex; align-items: center; gap: var(--space-2); flex-wrap: wrap; }
@@ -125,9 +127,11 @@
   .main[data-aba="mapa"] .list-card { display: none; }
   .main[data-aba="mapa"] #aviso-demo, .main[data-aba="lista"] #aviso-demo { display: none; }
   .workspace .views-switch { display: none; }
-  .map { height: calc(100dvh - var(--topbar-height) - var(--bottomnav-height) - 220px); min-height: 320px; }
+  .map { height: calc(100dvh - var(--topbar-height) - var(--bottomnav-height) - 260px - env(safe-area-inset-bottom)); min-height: 300px; }
   .map-legend { font-size: 11px; }
   .funnel__row { grid-template-columns: 104px minmax(0, 1fr) 56px; padding: 0 var(--space-2); }
+  .kpi { padding: var(--space-3) var(--space-4); }
+  .kpi__value { font-size: var(--text-xl); line-height: var(--leading-xl); }
 }
 @media (min-width: 480px) { .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (min-width: 768px) {

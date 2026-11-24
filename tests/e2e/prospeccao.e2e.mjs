@@ -58,7 +58,7 @@ await caso("indicadores batem com os dados (6 empresas fictícias)", async () =>
   assert.equal(valores[1], "4");
   const soma = await p.$$eval(".funnel__value", (els) => els.reduce((s, e) => s + Number(e.firstChild.textContent), 0));
   assert.equal(soma, 6);
-  assert.ok(await p.isVisible("text=Dados de demonstração"));
+  assert.ok(await p.isVisible("text=Demonstração:"));
 });
 
 await caso("mapa carrega com estilo e marcadores", async () => {
@@ -104,19 +104,19 @@ await caso("formulário: erro de nome, cadastro e duplicidade", async () => {
   await p.click('.page-head [data-acao="novo"]');
   await p.waitForSelector("#new-company");
   assert.equal(await p.evaluate(() => document.activeElement.id), "new-name", "foco inicial no nome");
-  await p.click('#new-company [type="submit"]');
+  await p.click('[type="submit"][form="new-company"]');
   assert.equal(await p.getAttribute("#new-name", "aria-invalid"), "true");
   await p.fill("#new-name", "Padaria Teste");
   await p.fill("#new-city", "Aracaju"); await p.fill("#new-uf", "se");
   await p.fill("#new-lat", "-10.92"); await p.fill("#new-lng", "-37.05");
-  await p.click('#new-company [type="submit"]');
+  await p.click('[type="submit"][form="new-company"]');
   await p.waitForSelector("#detalhe-titulo");
   assert.equal(await p.textContent("#detalhe-titulo"), "Padaria Teste");
   assert.equal(await p.$eval(".kpi__value", (e) => e.textContent), "7");
   await p.keyboard.press("Escape");
   await p.click('.page-head [data-acao="novo"]');
   await p.fill("#new-name", "padaria teste"); await p.fill("#new-city", "Aracaju"); await p.fill("#new-uf", "SE");
-  await p.click('#new-company [type="submit"]');
+  await p.click('[type="submit"][form="new-company"]');
   assert.ok(await p.isVisible("text=já está cadastrada"));
   await p.keyboard.press("Escape");
 });

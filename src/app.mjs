@@ -53,7 +53,7 @@ function filtrados() {
 /* ───────────────────────── Estrutura ───────────────────────── */
 function montarEstrutura() {
   const modulos = [
-    ["fluxo", "Bot Studio"], ["conversa", "Central de Atendimento"], ["agente", "Agentes de IA"],
+    ["fluxo", "Bot Studio"], ["conversa", "Atendimento"], ["agente", "Agentes de IA"],
     ["atividade", "Operações"], ["engrenagem", "Administração"],
   ];
   document.body.innerHTML = `
@@ -64,8 +64,8 @@ function montarEstrutura() {
       <nav aria-label="Módulos" class="nav-group">
         <span class="t-label nav-group__label">Comercial</span>
         <a class="nav-item" href="./" aria-current="page">${icone("alvo")}Prospecção</a>
-        <span class="t-label nav-group__label">Próximos módulos</span>
-        ${modulos.map(([i, n]) => `<button type="button" class="nav-item" aria-disabled="true" data-acao="em-breve" data-modulo="${n}">${icone(i)}${n}<span class="badge">Em breve</span></button>`).join("")}
+        <span class="t-label nav-group__label">Em breve</span>
+        ${modulos.map(([i, n]) => `<button type="button" class="nav-item" aria-disabled="true" data-acao="em-breve" data-modulo="${n}">${icone(i)}${n}</button>`).join("")}
       </nav>
       <div class="sidebar__foot">
         <div class="alert">${icone("escudo")}<span>Pesquisa separada de envio. Nada é disparado nesta versão.</span></div>
@@ -76,7 +76,7 @@ function montarEstrutura() {
     <div>
       <header class="topbar">
         <a class="brand" href="./"><img src="./assets/flowbot-symbol.svg" alt="" width="26" height="26">flowbot</a>
-        <span class="badge badge--accent" style="margin-left:auto">Prospecção</span>
+        <span class="topbar__module">Prospecção</span>
         <div class="menu-anchor topbar__more">
           <button type="button" class="btn btn--ghost btn--icon" aria-label="Mais ações" aria-haspopup="menu" aria-expanded="false" aria-controls="menu-topo">${icone("reticencias")}</button>
           <div class="menu" id="menu-topo" role="menu" hidden>
@@ -121,7 +121,7 @@ function montarEstrutura() {
               </div>
               <div class="input-group search">
                 ${icone("busca")}
-                <input class="input" type="search" id="search" placeholder="Buscar empresa, cidade ou segmento" aria-label="Pesquisar empresas" autocomplete="off" enterkeyhint="search">
+                <input class="input" type="search" id="search" placeholder="Buscar empresas" aria-label="Pesquisar empresas" autocomplete="off" enterkeyhint="search">
                 <kbd aria-hidden="true">/</kbd>
               </div>
               <div class="chips" id="chips" role="group" aria-label="Filtrar por etapa"></div>
@@ -137,7 +137,7 @@ function montarEstrutura() {
                 <div class="card__head list-head">
                   <h3 class="card__title" id="titulo-lista">Empresas <span class="t-faint t-num" id="contagem"></span></h3>
                   <label class="sr-only" for="ordem">Ordenar</label>
-                  <select class="select" id="ordem" style="width:auto;min-height:36px;font-size:13px;border-radius:999px">
+                  <select class="select select--sm" id="ordem">
                     <option value="recentes">Mais recentes</option><option value="nome">Nome</option><option value="pontuacao">Pontuação</option>
                   </select>
                 </div>
@@ -169,11 +169,11 @@ function desenharResumo() {
   const r = resumoFunil(estado.leads);
   const encerrados = r.ganhos + r.perdidos;
   $("#kpis").innerHTML =
-    kpi("Empresas", formatar.numero(r.total), r.comCoordenadas + " com localização no mapa", "predio") +
-    kpi("Em andamento", formatar.numero(r.emAndamento), "De Lead até Negociação", "atividade") +
+    kpi("Empresas", formatar.numero(r.total), r.comCoordenadas + " no mapa", "predio") +
+    kpi("Em andamento", formatar.numero(r.emAndamento), "Lead a Negociação", "atividade") +
     kpi("Taxa de ganho", r.taxaGanho === null ? "—" : formatar.percentual(r.taxaGanho),
-      encerrados ? r.ganhos + " ganho(s) de " + encerrados + " encerrado(s)" : "Nenhum negócio encerrado ainda", "alvo") +
-    kpi("Não contatar", formatar.numero(r.naoContatar), "Excluídas de qualquer abordagem", "proibido");
+      encerrados ? r.ganhos + " de " + encerrados + " encerrado(s)" : "Sem negócios encerrados", "alvo") +
+    kpi("Não contatar", formatar.numero(r.naoContatar), "Fora de abordagens", "proibido");
 
   const maior = Math.max(1, ...r.porEtapa.map((e) => e.quantidade));
   const linha = (e) => `<button type="button" class="funnel__row" data-filtro="${e.id}" aria-pressed="${estado.filtro === e.id}" style="--stage:${corEtapa(e.id)}" aria-label="${html(e.nome)}: ${e.quantidade} empresa(s), ${formatar.percentual(e.percentual)} do total. Filtrar.">
@@ -184,8 +184,8 @@ function desenharResumo() {
   $("#funil-meta").textContent = r.total ? formatar.numero(r.total) + " empresa(s) nesta sessão" : "Sem empresas";
 
   $("#aviso-demo").innerHTML = r.demonstracao
-    ? `<div class="alert alert--warning">${icone("info")}<span><strong>Dados de demonstração.</strong> ${r.demonstracao} empresa(s) fictícia(s) para testar a interface. Tudo fica só nesta aba e some ao atualizar: exporte o CSV para guardar.</span></div>`
-    : `<div class="alert">${icone("info")}<span>Os dados ficam só nesta aba e somem ao atualizar. Exporte o CSV para guardar.</span></div>`;
+    ? `<div class="alert alert--warning">${icone("info")}<span><strong>Demonstração:</strong> ${r.demonstracao} empresa(s) fictícia(s). Os dados ficam só nesta aba; exporte o CSV para guardar.</span></div>`
+    : `<div class="alert">${icone("info")}<span>Os dados ficam só nesta aba. Exporte o CSV para guardar.</span></div>`;
 }
 
 function desenharChips() {
@@ -216,7 +216,7 @@ function desenharLista() {
     const p = pontuacao(l);
     return `<button type="button" class="lead-card" data-acao="abrir" data-id="${html(l.id)}">
       <span class="lead-card__top"><span class="avatar" aria-hidden="true">${html(l.nome.charAt(0).toUpperCase())}</span>
-        <span style="min-width:0"><span class="lead-card__name">${html(l.nome)}</span><br><span class="lead-card__sub">${html(l.categoria || "Segmento não informado")}${local(l) ? " · " + html(local(l)) : ""}</span></span>
+        <span class="lead-card__text"><span class="lead-card__name">${html(l.nome)}</span><br><span class="lead-card__sub">${html(l.categoria || "Segmento não informado")}${local(l) ? " · " + html(local(l)) : ""}</span></span>
         ${icone("seta", "icon icon--sm")}</span>
       <span class="lead-card__bottom">${seloEtapa(l.etapa)}${l.suprimido ? `<span class="badge badge--danger">${icone("proibido", "icon icon--sm")}Não contatar</span>` : ""}
         <span class="lead-card__score">${medidor(p)}<span>${p}/100</span></span></span></button>`;
@@ -371,7 +371,7 @@ function desenharSelecao() {
   if (alvo.tipo === "grupo") {
     const itens = alvo.ids.map((id) => estado.leads.find((l) => l.id === id)).filter(Boolean);
     $("#selecao").innerHTML = `<div class="map-select" role="dialog" aria-label="Empresas neste ponto">
-      <div class="map-select__head"><div style="flex:1"><p class="map-select__name">${itens.length} empresas neste ponto</p><p class="t-small t-muted">Mesma localização ou muito próximas.</p></div>
+      <div class="map-select__head"><div class="grow"><p class="map-select__name">${itens.length} empresas neste ponto</p><p class="t-small t-muted">Mesma localização ou muito próximas.</p></div>
       <button type="button" class="btn btn--ghost btn--icon btn--sm" data-acao="desmarcar" aria-label="Fechar">${icone("fechar")}</button></div>
       <ul>${itens.map((l) => `<li><button type="button" class="menu__item" data-acao="abrir" data-id="${html(l.id)}"><span class="dot" style="color:${corEtapa(l.etapa)}"></span>${html(l.nome)}</button></li>`).join("")}</ul></div>`;
     return;
@@ -380,7 +380,7 @@ function desenharSelecao() {
   if (!l) { estado.marcado = null; $("#selecao").innerHTML = ""; return; }
   const p = pontuacao(l);
   $("#selecao").innerHTML = `<div class="map-select" role="dialog" aria-label="Empresa selecionada no mapa">
-    <div class="map-select__head"><div style="flex:1;min-width:0"><p class="map-select__name">${html(l.nome)}</p>
+    <div class="map-select__head"><div class="grow"><p class="map-select__name">${html(l.nome)}</p>
       <p class="map-select__meta">${seloEtapa(l.etapa)}<span>${html([l.categoria, local(l)].filter(Boolean).join(" · ") || "Sem segmento e local")}</span></p></div>
       <button type="button" class="btn btn--ghost btn--icon btn--sm" data-acao="desmarcar" aria-label="Fechar">${icone("fechar")}</button></div>
     <div class="map-select__meta">${medidor(p)}<span class="t-num">Pontuação ${p}/100</span>${l.suprimido ? '<span class="badge badge--danger">Não contatar</span>' : ""}</div>
@@ -444,11 +444,11 @@ function painelDetalhe(id) {
   return `<section class="drawer" role="dialog" aria-modal="true" aria-labelledby="detalhe-titulo" data-chave="detalhe${html(l.id)}">
     <span class="drawer__grab" aria-hidden="true"></span>
     <div class="drawer__head">
-      <div style="flex:1;min-width:0;display:grid;gap:6px">
+      <div class="drawer__heading">
         <span class="t-label">Empresa</span>
         <h2 class="drawer__title" id="detalhe-titulo">${html(l.nome)}</h2>
         <span class="t-small t-muted">${html([l.categoria || "Segmento não informado", local(l)].filter(Boolean).join(" · "))}</span>
-        <span style="display:flex;gap:6px;flex-wrap:wrap">${seloEtapa(l.etapa)}${l.suprimido ? `<span class="badge badge--danger">${icone("proibido", "icon icon--sm")}Não contatar</span>` : ""}${l.origem === "exemplo_ficticio" ? '<span class="badge badge--warning">Fictícia</span>' : ""}</span>
+        <span class="badges">${seloEtapa(l.etapa)}${l.suprimido ? `<span class="badge badge--danger">${icone("proibido", "icon icon--sm")}Não contatar</span>` : ""}${l.origem === "exemplo_ficticio" ? '<span class="badge badge--warning">Fictícia</span>' : ""}</span>
       </div>
       <button type="button" class="btn btn--ghost btn--icon" data-acao="fechar" aria-label="Fechar detalhes">${icone("fechar")}</button>
     </div>
@@ -528,7 +528,7 @@ function painelNovo() {
   return `<section class="drawer" role="dialog" aria-modal="true" aria-labelledby="novo-titulo" data-chave="novo">
     <span class="drawer__grab" aria-hidden="true"></span>
     <div class="drawer__head">
-      <div style="flex:1;display:grid;gap:6px"><span class="t-label">Novo registro</span><h2 class="drawer__title" id="novo-titulo">Adicionar empresa</h2>
+      <div class="drawer__heading"><span class="t-label">Novo registro</span><h2 class="drawer__title" id="novo-titulo">Adicionar empresa</h2>
       <span class="t-small t-muted">Cadastre só dados comerciais. Nada é consultado fora daqui.</span></div>
       <button type="button" class="btn btn--ghost btn--icon" data-acao="fechar" aria-label="Fechar formulário">${icone("fechar")}</button>
     </div>
@@ -541,7 +541,7 @@ function painelNovo() {
         <div class="field"><label class="field__label" for="new-cnpj">CNPJ <span class="t-faint">(opcional)</span></label><input class="input" id="new-cnpj" name="cnpj" maxlength="18" inputmode="numeric" enterkeyhint="next" placeholder="00.000.000/0000-00"></div>
       </fieldset>
       <fieldset class="fieldset"><legend class="section__title">Localização</legend>
-        <div class="form-grid form-grid--2" style="grid-template-columns:minmax(0,1fr) 88px">
+        <div class="form-grid form-grid--city">
           <div class="field"><label class="field__label" for="new-city">Cidade</label><input class="input" id="new-city" name="cidade" maxlength="100" enterkeyhint="next"></div>
           <div class="field"><label class="field__label" for="new-uf">UF</label><input class="input" id="new-uf" name="uf" maxlength="2" autocapitalize="characters" enterkeyhint="next"></div>
         </div>
@@ -558,11 +558,11 @@ function painelNovo() {
           <span class="field__hint">Sem fonte, o fato não entra no rascunho.</span></div>
       </fieldset>
       <div class="alert">${icone("escudo")}<span>O cadastro não inicia campanhas nem consulta serviços externos. Contatos pessoais não são pedidos.</span></div>
-      <div style="display:flex;gap:8px;position:sticky;bottom:0;padding:12px 0 0;background:var(--surface)">
-        <button class="btn btn--secondary" type="button" data-acao="fechar" style="flex:1">Cancelar</button>
-        <button class="btn btn--primary" type="submit" style="flex:2">${icone("mais")}Salvar empresa</button>
-      </div>
     </form>
+    <div class="drawer__foot">
+      <button class="btn btn--secondary" type="button" data-acao="fechar">Cancelar</button>
+      <button class="btn btn--primary grow" type="submit" form="new-company">${icone("mais")}Salvar empresa</button>
+    </div>
   </section>`;
 }
 
