@@ -151,6 +151,47 @@ test("falha do Nominatim é distinta de ausência de empresas", async () => {
   );
 });
 
+test("BrasilAPI v2 recupera coordenadas quando Nominatim está inacessível", async () => {
+  const base = simularAPIs();
+  let calledV2 = 0;
+  const fetchFn = async (url, opts) => {
+    if (String(url).includes("nominatim.openstreetmap.org")) throw new Error("Nominatim blocked");
+    if (String(url).includes("brasilapi.com.br/api/cep/v2/")) {
+      calledV2++;
+      return new Response(JSON.stringify({
+        cep: "49000000", state: "SE",
+        location: { type: "Point", coordinates: { latitude: "-10.9", longitude: "-37.05" } },
+      }));
+    }
+    return base.fetchFn(url, opts);
+  };
+  const res = await consultarEmpresasCep({ cep: "49000000", raio: 500 }, { fetchFn });
+  assert.equal(calledV2, 1);
+  assert.equal(res.centro.precisao, "cep_aproximado");
+  assert.match(res.observacao, /aproximadas/i);
+  assert.equal(res.empresas.length, 3);
+});
+
+test("BrasilAPI v2 sem coordenadas ou divergente não cria posições fictícias", async () => {
+  const base = simularAPIs();
+  for (const location of [
+    { coordinates: { latitude: null, longitude: null } },
+    { coordinates: { latitude: "-10.9", longitude: "-37.05" } },
+  ]) {
+    const fetchFn = async (url, opts) => {
+      if (String(url).includes("nominatim.openstreetmap.org")) throw new Error("Nominatim blocked");
+      if (String(url).includes("brasilapi.com.br/api/cep/v2/")) {
+        return new Response(JSON.stringify({ cep: "99999999", state: "SE", location }));
+      }
+      return base.fetchFn(url, opts);
+    };
+    await assert.rejects(
+      () => consultarEmpresasCep({ cep: "49000000" }, { fetchFn }),
+      (err) => err instanceof CepErro && err.codigo === "fonte_indisponivel_nominatim",
+    );
+  }
+});
+
 test("falha do Overpass não é registrada como zero empresas", async () => {
   const api = simularAPIs();
   const fetchFn = async (url, options) => {
