@@ -24,14 +24,16 @@ No celular, cada destino da barra inferior mostra uma área por vez (como Resumo
 
 Referência viva de todos os padrões: `src/app.mjs` e `assets/prospeccao.css`. Resumo com KPIs e funil clicável que filtra; mapa com legenda, agrupamento e cartão de seleção; lista em tabela (≥768px) ou cartões; detalhes em gaveta com seções.
 
-## Bot Studio — editor de automações
+## Bot Studio — editor de automações (prévia implementada)
 
-- **Tela:** lista de fluxos (tabela/cartões, selos de status: Rascunho, Testado, Publicado) → editor.
-- **Editor:** tela cheia com quadro de nós no centro, painel de propriedades em `.drawer` à direita e simulador do lado (computador) ou como aba (celular).
-- **Nós:** `.card` pequeno com ícone do tipo, título e uma linha de resumo; cor de borda pelo tipo (mensagem, pergunta, condição, transferência) usando papéis de estado, nunca cor de personagem. Conexões com traço em `--border-strong`; selecionada em `--accent`.
-- **Simulador:** bolhas `--chat-bot`, `--chat-client`, `--chat-team` (mesmas da landing). Botão "Equipe assume" sempre visível.
-- **Publicar:** `.modal` de confirmação dizendo o que muda e para quem. Publicar é sempre o único `.btn--primary` da barra.
-- **Celular:** o quadro de nós vira lista vertical de passos; editar um passo abre a folha inferior.
+Detalhes e o que é real em `../bot-studio.md`.
+
+- **Telas:** Agentes, Fluxo, Oficina, Simulador e Versões, com abas no computador e barra inferior no celular.
+- **Passos:** cada família de passo tem um personagem da identidade (Recepcionista abre, Qualificador pergunta e ramifica, Guardião segura o erro, Passador passa à equipe, FlowBot cuida do resto). A cor do personagem aparece só como filete e rosto pequeno, nunca como fundo de botão ou estado.
+- **Ligações:** traço em `--border-strong`; caminho de erro tracejado em `--danger`; retorno com limite em arco pontilhado; ligações do passo selecionado em `--accent`.
+- **Editor:** canvas com zoom e panorâmica e painel lateral (`.side-panel`) no computador; árvore de passos e folha inferior com Anterior/Próximo no celular.
+- **Estados:** revisão com `.version-state`; integrações com `.op-state`; nada aparece como conectado ou aprovado sem ser.
+- **Publicar:** quando existir, `.modal` de confirmação dizendo o que muda e para quem; hoje o botão aparece desligado com o motivo.
 
 ## Central de Atendimento — conversas e filas
 

@@ -80,7 +80,22 @@ Escala: `--text-xs` 12 · `sm` 13 · `md` 14 (padrão de interface) · `base` 16
 
 ### Movimento
 
-`--duration-fast` 120ms (hover, cor) · `--duration-base` 200ms (menus, painéis) · `--duration-slow` 280ms (gaveta, toast). Curvas: `--ease-out` (padrão), `--ease-emphasized` (entradas grandes), `--ease-spring` (só personagens e marcadores do mapa).
+Uma linguagem só para todos os módulos (galeria: seção "Movimento").
+
+| Token | Duração | Para quê |
+| --- | --- | --- |
+| `--duration-fast` | 120 ms | Toque, hover, cor, giro de seta |
+| `--duration-base` | 200 ms | Troca de tela (`.view-enter`), dobra que abre (`.reveal`), menus |
+| `--duration-slow` | 280 ms | Gaveta, folha inferior, painel lateral, toast |
+
+Curvas: `--ease-out` (padrão), `--ease-emphasized` (entradas grandes), `--ease-spring` (só personagens, ícone ativo da barra inferior e marcadores do mapa).
+
+Regras:
+- Só `transform` e `opacity`. Nada de animar largura, altura, top ou left.
+- Toque dá retorno na hora: `.btn`, `.pressable`, `.chip` e itens de menu encolhem para 0,97–0,98 enquanto pressionados.
+- Algo novo apareceu (passo criado, por exemplo): `.pulse-once`, uma vez.
+- Carregando ou salvando: o ponto do `.op-state` pisca devagar. Não há barra de progresso inventada.
+- `prefers-reduced-motion: reduce` corta tudo para 1 ms em `base.css`. O teste `estudio.e2e.mjs` confere isso.
 
 ### Camadas e breakpoints
 
@@ -90,8 +105,11 @@ Breakpoints (use os números em `@media`): 360 (celular pequeno), 768 (tablet: t
 
 ## Navegação
 
-- **Celular (< 1024px):** barra superior com logo e menu de mais ações; barra inferior (`.bottomnav`) com até 4 destinos do módulo e respiro para a área segura.
-- **Computador (≥ 1024px):** barra lateral (`.sidebar`) com módulos agrupados. Módulos que ainda não existem aparecem com o selo "Em breve" e não navegam.
+A estrutura é montada por `montarShell()` em `src/ui/shell.mjs`. Todo módulo usa a mesma função; a lista de módulos fica em `MODULOS`. Detalhes em `navegacao.md`.
+
+- **Celular e tablet (< 1024px):** barra superior com logo e o **seletor de módulo** (nome do módulo atual + seta). O mesmo menu traz os outros módulos, as ações do módulo, o tema e o site. A barra inferior (`.bottomnav`) tem até 5 destinos do módulo, com respiro para a área segura.
+- **Computador (≥ 1024px):** barra lateral (`.sidebar`) com os módulos agrupados (Comercial, Automação…). Abas de página (`.tabs`) para as telas do módulo.
+- **Só aparece o que existe.** Nada de itens desativados com "Em breve". Um módulo em prévia leva a marca discreta `Prévia` (`.nav-item__tag`).
 - Toda página tem `.skip-link` para pular ao conteúdo.
 
 ## Como criar um módulo novo
@@ -99,5 +117,6 @@ Breakpoints (use os números em `@media`): 360 (celular pequeno), 768 (tablet: t
 1. Crie `assets/<modulo>.css` só com layout (grid, larguras, ordem). Nada de cor ou tipografia nova.
 2. Monte a tela com os componentes de `componentes.md`. Comece pelo estado vazio e pelo carregamento.
 3. Regras de negócio ficam num arquivo de domínio sem DOM (como `src/prospecting.mjs`), com testes em `tests/`.
-4. Valide em 360/390/430/768/1280, nos dois temas, só com teclado, e sem erros no console.
-5. Se criou algo reutilizável, mova para `components.css`, adicione à galeria e documente em `componentes.md`.
+4. Valide em 320/360/390/430/768/1024/1280/1440, nos dois temas, só com teclado, com movimento reduzido e sem erros no console. Rode `tests/e2e/contraste.e2e.mjs` (WCAG AA).
+5. Estados de integração usam `estadoOperacional()` e `blocoDeEstado()`, nunca texto solto. Dado fictício fica num arquivo separado e a tela diz "Demonstração".
+6. Se criou algo reutilizável, mova para `components.css`, adicione à galeria e documente em `componentes.md`.

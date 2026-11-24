@@ -85,10 +85,34 @@ Botão com `aria-haspopup="menu"`, `aria-expanded` e `aria-controls`; `alternarM
 
 `<button data-tip="Texto curto" aria-label="Texto curto">`. Aparece no hover e no foco; some em telas de toque. Não coloque informação essencial só na dica.
 
-## Navegação — `.sidebar`, `.topbar`, `.bottomnav`, `.nav-item`
+## Navegação — `montarShell()`, `.sidebar`, `.topbar__module`, `.bottomnav`, `.tabs`
 
-Veja "Navegação" no README. Item atual com `aria-current="page"`; módulo ainda indisponível com `aria-disabled="true"` e selo "Em breve".
+Use `montarShell({ ativo, raiz, nota, acoes, conteudo, inferior })` (`src/ui/shell.mjs`). Item atual com `aria-current="page"`. Ações do módulo entram em `acoes` e aparecem no menu do seletor de módulo. Abas de página (`.tabs`) só no tablet e no computador; no celular a barra inferior faz o papel delas.
+
+## Estado operacional — `estadoOperacional(estado, texto?)`, `.op-state`
+
+Ponto + texto para dizer como uma integração está agora: `conectado`, `desconectado`, `demonstracao`, `carregando`, `salvando`, `nao-salvo`, `conflito`, `validacao`, `permissao`, `indisponivel`, `erro`, `vazio`. Não crie estados novos na tela; acrescente em `ESTADOS` (`src/ui/componentes.mjs`) e na galeria.
+
+## Bloco de estado — `blocoDeEstado({ estado, titulo, texto, acao })`, `.state-block`
+
+Para telas e seções inteiras sem dados, com erro, sem permissão ou com serviço indisponível. Título curto, um texto que diz o que fazer e no máximo uma ação. Erro, conflito e permissão viram `role="alert"`.
+
+## Estado de versão — `.version-state[data-estado]`
+
+`rascunho`, `revisao`, `correcao`, `aprovado` (contorno: ainda não definitivo) e `publicado` (preenchido). Sempre com texto.
+
+## Painel lateral — `.side-panel`
+
+Edição contextual ao lado do trabalho no computador, sem bloquear a tela. No celular o mesmo conteúdo abre numa folha inferior (`.drawer`).
+
+## Ação do polegar — `.fab`
+
+Uma ação principal flutuante no celular, acima da barra inferior e da área segura. Some a partir de 1024px, onde a ação vai para a barra da página.
+
+## Dobra — `details.fold`
+
+Seções que o usuário abre quando precisa (testes, lacunas, relatórios). O resumo tem 44px e mostra a contagem à direita.
 
 ## Ícones — `icone(nome)`
 
-Traço único de 24px. Nomes disponíveis em `src/ui/icones.mjs` (painel, mapa, lista, alvo, mais, importar, exportar, seta, fechar, info, alerta, ok, check, menos, copiar, faisca, escudo, proibido, busca, reticencias, sol, lua, pino, link, relogio, nota, fluxo, conversa, agente, atividade, engrenagem, predio, site, enquadrar). Tamanhos: `.icon` 18, `.icon--sm` 16, `.icon--lg` 22. Ícone ao lado de texto é decorativo (`aria-hidden` já vem).
+Traço único de 24px. Nomes disponíveis em `src/ui/icones.mjs` (painel, mapa, lista, alvo, mais, importar, exportar, seta, fechar, info, alerta, ok, check, menos, copiar, faisca, escudo, proibido, busca, reticencias, sol, lua, pino, link, relogio, nota, fluxo, conversa, agente, atividade, engrenagem, predio, site, enquadrar, abaixo, esquerda, lixeira, ramo, retorno, play, cadeado, camadas, ajustes, desfazer, arquivo, nuvemoff). Tamanhos: `.icon--xs` 14, `.icon` 18, `.icon--sm` 16, `.icon--lg` 22. Ícone ao lado de texto é decorativo (`aria-hidden` já vem).
