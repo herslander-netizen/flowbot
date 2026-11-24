@@ -180,7 +180,7 @@ export async function consultarEmpresasCep(input, { fetchFn = fetch, beforeGeoco
       const raw = v2?.location?.coordinates;
       const candidate = coordenada({ lat: raw?.latitude, lon: raw?.longitude });
       if (candidate &&
-          String(v2?.cep ?? "").replace(/\\D/g, "") === cep &&
+          String(v2?.cep ?? "").replace(/\D/g, "") === cep &&
           String(v2?.state ?? "").toUpperCase() === uf &&
           candidate.lat >= -35 && candidate.lat <= 6 &&
           candidate.lon >= -75 && candidate.lon <= -30) {
