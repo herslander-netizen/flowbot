@@ -139,6 +139,30 @@ test("sem geocodificação de logradouro, usa município e sinaliza imprecisão"
   assert.match(result.observacao, /município/);
 });
 
+test("falha do Nominatim é distinta de ausência de empresas", async () => {
+  const api = simularAPIs();
+  const fetchFn = async (url, options) => {
+    if (String(url).includes("nominatim.openstreetmap.org")) throw new Error("blocked");
+    return api.fetchFn(url, options);
+  };
+  await assert.rejects(
+    () => consultarEmpresasCep({ cep: "49000000" }, { fetchFn }),
+    (error) => error instanceof CepErro && error.codigo === "fonte_indisponivel_nominatim",
+  );
+});
+
+test("falha do Overpass não é registrada como zero empresas", async () => {
+  const api = simularAPIs();
+  const fetchFn = async (url, options) => {
+    if (String(url).includes("overpass-api.de")) throw new Error("blocked");
+    return api.fetchFn(url, options);
+  };
+  await assert.rejects(
+    () => consultarEmpresasCep({ cep: "49000000" }, { fetchFn }),
+    (error) => error instanceof CepErro && error.codigo === "fonte_indisponivel_overpass",
+  );
+});
+
 test("limite 429 do Overpass se propaga e não aparece como resultado vazio", async () => {
   const api = simularAPIs({ status: 429 });
   await assert.rejects(
