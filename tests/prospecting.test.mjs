@@ -132,3 +132,36 @@ test("não cria rascunho de empresa marcada não contatar", () => {
   assert.throws(() => criarRascunho(validarEmpresa({nome:"Empresa Fictícia",suprimido:true})), /não contatar/);
   assert.match(criarRascunho(validarEmpresa({nome:"Empresa Fictícia",suprimido:false})), /Empresa Fictícia/);
 });
+
+test("CSV preserva coordenadas WGS84 negativas e zero sem perder a supressão", () => {
+  const original = [
+    validarEmpresa({ nome: "Sul e Oeste Fictício", latitude: -10.916, longitude: -37.061, suprimido: true }),
+    validarEmpresa({ nome: "Linha Fictícia", latitude: 0, longitude: 180 }),
+    validarEmpresa({ nome: "Extremo Fictício", latitude: -90, longitude: -180 }),
+    validarEmpresa({ nome: "Sem Coordenadas Fictício" }),
+  ];
+  const csv = exportarCsv(original);
+  assert.match(csv, /"-10\.916";"-37\.061"/);
+  const { adicionados, erros } = importarCsv(csv);
+  assert.deepEqual(erros, []);
+  const campos = ({ latitude, longitude, suprimido }) => [latitude, longitude, suprimido];
+  assert.deepEqual(adicionados.map(campos), original.map(campos));
+});
+
+test("CSV recupera números negativos legados sem aceitar fórmulas ou coordenadas fora dos limites", () => {
+  const { adicionados, erros } = importarCsv(
+    "nome;latitude;longitude;suprimido\r\n" +
+    "Legado Fictício;'-1e-7;'-37.061;true\r\n" +
+    "Latitude Inválida;'-91;0;true\r\n" +
+    "Longitude Inválida;0;'-181;true\r\n" +
+    "Texto Inválido;'-1+2;0;true");
+  assert.deepEqual(adicionados.map(({ latitude, longitude, suprimido }) => [latitude, longitude, suprimido]),
+    [[-1e-7, -37.061, true]]);
+  assert.equal(erros.length, 3);
+
+  const csv = exportarCsv([{ nome: "-37", cidade: "@Texto", uf: " +Texto", categoria: "=Texto",
+    latitude: "-1+2", longitude: -181 }]);
+  for (const esperado of ["'-37", "'@Texto", "' +Texto", "'=Texto", "'-1+2", "'-181"]) {
+    assert.ok(csv.includes('"' + esperado + '"'), esperado);
+  }
+});

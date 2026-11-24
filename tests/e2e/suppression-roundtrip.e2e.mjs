@@ -3,6 +3,7 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
+import { lerCsv } from "../../src/prospecting.mjs";
 
 const { chromium } = createRequire(import.meta.url)("playwright");
 const base = new URL(process.env.FLOWBOT_URL ?? "http://127.0.0.1:4173/");
@@ -14,7 +15,7 @@ const browser = await chromium.launch({
 const nome = "Empresa Ficticia Teste Supressao";
 const csv = (flag) => ({
   name: "fixture.csv", mimeType: "text/csv",
-  buffer: Buffer.from(`empresa;suprimido\r\n${nome};${flag}\r\n`),
+  buffer: Buffer.from(`empresa;suprimido;latitude;longitude\r\n${nome};${flag};-10.916;-37.061\r\n`),
 });
 
 async function mobile() {
@@ -67,6 +68,11 @@ try {
   ]);
   assert.equal(download.suggestedFilename(), "flowbot-prospeccao.csv");
   const exported = await readFile(await download.path());
+  const [columns, ...rows] = lerCsv(exported.toString("utf8"));
+  const exportedLeads = rows.filter(row => row[columns.indexOf("nome")] === nome);
+  assert.equal(exportedLeads.length, 1, "Exactly one matching row in browser download");
+  assert.deepEqual(["latitude", "longitude", "suprimido"].map(key => exportedLeads[0][columns.indexOf(key)]),
+    ["-10.916", "-37.061", "true"], "Browser download preserves both numbers and suppression");
   await original.context.close();
 
   const restored = await mobile();
@@ -76,6 +82,9 @@ try {
   });
   await lead(restored.page).click();
   await blocked(restored.page);
+  const location = restored.page.locator('section[aria-labelledby="s-local"]');
+  assert.equal(await location.getByText("-10.916, -37.061", { exact: true }).count(), 1,
+    "Both coordinates survive the real reimport");
   await restored.page.locator('#painel [data-acao="fechar"]').click();
 
   await importCsv(restored.page, csv("false"), "0 importada(s) · 1 duplicada(s)");
@@ -83,7 +92,7 @@ try {
   await lead(restored.page).click();
   await blocked(restored.page);
   await restored.context.close();
-  console.log("PASS: 390px, stale draft removed, downloaded CSV stays suppressed after clean reimport and duplicate false");
+  console.log("PASS: 390px, negative coordinates and suppression survive clean CSV reimport and duplicate false");
 } finally {
   await browser.close();
 }
