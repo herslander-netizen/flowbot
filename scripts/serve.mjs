@@ -9,6 +9,8 @@ const tipos = {
   ".js": "text/javascript; charset=utf-8",
   ".mjs": "text/javascript; charset=utf-8",
   ".svg": "image/svg+xml",
+  ".png": "image/png",
+  ".json": "application/json; charset=utf-8",
   ".webmanifest": "application/manifest+json",
 };
 const porta = Number(process.env.PORT || 4173);
@@ -20,7 +22,7 @@ const servidor = createServer(async (req, res) => {
   let caminho;
   try { caminho = decodeURIComponent(new URL(req.url ?? "/", "http://localhost").pathname); }
   catch { res.writeHead(400); res.end(); return; }
-  const arquivo = resolve(join(raiz, caminho === "/" ? "index.html" : "." + caminho));
+  const arquivo = resolve(join(raiz, caminho.endsWith("/") ? "." + caminho + "index.html" : "." + caminho));
   if (arquivo !== raiz && !arquivo.startsWith(raiz + sep)) {
     res.writeHead(403); res.end(); return;
   }

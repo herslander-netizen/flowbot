@@ -1,366 +1,726 @@
+// Modo Prospecção — camada de interface. Toda regra de negócio fica em prospecting.mjs.
+// A tela é montada uma vez e cada região é atualizada sozinha, sem recriar o mapa.
 import {
-  ETAPAS, dadosDeDemonstracao, validarEmpresa, chaveEmpresa,
-  importarCsv, criarRascunho, pontuacao, exportarCsv
+  ETAPAS, dadosDeDemonstracao, validarEmpresa, chaveEmpresa, importarCsv, criarRascunho,
+  pontuacao, explicarPontuacao, resumoFunil, exportarCsv,
 } from "./prospecting.mjs";
+import { icone } from "./ui/icones.mjs";
+import {
+  html, formatar, aviso, prenderFoco, temaAtual, aplicarTema, alternarMenu, fecharMenus,
+} from "./ui/componentes.mjs";
 
-let leads = dadosDeDemonstracao();
-let filtro = "todos";
-let busca = "";
-let vista = "mapa";
-let selecionado = null;
-let formularioAberto = false;
-let mapa = null;
-let avisoTimer = null;
+const REMETENTE = "Alvo Digital";
+const estado = {
+  leads: dadosDeDemonstracao(),
+  filtro: "todos",
+  busca: "",
+  ordem: "recentes",
+  vista: "mapa",          // mapa | lista (computador e tablet)
+  aba: "resumo",          // resumo | mapa | lista (celular)
+  marcado: null,          // empresa ou grupo marcado no mapa
+  painel: null,           // { tipo: "detalhe", id } | { tipo: "novo" }
+  legendaAberta: !matchMedia("(max-width: 767px)").matches,
+};
 const rascunhos = new Map();
-const app = document.querySelector("#app");
+const historico = new Map();
+let mapa = null; let camada = null; let soltarFoco = null; let focoAnterior = null;
 
-function html(valor) {
-  return String(valor ?? "").replace(/[&<>"']/g, (caracter) =>
-    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[caracter]);
+const $ = (seletor, raiz = document) => raiz.querySelector(seletor);
+const etapa = (id) => ETAPAS.find((e) => e.id === id) ?? ETAPAS[0];
+const corEtapa = (id) => "var(--stage-" + id + ")";
+const temCoordenadas = (l) => Number.isFinite(l.latitude) && Number.isFinite(l.longitude);
+const local = (l) => [l.cidade, l.uf].filter(Boolean).join(" / ");
+
+function registrar(id, texto, nomeIcone = "relogio") {
+  const lista = historico.get(id) ?? [];
+  lista.unshift({ texto, icone: nomeIcone, quando: new Date() });
+  historico.set(id, lista.slice(0, 30));
 }
 
-function icone(nome) {
-  const desenhos = {
-    grid: '<rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/>',
-    pin: '<path d="M20 10c0 5-8 12-8 12S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/>',
-    users: '<circle cx="9" cy="8" r="4"/><path d="M3 21v-2a6 6 0 0 1 12 0v2"/><path d="M17 4a4 4 0 0 1 0 8M19 15a6 6 0 0 1 2 5v1"/>',
-    plus: '<path d="M12 5v14M5 12h14"/>',
-    upload: '<path d="M12 16V3m-5 5 5-5 5 5"/><path d="M4 16v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3"/>',
-    download: '<path d="M12 3v14m-5-5 5 5 5-5"/><path d="M4 19v2h16v-2"/>',
-    arrow: '<path d="m9 18 6-6-6-6"/>',
-    x: '<path d="M5 5 19 19M19 5 5 19"/>',
-    info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v6M12 7h.01"/>',
-    copy: '<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>',
-    spark: '<path d="m12 3 1.6 6.4L20 11l-6.4 1.6L12 19l-1.6-6.4L4 11l6.4-1.6L12 3Z"/><path d="m19 18 .7 2.3L22 21l-2.3.7L19 24l-.7-2.3L16 21l2.3-.7L19 18Z"/>',
-    shield: '<path d="M12 2 4 6v6c0 5 3.5 8 8 10 4.5-2 8-5 8-10V6l-8-4Z"/><path d="m9 12 2 2 4-4"/>',
-  };
-  return '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">' +
-    (desenhos[nome] ?? "") + '</svg>';
-}
-
-function etiqueta(etapa) { return ETAPAS.find((x) => x.id === etapa) ?? ETAPAS[0]; }
 function filtrados() {
-  return leads.filter((lead) => {
-    if (filtro !== "todos" && lead.etapa !== filtro) return false;
-    if (!busca.trim()) return true;
-    const termo = busca.toLocaleLowerCase("pt-BR");
-    return [lead.nome, lead.cidade, lead.uf, lead.categoria]
-      .some((v) => String(v ?? "").toLocaleLowerCase("pt-BR").includes(termo));
+  const termo = estado.busca.trim().toLocaleLowerCase("pt-BR");
+  const lista = estado.leads.filter((l) => {
+    if (estado.filtro !== "todos" && l.etapa !== estado.filtro) return false;
+    if (!termo) return true;
+    return [l.nome, l.cidade, l.uf, l.categoria].some((v) => String(v ?? "").toLocaleLowerCase("pt-BR").includes(termo));
   });
-}
-function estatistica(label, valor, detalhe) {
-  return '<article class="stat"><div class="stat-label">' + html(label) +
-    '</div><div class="stat-value">' + valor + '</div><div class="stat-detail">' +
-    html(detalhe) + '</div></article>';
-}
-function leadCard(lead) {
-  const etapa = etiqueta(lead.etapa);
-  const local = [lead.cidade, lead.uf].filter(Boolean).join(" / ");
-  return [
-    '<button type="button" class="lead" data-action="lead" data-id="', html(lead.id), '">',
-    '<span class="lead-head"><span class="lead-avatar">', html(lead.nome.charAt(0).toUpperCase()), '</span>',
-    '<span><span class="lead-name">', html(lead.nome), '</span><br><span class="lead-sub">',
-    html(lead.categoria || "Segmento não informado"), local ? " · " + html(local) : "", '</span></span>',
-    '<span class="lead-end">', icone("arrow"), '</span></span>',
-    '<span class="lead-foot"><span class="status"><span class="stage-dot" style="background:',
-    html(etapa.cor), '"></span>', html(etapa.nome), '</span>',
-    lead.suprimido ? '<span class="stop">Não contatar</span>' : '',
-    '<span class="score">', pontuacao(lead), '/100</span></span></button>'
-  ].join("");
-}
-function lista() {
-  const dados = filtrados();
-  const titulacao = '<div class="panel-heading"><h3 class="panel-title">Empresas no funil</h3>' +
-    '<span class="panel-meta">' + dados.length + ' resultados</span></div>';
-  const corpo = dados.length ? dados.map(leadCard).join("") :
-    '<div class="empty"><strong>Nenhuma empresa encontrada</strong>Altere os filtros ou importe uma lista CSV autorizada.</div>';
-  return titulacao + '<div class="lead-list">' + corpo + '</div>';
-}
-function filtros() {
-  return '<button class="stage-button ' + (filtro === "todos" ? "active" : '') +
-    '" type="button" data-filter="todos">Todas <span class="stage-count">' + leads.length +
-    '</span></button>' + ETAPAS.map((etapa) => {
-      const total = leads.filter((l) => l.etapa === etapa.id).length;
-      return '<button type="button" class="stage-button ' + (filtro === etapa.id ? "active" : "") +
-        '" data-filter="' + etapa.id + '"><span class="stage-dot" style="background:' +
-        etapa.cor + '"></span>' + html(etapa.nome) + ' <span class="stage-count">' +
-        total + '</span></button>';
-    }).join("");
-}
-function renderApp() {
-  if (mapa) { mapa.remove(); mapa = null; }
-  const ativos = leads.filter((l) => !l.suprimido);
-  app.innerHTML = [
-    '<div class="app"><aside class="sidebar"><a class="brand" href="./"><img alt="" src="./assets/flowbot-symbol.svg">flowbot</a>',
-    '<nav aria-label="Navegação principal">',
-    '<button class="nav-link active" data-view="mapa">', icone("grid"), 'Visão geral</button>',
-    '<button class="nav-link" data-view="lista">', icone("users"), 'Empresas</button>',
-    '<button class="nav-link" data-action="new">', icone("plus"), 'Novo lead</button>',
-    '</nav><div class="sidebar-bottom"><strong>Prospecção responsável</strong><br>Pesquisa separada de envio. Nenhum contato será disparado neste MVP.</div></aside>',
-    '<main class="main"><div class="topbar"><div class="top-brand"><img alt="" src="./assets/flowbot-symbol.svg">flowbot</div>',
-    '<span class="pill">● MVP local · Sem envios</span></div>',
-    '<section class="heading-row"><div><p class="eyebrow">FLOWBOT / COMERCIAL</p>',
-    '<h1>Seu próximo cliente<br>começa aqui<span style="color:var(--blue)">.</span></h1>',
-    '<p class="subtitle">Organize empresas, entenda oportunidades e prepare abordagens que usam fatos verificáveis. A decisão de contato continua sendo sua.</p></div>',
-    '<div class="actions"><button class="btn btn-ghost" type="button" data-action="export">',
-    icone("download"), 'Exportar CSV</button>',
-    '<button class="btn" type="button" data-action="import">', icone("upload"), 'Importar CSV</button>',
-    '<button class="btn btn-primary" type="button" data-action="new">', icone("plus"), 'Adicionar empresa</button>',
-    '<input class="file-input" id="csv-file" type="file" accept=".csv,text/csv" aria-label="Arquivo CSV de empresas"/></div></section>',
-    '<section class="stats" aria-label="Resumo do funil">',
-    estatistica("Empresas cadastradas", leads.length, "Dados desta sessão"),
-    estatistica("Leads qualificados", leads.filter((l) => l.etapa === "qualificado").length, "Prontos para revisão"),
-    estatistica("Em negociação", leads.filter((l) => ["proposta", "negociacao"].includes(l.etapa)).length, "Propostas e negociações"),
-    estatistica("Sem bloqueio", ativos.length, "Envio desativado no MVP"),
-    '</section>',
-    '<div class="note">', icone("info"),
-    '<span>Este é um <strong>ambiente local de demonstração</strong>: os dados ficam apenas na memória desta aba e se perdem ao atualizar. Os exemplos são fictícios. Nenhum scraping, WhatsApp, e-mail ou IA é executado. Exporte o CSV para guardar as informações.</span></div>',
-    '<div class="workspace-bar"><div><h2 class="section-label">Território comercial</h2><p class="section-description">Pesquise, filtre e avance cada empresa no funil.</p></div>',
-    '<div class="switcher" aria-label="Visualização"><button type="button" data-view="mapa" class="',
-    vista === "mapa" ? "active" : '', '">Mapa</button><button type="button" data-view="lista" class="',
-    vista === "lista" ? "active" : '', '">Lista</button></div></div>',
-    '<div class="toolbar"><input class="search" type="search" id="search" placeholder="Buscar empresa, cidade ou segmento…" value="',
-    html(busca), '" aria-label="Pesquisar empresas"></div>',
-    '<div class="stage-filter" aria-label="Filtrar etapas">', filtros(), '</div>',
-    '<div class="workspace ', vista === "lista" ? 'list-mode' : '', '">',
-    '<section class="panel map-panel ', vista === "lista" ? 'hidden' : '', '">',
-    '<div class="panel-heading"><h3 class="panel-title">Mapa de oportunidades</h3>',
-    '<span class="panel-meta">● Pontos com coordenadas</span></div>',
-    '<div class="map-wrap"><div id="map" role="region" aria-label="Mapa com empresas da lista"></div></div>',
-    '<div class="map-note">© OpenStreetMap contributors. Mapa para navegação pontual; não é fonte de coleta de leads. Empresas importadas sem coordenadas aparecem somente na lista.</div></section>',
-    '<section class="panel list-panel" id="results">', lista(), '</section></div>',
-    '<footer class="footer">FlowBot · Produto da Alvo Digital · Prospecção responsável · Sem integração com o motor em produção</footer>',
-    '</main></div>',
-    selecionado ? renderDetalhe() : (formularioAberto ? renderFormulario() : ''),
-    '<div id="toast" class="toast hidden" role="status" aria-live="polite"></div>'
-  ].join("");
-  if (vista === "mapa") setTimeout(montarMapa, 0);
-  if (selecionado || formularioAberto) {
-    const fechar = document.querySelector('[data-action="close"]');
-    fechar?.focus({ preventScroll: true });
-  }
-}
-function renderDetalhe() {
-  const l = leads.find((x) => x.id === selecionado);
-  if (!l) { selecionado = null; return ""; }
-  const e = etiqueta(l.etapa);
-  const texto = rascunhos.get(l.id) ?? "";
-  return [
-    '<div class="overlay" data-overlay="true"><section class="drawer" role="dialog" aria-modal="true" aria-label="Detalhes da empresa">',
-    '<div class="drawer-head"><div><span class="drawer-kicker">Detalhes do prospect</span><h2>',
-    html(l.nome), '</h2><span class="panel-meta">',
-    html([l.categoria, l.cidade, l.uf].filter(Boolean).join(" · ")), '</span></div>',
-    '<button type="button" class="icon-btn" data-action="close" aria-label="Fechar">',
-    icone("x"), '</button></div>',
-    '<div class="detail-grid"><div class="detail"><label>Pontuação explicável</label><strong>',
-    pontuacao(l), ' de 100</strong></div><div class="detail"><label>Origem do cadastro</label><strong>',
-    html(l.origem.replaceAll("_", " ")), '</strong></div></div>',
-    '<div class="field"><label for="lead-stage">Etapa comercial</label><select id="lead-stage">',
-    ETAPAS.map((s) => '<option value="' + s.id + '" ' + (s.id === l.etapa ? 'selected' : '') +
-      '>' + html(s.nome) + '</option>').join(""), '</select></div>',
-    '<div class="field"><label for="lead-notes">Notas internas</label><textarea id="lead-notes" maxlength="1000" placeholder="Registre o contexto e a próxima ação…">',
-    html(l.nota), '</textarea><small>Informações internas. Não insira dados sensíveis.</small></div>',
-    '<div class="hr"></div><div class="field-title">Informações verificáveis</div>',
-    '<div class="detail-grid"><div class="detail"><label>Site</label><strong>',
-    l.site ? '<a href="' + html(l.site) + '" target="_blank" rel="noopener noreferrer">Visitar ↗</a>' : 'Não informado',
-    '</strong></div><div class="detail"><label>CNPJ</label><strong>',
-    html(l.cnpj || "Não informado"), '</strong></div></div>',
-    '<div class="info">', l.fato && l.fonteFato ?
-      'Fato informado: ' + html(l.fato) + '<br>Confira a fonte antes de usar: <a href="' +
-      html(l.fonteFato) + '" target="_blank" rel="noopener noreferrer">Abrir evidência ↗</a>' :
-      'Nenhuma evidência com URL de origem cadastrada. O rascunho não incluirá alegações específicas.',
-    '</div>',
-    '<label class="checkbox-row"><input type="checkbox" id="suppression" ',
-    l.suprimido ? 'checked' : '', '> Não contatar / excluir de abordagens</label>',
-    '<div class="hr"></div><div class="field-title">Mensagem personalizada · Revisão humana</div>',
-    '<div class="field"><label for="lead-draft">Rascunho (não é enviado)</label>',
-    '<textarea id="lead-draft" rows="8" placeholder="Clique em Preparar rascunho para criar uma sugestão…">',
-    html(texto), '</textarea><small>Nenhum contato é autorizado automaticamente. Verifique origem, base legal e política do canal antes de abordar.</small></div>',
-    '<div class="drawer-actions"><button class="btn" data-action="generate">', icone("spark"),
-    'Preparar rascunho</button><button class="btn btn-primary" data-action="copy">',
-    icone("copy"), 'Copiar texto</button></div>',
-    '<div class="hr"></div><div class="panel-meta">Criado em ',
-    html(new Date(l.criadoEm).toLocaleDateString("pt-BR")), ' · Nenhuma ação enviada</div>',
-    '</section></div>'
-  ].join("");
-}
-function renderFormulario() {
-  return [
-    '<div class="overlay" data-overlay="true"><section class="drawer" role="dialog" aria-modal="true" aria-label="Adicionar empresa">',
-    '<div class="drawer-head"><div><span class="drawer-kicker">Novo registro</span><h2>Adicionar empresa</h2>',
-    '<span class="panel-meta">Cadastre apenas dados comerciais necessários.</span></div>',
-    '<button type="button" class="icon-btn" data-action="close" aria-label="Fechar">',
-    icone("x"), '</button></div>',
-    '<form id="new-company"><div class="field"><label for="new-name">Nome da empresa *</label>',
-    '<input id="new-name" name="nome" maxlength="140" required minlength="2" autocomplete="off"></div>',
-    '<div class="detail-grid"><div class="field"><label for="new-city">Cidade</label>',
-    '<input id="new-city" name="cidade" maxlength="100"></div>',
-    '<div class="field"><label for="new-uf">UF</label><input id="new-uf" name="uf" maxlength="2"></div></div>',
-    '<div class="field"><label for="new-category">Segmento</label>',
-    '<input id="new-category" name="categoria" maxlength="80"></div>',
-    '<div class="field"><label for="new-cnpj">CNPJ (opcional)</label>',
-    '<input id="new-cnpj" name="cnpj" maxlength="18" inputmode="numeric"></div>',
-    '<div class="field"><label for="new-site">Site comercial</label>',
-    '<input id="new-site" type="url" name="site" placeholder="https://empresa.com.br"></div>',
-    '<div class="detail-grid"><div class="field"><label for="new-lat">Latitude</label>',
-    '<input id="new-lat" name="latitude" type="number" step="any" placeholder="-10.916"></div>',
-    '<div class="field"><label for="new-lng">Longitude</label>',
-    '<input id="new-lng" name="longitude" type="number" step="any" placeholder="-37.061"></div></div>',
-    '<div class="field"><label for="new-fact">Fato público (opcional)</label>',
-    '<textarea id="new-fact" name="fato" maxlength="300"></textarea></div>',
-    '<div class="field"><label for="new-fact-url">URL da fonte do fato</label>',
-    '<input id="new-fact-url" name="fonteFato" type="url" placeholder="https://fonte-oficial.com/...">',
-    '<small>Sem fonte, o fato não será usado no rascunho.</small></div>',
-    '<p class="info">O cadastro não inicia campanhas nem faz consultas externas. Contatos pessoais não são solicitados neste MVP.</p>',
-    '<button class="btn btn-primary" style="width:100%;margin-top:17px" type="submit">',
-    icone("plus"), 'Salvar empresa na sessão</button></form></section></div>'
-  ].join("");
+  if (estado.ordem === "nome") lista.sort((a, b) => a.nome.localeCompare(b.nome, "pt-BR"));
+  else if (estado.ordem === "pontuacao") lista.sort((a, b) => pontuacao(b) - pontuacao(a));
+  else lista.sort((a, b) => String(b.criadoEm).localeCompare(String(a.criadoEm)));
+  return lista;
 }
 
-function montarMapa() {
-  const elemento = document.querySelector("#map");
-  if (!elemento) return;
+/* ───────────────────────── Estrutura ───────────────────────── */
+function montarEstrutura() {
+  const modulos = [
+    ["fluxo", "Bot Studio"], ["conversa", "Atendimento"], ["agente", "Agentes de IA"],
+    ["atividade", "Operações"], ["engrenagem", "Administração"],
+  ];
+  document.body.innerHTML = `
+  <a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+  <div class="shell">
+    <aside class="sidebar" aria-label="Menu do FlowBot">
+      <a class="brand" href="./"><img src="./assets/flowbot-symbol.svg" alt="" width="26" height="26">flowbot</a>
+      <nav aria-label="Módulos" class="nav-group">
+        <span class="t-label nav-group__label">Comercial</span>
+        <a class="nav-item" href="./" aria-current="page">${icone("alvo")}Prospecção</a>
+        <span class="t-label nav-group__label">Em breve</span>
+        ${modulos.map(([i, n]) => `<button type="button" class="nav-item" aria-disabled="true" data-acao="em-breve" data-modulo="${n}">${icone(i)}${n}</button>`).join("")}
+      </nav>
+      <div class="sidebar__foot">
+        <div class="alert">${icone("escudo")}<span>Pesquisa separada de envio. Nada é disparado nesta versão.</span></div>
+        <button type="button" class="nav-item" data-acao="tema">${icone(temaAtual() === "light" ? "lua" : "sol")}<span data-rotulo-tema>Tema ${temaAtual() === "light" ? "escuro" : "claro"}</span></button>
+        <a class="nav-item" href="./landing/">${icone("link")}Site do FlowBot</a>
+      </div>
+    </aside>
+    <div>
+      <header class="topbar">
+        <a class="brand" href="./"><img src="./assets/flowbot-symbol.svg" alt="" width="26" height="26">flowbot</a>
+        <span class="topbar__module">Prospecção</span>
+        <div class="menu-anchor topbar__more">
+          <button type="button" class="btn btn--ghost btn--icon" aria-label="Mais ações" aria-haspopup="menu" aria-expanded="false" aria-controls="menu-topo">${icone("reticencias")}</button>
+          <div class="menu" id="menu-topo" role="menu" hidden>
+            <button type="button" class="menu__item" role="menuitem" data-acao="importar">${icone("importar")}Importar CSV</button>
+            <button type="button" class="menu__item" role="menuitem" data-acao="exportar">${icone("exportar")}Exportar CSV</button>
+            <div class="menu__sep"></div>
+            <button type="button" class="menu__item" role="menuitem" data-acao="tema">${icone("sol")}<span data-rotulo-tema>Tema ${temaAtual() === "light" ? "escuro" : "claro"}</span></button>
+            <a class="menu__item" role="menuitem" href="./landing/">${icone("link")}Site do FlowBot</a>
+          </div>
+        </div>
+      </header>
+      <main class="main" id="conteudo" data-aba="${estado.aba}" tabindex="-1">
+        <div class="page">
+          <header class="page-head">
+            <div>
+              <p class="t-label page-head__crumb">Comercial · Prospecção</p>
+              <h1 class="page-head__title">Prospecção</h1>
+              <p class="page-head__text">Organize empresas, acompanhe o funil e prepare abordagens com fatos verificáveis. A decisão de contato é sempre de uma pessoa.</p>
+            </div>
+            <div class="page-head__actions">
+              <button class="btn btn--secondary" type="button" data-acao="exportar">${icone("exportar")}Exportar CSV</button>
+              <button class="btn btn--secondary" type="button" data-acao="importar">${icone("importar")}Importar CSV</button>
+              <button class="btn btn--primary" type="button" data-acao="novo">${icone("mais")}Adicionar empresa</button>
+            </div>
+          </header>
+          <div id="aviso-demo"></div>
+          <section class="overview" aria-label="Resumo do funil">
+            <div class="kpis" id="kpis"></div>
+            <section class="card" aria-labelledby="titulo-funil">
+              <div class="card__head"><h2 class="card__title" id="titulo-funil">Funil comercial</h2><span class="t-small t-faint" id="funil-meta"></span></div>
+              <div class="funnel__rows" id="funil"></div>
+            </section>
+          </section>
+          <section class="workspace" aria-labelledby="titulo-territorio">
+            <div class="workspace__bar">
+              <div class="workspace__row">
+                <h2 class="workspace__title" id="titulo-territorio">Território comercial</h2>
+                <div class="segmented views-switch" role="group" aria-label="Visualização">
+                  <button type="button" data-vista="mapa">${icone("mapa", "icon icon--sm")}Mapa</button>
+                  <button type="button" data-vista="lista">${icone("lista", "icon icon--sm")}Lista</button>
+                </div>
+              </div>
+              <div class="input-group search">
+                ${icone("busca")}
+                <input class="input" type="search" id="search" placeholder="Buscar empresas" aria-label="Pesquisar empresas" autocomplete="off" enterkeyhint="search">
+                <kbd aria-hidden="true">/</kbd>
+              </div>
+              <div class="chips" id="chips" role="group" aria-label="Filtrar por etapa"></div>
+            </div>
+            <div class="views" id="views">
+              <section class="card map-card" id="map-card" aria-label="Mapa de oportunidades">
+                <div class="map" id="map" role="region" aria-label="Mapa com as empresas filtradas"></div>
+                <div id="legenda"></div>
+                <div id="selecao"></div>
+                <div class="map-foot" id="map-foot"></div>
+              </section>
+              <section class="card list-card" aria-labelledby="titulo-lista">
+                <div class="card__head list-head">
+                  <h3 class="card__title" id="titulo-lista">Empresas <span class="t-faint t-num" id="contagem"></span></h3>
+                  <label class="sr-only" for="ordem">Ordenar</label>
+                  <select class="select select--sm" id="ordem">
+                    <option value="recentes">Mais recentes</option><option value="nome">Nome</option><option value="pontuacao">Pontuação</option>
+                  </select>
+                </div>
+                <div class="list-scroll" id="lista"></div>
+              </section>
+            </div>
+          </section>
+          <footer class="page-foot">FlowBot · Alvo Digital · Prospecção responsável · Sem integração com o motor de atendimento nesta versão</footer>
+        </div>
+      </main>
+    </div>
+  </div>
+  <nav class="bottomnav" aria-label="Seções da prospecção">
+    <button type="button" class="bottomnav__item" data-aba="resumo">${icone("painel")}Resumo</button>
+    <button type="button" class="bottomnav__item" data-aba="mapa">${icone("mapa")}Mapa</button>
+    <button type="button" class="bottomnav__item" data-aba="lista">${icone("lista")}Empresas</button>
+    <button type="button" class="bottomnav__item" data-acao="novo">${icone("mais")}Adicionar</button>
+  </nav>
+  <input class="sr-only" id="csv-file" type="file" accept=".csv,text/csv" tabindex="-1" aria-label="Arquivo CSV de empresas">
+  <div id="painel"></div>`;
+}
+
+/* ───────────────────────── Regiões ───────────────────────── */
+function kpi(rotulo, valor, dica, nomeIcone) {
+  return `<article class="card kpi"><span class="kpi__label">${icone(nomeIcone, "icon icon--sm")}${html(rotulo)}</span><span class="kpi__value">${valor}</span><span class="kpi__hint">${html(dica)}</span></article>`;
+}
+
+function desenharResumo() {
+  const r = resumoFunil(estado.leads);
+  const encerrados = r.ganhos + r.perdidos;
+  $("#kpis").innerHTML =
+    kpi("Empresas", formatar.numero(r.total), r.comCoordenadas + " no mapa", "predio") +
+    kpi("Em andamento", formatar.numero(r.emAndamento), "Lead a Negociação", "atividade") +
+    kpi("Taxa de ganho", r.taxaGanho === null ? "—" : formatar.percentual(r.taxaGanho),
+      encerrados ? r.ganhos + " de " + encerrados + " encerrado(s)" : "Sem negócios encerrados", "alvo") +
+    kpi("Não contatar", formatar.numero(r.naoContatar), "Fora de abordagens", "proibido");
+
+  const maior = Math.max(1, ...r.porEtapa.map((e) => e.quantidade));
+  const linha = (e) => `<button type="button" class="funnel__row" data-filtro="${e.id}" aria-pressed="${estado.filtro === e.id}" style="--stage:${corEtapa(e.id)}" aria-label="${html(e.nome)}: ${e.quantidade} empresa(s), ${formatar.percentual(e.percentual)} do total. Filtrar.">
+      <span class="funnel__name"><span class="dot"></span>${html(e.nome)}</span>
+      <span class="funnel__bar"><span style="width:${(e.quantidade / maior) * 100}%"></span></span>
+      <span class="funnel__value t-num">${e.quantidade}<small>${formatar.percentual(e.percentual)}</small></span></button>`;
+  $("#funil").innerHTML = r.porEtapa.slice(0, 5).map(linha).join("") + '<div class="funnel__sep" role="presentation"></div>' + r.porEtapa.slice(5).map(linha).join("");
+  $("#funil-meta").textContent = r.total ? formatar.numero(r.total) + " empresa(s) nesta sessão" : "Sem empresas";
+
+  $("#aviso-demo").innerHTML = r.demonstracao
+    ? `<div class="alert alert--warning">${icone("info")}<span><strong>Demonstração:</strong> ${r.demonstracao} empresa(s) fictícia(s). Os dados ficam só nesta aba; exporte o CSV para guardar.</span></div>`
+    : `<div class="alert">${icone("info")}<span>Os dados ficam só nesta aba. Exporte o CSV para guardar.</span></div>`;
+}
+
+function desenharChips() {
+  const contagem = (id) => estado.leads.filter((l) => l.etapa === id).length;
+  $("#chips").innerHTML = `<button type="button" class="chip" data-filtro="todos" aria-pressed="${estado.filtro === "todos"}">Todas <span class="chip__count">${estado.leads.length}</span></button>` +
+    ETAPAS.map((e) => `<button type="button" class="chip" data-filtro="${e.id}" aria-pressed="${estado.filtro === e.id}"><span class="dot" style="color:${corEtapa(e.id)}"></span>${html(e.nome)} <span class="chip__count">${contagem(e.id)}</span></button>`).join("");
+}
+
+function seloEtapa(id) {
+  return `<span class="badge badge--stage" style="--stage:${corEtapa(id)}"><span class="dot"></span>${html(etapa(id).nome)}</span>`;
+}
+function medidor(valor) {
+  return `<span class="meter" role="img" aria-label="Pontuação ${valor} de 100"><span style="width:${valor}%;--meter:${valor >= 60 ? "var(--success)" : valor >= 30 ? "var(--warning)" : "var(--text-faint)"}"></span></span>`;
+}
+
+function desenharLista() {
+  const dados = filtrados();
+  $("#contagem").textContent = "· " + dados.length;
+  if (!dados.length) {
+    const semNada = !estado.leads.length;
+    $("#lista").innerHTML = `<div class="empty">${icone("busca", "icon empty__art")}
+      <p class="empty__title">${semNada ? "Nenhuma empresa ainda" : "Nenhuma empresa com esses filtros"}</p>
+      <p class="empty__text">${semNada ? "Importe uma lista CSV autorizada ou cadastre a primeira empresa." : "Mude a busca ou a etapa para ver outras empresas."}</p>
+      <div class="empty__actions">${semNada ? `<button class="btn btn--secondary" data-acao="importar">${icone("importar")}Importar CSV</button><button class="btn btn--primary" data-acao="novo">${icone("mais")}Adicionar empresa</button>` : `<button class="btn btn--secondary" data-acao="limpar-filtros">Limpar filtros</button>`}</div></div>`;
+    return;
+  }
+  const cartoes = dados.map((l) => {
+    const p = pontuacao(l);
+    return `<button type="button" class="lead-card" data-acao="abrir" data-id="${html(l.id)}">
+      <span class="lead-card__top"><span class="avatar" aria-hidden="true">${html(l.nome.charAt(0).toUpperCase())}</span>
+        <span class="lead-card__text"><span class="lead-card__name">${html(l.nome)}</span><br><span class="lead-card__sub">${html(l.categoria || "Segmento não informado")}${local(l) ? " · " + html(local(l)) : ""}</span></span>
+        ${icone("seta", "icon icon--sm")}</span>
+      <span class="lead-card__bottom">${seloEtapa(l.etapa)}${l.suprimido ? `<span class="badge badge--danger">${icone("proibido", "icon icon--sm")}Não contatar</span>` : ""}
+        <span class="lead-card__score">${medidor(p)}<span>${p}/100</span></span></span></button>`;
+  }).join("");
+  const linhas = dados.map((l) => {
+    const p = pontuacao(l);
+    return `<tr><td><button type="button" class="row-link" data-acao="abrir" data-id="${html(l.id)}">${html(l.nome)}</button></td>
+      <td class="t-muted">${html(l.categoria || "—")}</td><td class="t-muted">${html(local(l) || "—")}</td>
+      <td>${seloEtapa(l.etapa)}</td>
+      <td>${l.suprimido ? '<span class="badge badge--danger">Não contatar</span>' : '<span class="t-faint">—</span>'}</td>
+      <td class="num"><span class="score-cell">${medidor(p)}<span>${p}</span></span></td></tr>`;
+  }).join("");
+  $("#lista").innerHTML = `<div class="lead-cards">${cartoes}</div>
+    <div class="table-view table-wrap"><table class="table"><caption class="sr-only">Empresas filtradas</caption>
+      <thead><tr><th scope="col">Empresa</th><th scope="col">Segmento</th><th scope="col">Local</th><th scope="col">Etapa</th><th scope="col">Contato</th><th scope="col" class="num">Pontuação</th></tr></thead>
+      <tbody>${linhas}</tbody></table></div>`;
+}
+
+function desenharVistas() {
+  const vista = estado.vista;
+  $("#views").dataset.vista = vista;
+  $("#map-card").hidden = vista !== "mapa";
+  document.querySelectorAll("[data-vista]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.vista === vista)));
+  $("#conteudo").dataset.aba = estado.aba;
+  document.querySelectorAll(".bottomnav__item[data-aba]").forEach((b) => {
+    if (b.dataset.aba === estado.aba) b.setAttribute("aria-current", "page"); else b.removeAttribute("aria-current");
+  });
+  if (vista === "mapa") { iniciarMapa(); mapa?.invalidateSize(); setTimeout(() => mapa?.invalidateSize(), 60); }
+}
+
+function atualizar({ mapaJunto = true } = {}) {
+  desenharResumo(); desenharChips(); desenharLista(); desenharVistas();
+  if (mapaJunto) desenharMarcadores();
+  desenharPainel();
+}
+
+/* ───────────────────────── Mapa ───────────────────────── */
+function iniciarMapa() {
+  if (mapa) return;
+  const elemento = $("#map");
   if (!globalThis.L) {
-    elemento.innerHTML = '<div class="map-empty">O mapa precisa de conexão para carregar a biblioteca Leaflet. Você pode continuar pela lista.</div>';
+    elemento.innerHTML = `<div class="map-empty"><div class="empty">${icone("mapa", "icon empty__art")}<p class="empty__title">Mapa indisponível</p><p class="empty__text">A biblioteca do mapa não carregou (sem conexão?). Continue pela lista.</p><div class="empty__actions"><button class="btn btn--secondary" data-vista="lista">Ver lista</button></div></div></div>`;
     return;
   }
-  const pontos = filtrados().filter((l) => Number.isFinite(l.latitude) &&
-    Number.isFinite(l.longitude));
-  if (!pontos.length) {
-    elemento.innerHTML = '<div class="map-empty">Nenhuma empresa filtrada possui coordenadas. Adicione latitude e longitude na importação CSV.</div>';
-    return;
-  }
-  mapa = L.map(elemento, { zoomControl: true, scrollWheelZoom: false }).setView([-10.93, -37.06], 11);
+  mapa = L.map(elemento, { zoomControl: false, scrollWheelZoom: false, attributionControl: true }).setView([-14.2, -51.9], 4);
+  L.control.zoom({ position: "topright", zoomInTitle: "Aproximar", zoomOutTitle: "Afastar" }).addTo(mapa);
   L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
     maxZoom: 18,
-    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
   }).addTo(mapa);
-  const bounds = [];
-  pontos.forEach((l) => {
-    const color = etiqueta(l.etapa).cor;
-    const ponto = L.circleMarker([l.latitude, l.longitude], {
-      radius: 9, color: "#0f1520", weight: 3, fillColor: color, fillOpacity: 1,
-    }).addTo(mapa);
-    ponto.bindTooltip(html(l.nome), { direction: "top" });
-    ponto.on("click", () => { selecionado = l.id; renderApp(); });
-    bounds.push([l.latitude, l.longitude]);
-  });
-  if (bounds.length > 1) mapa.fitBounds(bounds, { padding: [34, 34], maxZoom: 12 });
-  setTimeout(() => mapa?.invalidateSize(), 100);
+  camada = L.layerGroup().addTo(mapa);
+  mapa.on("zoomend", () => { if (!desenhando) desenharMarcadores({ enquadrar: false }); });
+  mapa.on("click", () => { if (estado.marcado) { estado.marcado = null; desenharSelecao(); desenharMarcadores({ enquadrar: false }); } });
 }
 
-function toast(texto) {
-  const el = document.querySelector("#toast");
-  if (!el) return;
-  el.textContent = texto;
-  el.classList.remove("hidden");
-  clearTimeout(avisoTimer);
-  avisoTimer = setTimeout(() => el.classList.add("hidden"), 4300);
+// Agrupa pontos que ficariam a menos de 44 px na tela, para o mapa continuar legível.
+function agrupar(pontos) {
+  const grupos = [];
+  for (const l of pontos) {
+    const p = mapa.latLngToLayerPoint([l.latitude, l.longitude]);
+    const grupo = grupos.find((g) => g.ponto.distanceTo(p) < 44);
+    if (grupo) grupo.itens.push(l); else grupos.push({ ponto: p, itens: [l] });
+  }
+  return grupos;
 }
-function abrir(id) { selecionado = id; formularioAberto = false; renderApp(); }
-function fechar() { selecionado = null; formularioAberto = false; renderApp(); }
+
+let ultimoEnquadramento = "";
+let desenhando = false;
+function desenharMarcadores(opcoes = {}) {
+  if (desenhando) return;
+  desenhando = true;
+  try { desenharMarcadoresAgora(opcoes); } finally { desenhando = false; }
+}
+function desenharMarcadoresAgora({ enquadrar = true } = {}) {
+  if (!mapa || estado.vista !== "mapa") { desenharRodapeMapa(); return; }
+  const pontos = filtrados().filter(temCoordenadas);
+  // Enquadrar antes de limpar: o Leaflet dispara "zoomend" durante setView/fitBounds.
+  const chave = pontos.map((l) => l.id).join(",");
+  if (pontos.length && enquadrar && chave !== ultimoEnquadramento && mapa.getSize().x > 0) {
+    ultimoEnquadramento = chave;
+    if (pontos.length === 1) mapa.setView([pontos[0].latitude, pontos[0].longitude], 13, { animate: false });
+    else mapa.fitBounds(pontos.map((l) => [l.latitude, l.longitude]), { padding: [48, 48], maxZoom: 13, animate: false });
+  }
+  camada.clearLayers();
+  const vazio = $("#map .map-empty"); vazio?.remove();
+  if (!pontos.length) {
+    $("#map").insertAdjacentHTML("beforeend", `<div class="map-empty"><div class="empty">${icone("pino", "icon empty__art")}<p class="empty__title">Nenhuma empresa com localização</p><p class="empty__text">As empresas filtradas não têm latitude e longitude. Elas continuam na lista.</p></div></div>`);
+    desenharLegenda([]); desenharRodapeMapa(); desenharSelecao();
+    return;
+  }
+  for (const grupo of agrupar(pontos)) {
+    if (grupo.itens.length === 1) {
+      const l = grupo.itens[0];
+      const marcado = estado.marcado?.tipo === "empresa" && estado.marcado.id === l.id;
+      const icon = L.divIcon({ className: "pin-icon", iconSize: [24, 24], iconAnchor: [12, 12],
+        html: `<span class="pin${marcado ? " pin--selected" : ""}${l.suprimido ? " pin--blocked" : ""}" style="--stage:${corEtapa(l.etapa)}"></span>` });
+      L.marker([l.latitude, l.longitude], { icon, title: l.nome + " · " + etapa(l.etapa).nome, alt: l.nome, riseOnHover: true, zIndexOffset: marcado ? 1000 : 0 })
+        .on("click", () => marcar({ tipo: "empresa", id: l.id }))
+        .on("keypress", (e) => { if (e.originalEvent.key === "Enter" || e.originalEvent.key === " ") marcar({ tipo: "empresa", id: l.id }); })
+        .addTo(camada);
+    } else {
+      const total = grupo.itens.length; let acumulado = 0;
+      const fatias = ETAPAS.map((e) => {
+        const n = grupo.itens.filter((l) => l.etapa === e.id).length;
+        if (!n) return null;
+        const inicio = acumulado / total * 360; acumulado += n;
+        return corEtapa(e.id) + " " + inicio + "deg " + (acumulado / total * 360) + "deg";
+      }).filter(Boolean).join(", ");
+      const centro = mapa.layerPointToLatLng(grupo.ponto);
+      const icon = L.divIcon({ className: "pin-icon", iconSize: [40, 40], iconAnchor: [20, 20],
+        html: `<span class="cluster" style="--fatias:${fatias}"><span>${total}</span></span>` });
+      L.marker(centro, { icon, title: total + " empresas próximas", alt: total + " empresas", riseOnHover: true })
+        .on("click", () => abrirGrupo(grupo.itens))
+        .on("keypress", (e) => { if (e.originalEvent.key === "Enter") abrirGrupo(grupo.itens); })
+        .addTo(camada);
+    }
+  }
+  desenharLegenda(pontos); desenharRodapeMapa(); desenharSelecao();
+}
+
+function abrirGrupo(itens) {
+  const limites = L.latLngBounds(itens.map((l) => [l.latitude, l.longitude]));
+  if (mapa.getZoom() < 16 && limites.getNorthEast().distanceTo(limites.getSouthWest()) > 30) {
+    mapa.fitBounds(limites, { padding: [64, 64], maxZoom: 17 });
+  } else {
+    marcar({ tipo: "grupo", ids: itens.map((l) => l.id) });
+  }
+}
+
+function marcar(alvo) {
+  estado.marcado = alvo;
+  desenharMarcadores({ enquadrar: false });
+  $("#selecao .btn--primary")?.focus({ preventScroll: true });
+}
+
+function desenharLegenda(pontos) {
+  const presentes = ETAPAS.map((e) => ({ ...e, n: pontos.filter((l) => l.etapa === e.id).length })).filter((e) => e.n);
+  $("#legenda").innerHTML = presentes.length ? `<div class="map-legend${estado.legendaAberta ? "" : " map-legend--collapsed"}">
+    <button type="button" class="map-legend__toggle t-label" data-acao="legenda" aria-expanded="${estado.legendaAberta}">Legenda ${icone(estado.legendaAberta ? "menos" : "mais", "icon icon--sm")}</button>
+    ${presentes.map((e) => `<span class="map-legend__item" style="--stage:${corEtapa(e.id)}"><span class="dot"></span>${html(e.nome)}<b>${e.n}</b></span>`).join("")}</div>` : "";
+}
+
+function desenharRodapeMapa() {
+  const filtradosAgora = filtrados();
+  const sem = filtradosAgora.filter((l) => !temCoordenadas(l)).length;
+  $("#map-foot").innerHTML = `${icone("info", "icon icon--sm")}<span>${sem ? sem + " empresa(s) sem localização aparecem só na lista. " : ""}O mapa serve para navegar pelo território; não é fonte de coleta de empresas. © OpenStreetMap.</span>`;
+}
+
+function desenharSelecao() {
+  const alvo = estado.marcado;
+  if (!alvo) { $("#selecao").innerHTML = ""; return; }
+  if (alvo.tipo === "grupo") {
+    const itens = alvo.ids.map((id) => estado.leads.find((l) => l.id === id)).filter(Boolean);
+    $("#selecao").innerHTML = `<div class="map-select" role="dialog" aria-label="Empresas neste ponto">
+      <div class="map-select__head"><div class="grow"><p class="map-select__name">${itens.length} empresas neste ponto</p><p class="t-small t-muted">Mesma localização ou muito próximas.</p></div>
+      <button type="button" class="btn btn--ghost btn--icon btn--sm" data-acao="desmarcar" aria-label="Fechar">${icone("fechar")}</button></div>
+      <ul>${itens.map((l) => `<li><button type="button" class="menu__item" data-acao="abrir" data-id="${html(l.id)}"><span class="dot" style="color:${corEtapa(l.etapa)}"></span>${html(l.nome)}</button></li>`).join("")}</ul></div>`;
+    return;
+  }
+  const l = estado.leads.find((x) => x.id === alvo.id);
+  if (!l) { estado.marcado = null; $("#selecao").innerHTML = ""; return; }
+  const p = pontuacao(l);
+  $("#selecao").innerHTML = `<div class="map-select" role="dialog" aria-label="Empresa selecionada no mapa">
+    <div class="map-select__head"><div class="grow"><p class="map-select__name">${html(l.nome)}</p>
+      <p class="map-select__meta">${seloEtapa(l.etapa)}<span>${html([l.categoria, local(l)].filter(Boolean).join(" · ") || "Sem segmento e local")}</span></p></div>
+      <button type="button" class="btn btn--ghost btn--icon btn--sm" data-acao="desmarcar" aria-label="Fechar">${icone("fechar")}</button></div>
+    <div class="map-select__meta">${medidor(p)}<span class="t-num">Pontuação ${p}/100</span>${l.suprimido ? '<span class="badge badge--danger">Não contatar</span>' : ""}</div>
+    <div class="map-select__actions"><button type="button" class="btn btn--primary" data-acao="abrir" data-id="${html(l.id)}">Abrir detalhes</button></div></div>`;
+}
+
+function verNoMapa(id) {
+  const l = estado.leads.find((x) => x.id === id);
+  if (!l || !temCoordenadas(l)) return;
+  fecharPainel();
+  estado.vista = "mapa"; estado.aba = "mapa";
+  if (estado.filtro !== "todos" && estado.filtro !== l.etapa) estado.filtro = "todos";
+  atualizar({ mapaJunto: false });
+  mapa?.setView([l.latitude, l.longitude], Math.max(mapa.getZoom(), 14), { animate: false });
+  marcar({ tipo: "empresa", id: l.id });
+  $("#map-card")?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+/* ───────────────────────── Painéis ───────────────────────── */
+function abrirPainel(painel) {
+  if (!estado.painel) focoAnterior = document.activeElement;
+  estado.painel = painel;
+  fecharMenus();
+  desenharPainel();
+}
+function fecharPainel() {
+  if (!estado.painel) return;
+  const voltarPara = estado.painel.tipo === "detalhe" ? estado.painel.id : null;
+  estado.painel = null;
+  desenharPainel();
+  const alvo = (focoAnterior && document.contains(focoAnterior)) ? focoAnterior
+    : voltarPara ? document.querySelector(`[data-acao="abrir"][data-id="${CSS.escape(voltarPara)}"]`) : null;
+  alvo?.focus({ preventScroll: true });
+}
+
+function desenharPainel() {
+  soltarFoco?.(); soltarFoco = null;
+  const raiz = $("#painel");
+  const p = estado.painel;
+  document.body.style.overflow = p ? "hidden" : "";
+  if (!p) { raiz.innerHTML = ""; return; }
+  const jaAberto = raiz.querySelector(".drawer")?.dataset.chave === (p.tipo + (p.id ?? ""));
+  const rolagem = raiz.querySelector(".drawer__body")?.scrollTop ?? 0;
+  raiz.innerHTML = '<div class="overlay" data-acao="fechar-fundo"></div>' + (p.tipo === "novo" ? painelNovo() : painelDetalhe(p.id));
+  const gaveta = raiz.querySelector(".drawer");
+  if (!gaveta) { estado.painel = null; raiz.innerHTML = ""; return; }
+  if (jaAberto) { gaveta.style.animation = "none"; raiz.querySelector(".overlay").style.animation = "none"; raiz.querySelector(".overlay").style.opacity = "1"; gaveta.querySelector(".drawer__body").scrollTop = rolagem; }
+  soltarFoco = prenderFoco(gaveta);
+  if (!jaAberto) (gaveta.querySelector("[data-foco-inicial]") ?? gaveta.querySelector('[data-acao="fechar"]'))?.focus({ preventScroll: true });
+}
+
+function painelDetalhe(id) {
+  const l = estado.leads.find((x) => x.id === id);
+  if (!l) return "";
+  const p = pontuacao(l);
+  const criterios = explicarPontuacao(l);
+  const indice = ETAPAS.findIndex((e) => e.id === l.etapa);
+  const eventos = historico.get(l.id) ?? [];
+  const texto = rascunhos.get(l.id) ?? "";
+  const evidencia = l.fato && l.fonteFato;
+  return `<section class="drawer" role="dialog" aria-modal="true" aria-labelledby="detalhe-titulo" data-chave="detalhe${html(l.id)}">
+    <span class="drawer__grab" aria-hidden="true"></span>
+    <div class="drawer__head">
+      <div class="drawer__heading">
+        <span class="t-label">Empresa</span>
+        <h2 class="drawer__title" id="detalhe-titulo">${html(l.nome)}</h2>
+        <span class="t-small t-muted">${html([l.categoria || "Segmento não informado", local(l)].filter(Boolean).join(" · "))}</span>
+        <span class="badges">${seloEtapa(l.etapa)}${l.suprimido ? `<span class="badge badge--danger">${icone("proibido", "icon icon--sm")}Não contatar</span>` : ""}${l.origem === "exemplo_ficticio" ? '<span class="badge badge--warning">Fictícia</span>' : ""}</span>
+      </div>
+      <button type="button" class="btn btn--ghost btn--icon" data-acao="fechar" aria-label="Fechar detalhes">${icone("fechar")}</button>
+    </div>
+    <div class="drawer__body">
+      <section class="section" aria-labelledby="s-etapa">
+        <h3 class="section__title" id="s-etapa">Etapa do funil <span>${indice + 1} de ${ETAPAS.length}</span></h3>
+        <div class="stepper" aria-hidden="true" style="--stage:${corEtapa(l.etapa)}">${ETAPAS.map((_, i) => `<span class="${i <= indice ? "on" : ""}"></span>`).join("")}</div>
+        <label class="sr-only" for="lead-stage">Etapa comercial</label>
+        <select class="select" id="lead-stage">${ETAPAS.map((e) => `<option value="${e.id}"${e.id === l.etapa ? " selected" : ""}>${html(e.nome)}</option>`).join("")}</select>
+      </section>
+
+      <section class="section" aria-labelledby="s-pontos">
+        <h3 class="section__title" id="s-pontos">Pontuação explicável</h3>
+        <div class="score-big"><b>${p}</b><span class="t-muted">de 100</span></div>
+        ${medidor(p)}
+        <ul class="criteria">${criterios.map((c) => `<li class="${c.atendido ? "ok" : ""}">${icone(c.atendido ? "check" : "menos", "icon icon--sm")}<span>${html(c.rotulo)}</span><span>${c.atendido ? "+" : ""}${c.atendido ? c.pontos : 0}/${c.pontos}</span></li>`).join("")}</ul>
+      </section>
+
+      <section class="section" aria-labelledby="s-ident">
+        <h3 class="section__title" id="s-ident">Identificação</h3>
+        <dl class="dl"><div><dt>CNPJ</dt><dd>${html(l.cnpj || "Não informado")}</dd></div><div><dt>Segmento</dt><dd>${html(l.categoria || "Não informado")}</dd></div>
+        <div><dt>Origem</dt><dd>${html(l.origem.replaceAll("_", " "))}</dd></div><div><dt>Cadastro</dt><dd>${html(formatar.data(l.criadoEm))}</dd></div></dl>
+      </section>
+
+      <section class="section" aria-labelledby="s-local">
+        <h3 class="section__title" id="s-local">Localização</h3>
+        <dl class="dl"><div><dt>Cidade / UF</dt><dd>${html(local(l) || "Não informado")}</dd></div>
+        <div><dt>Coordenadas</dt><dd class="t-num">${temCoordenadas(l) ? l.latitude.toFixed(3) + ", " + l.longitude.toFixed(3) : "Não informadas"}</dd></div></dl>
+        ${temCoordenadas(l) ? `<button type="button" class="btn btn--secondary btn--sm" data-acao="ver-no-mapa" data-id="${html(l.id)}">${icone("pino", "icon icon--sm")}Ver no mapa</button>` : '<p class="t-small t-faint">Sem coordenadas, a empresa aparece só na lista.</p>'}
+      </section>
+
+      <section class="section" aria-labelledby="s-evid">
+        <h3 class="section__title" id="s-evid">Evidências verificáveis</h3>
+        <div class="evidence">
+          <span>${icone("site", "icon icon--sm")}</span>${l.site ? `<a href="${html(l.site)}" target="_blank" rel="noopener noreferrer">Site da empresa ${icone("link", "icon icon--sm")}</a>` : '<span class="t-muted">Site não informado.</span>'}
+        </div>
+        ${evidencia ? `<div class="evidence"><span><strong>Fato informado:</strong> ${html(l.fato)}</span><a href="${html(l.fonteFato)}" target="_blank" rel="noopener noreferrer">Conferir a fonte ${icone("link", "icon icon--sm")}</a></div>`
+          : `<div class="alert alert--warning">${icone("alerta")}<span>Nenhum fato com URL de fonte. O rascunho não fará afirmações específicas sobre a empresa.</span></div>`}
+      </section>
+
+      <section class="section" aria-labelledby="s-notas">
+        <h3 class="section__title" id="s-notas">Notas internas</h3>
+        <label class="sr-only" for="lead-notes">Notas internas</label>
+        <textarea class="textarea" id="lead-notes" maxlength="1000" placeholder="Contexto, próxima ação, quem cuida…">${html(l.nota)}</textarea>
+        <p class="field__hint">Só para a equipe. Não registre dados pessoais sensíveis.</p>
+      </section>
+
+      <section class="section" aria-labelledby="s-contato">
+        <h3 class="section__title" id="s-contato">Contato</h3>
+        <label class="switch"><span><strong>Não contatar</strong><br><span class="t-small t-muted">Exclui a empresa de qualquer abordagem.</span></span><input type="checkbox" id="suppression"${l.suprimido ? " checked" : ""}></label>
+      </section>
+
+      <section class="section" aria-labelledby="s-rasc">
+        <h3 class="section__title" id="s-rasc">Rascunho de abordagem <span class="badge">Revisão humana</span></h3>
+        ${l.suprimido ? `<div class="alert alert--danger">${icone("proibido")}<span>Esta empresa está marcada como não contatar. Desmarque acima só se houver base para um novo contato.</span></div>` : ""}
+        <label class="sr-only" for="lead-draft">Rascunho (não é enviado)</label>
+        <textarea class="textarea" id="lead-draft" rows="8" placeholder="Use Preparar rascunho para criar uma sugestão a partir dos dados acima."${l.suprimido ? " disabled" : ""}>${html(texto)}</textarea>
+        <p class="field__hint">O FlowBot não envia mensagens. Confira fatos, base legal e regras do canal antes de usar.</p>
+        <div class="draft-actions">
+          <button type="button" class="btn btn--secondary" data-acao="gerar"${l.suprimido ? " disabled" : ""}>${icone("faisca")}Preparar rascunho</button>
+          <button type="button" class="btn btn--primary" data-acao="copiar"${l.suprimido ? " disabled" : ""}>${icone("copiar")}Copiar texto</button>
+        </div>
+      </section>
+
+      <section class="section" aria-labelledby="s-hist">
+        <h3 class="section__title" id="s-hist">Histórico desta sessão</h3>
+        <ol class="timeline">
+          ${eventos.map((e) => `<li>${icone(e.icone, "icon icon--sm")}<span>${html(e.texto)}</span><time>${formatar.hora(e.quando)}</time></li>`).join("")}
+          <li>${icone("mais", "icon icon--sm")}<span>Cadastrada (${html(l.origem.replaceAll("_", " "))})</span><time>${html(formatar.data(l.criadoEm))}</time></li>
+        </ol>
+      </section>
+    </div>
+  </section>`;
+}
+
+function painelNovo() {
+  return `<section class="drawer" role="dialog" aria-modal="true" aria-labelledby="novo-titulo" data-chave="novo">
+    <span class="drawer__grab" aria-hidden="true"></span>
+    <div class="drawer__head">
+      <div class="drawer__heading"><span class="t-label">Novo registro</span><h2 class="drawer__title" id="novo-titulo">Adicionar empresa</h2>
+      <span class="t-small t-muted">Cadastre só dados comerciais. Nada é consultado fora daqui.</span></div>
+      <button type="button" class="btn btn--ghost btn--icon" data-acao="fechar" aria-label="Fechar formulário">${icone("fechar")}</button>
+    </div>
+    <form id="new-company" class="drawer__body" novalidate>
+      <div id="erro-form" role="alert"></div>
+      <fieldset class="fieldset"><legend class="section__title">Identificação</legend>
+        <div class="field"><label class="field__label" for="new-name">Nome da empresa<span class="req" aria-hidden="true">*</span></label>
+          <input class="input" id="new-name" name="nome" maxlength="140" required minlength="2" autocomplete="off" enterkeyhint="next" data-foco-inicial aria-describedby="erro-nome"><span class="field__error" id="erro-nome" hidden></span></div>
+        <div class="field"><label class="field__label" for="new-category">Segmento</label><input class="input" id="new-category" name="categoria" maxlength="80" enterkeyhint="next" placeholder="Ex.: Barbearia, Varejo"></div>
+        <div class="field"><label class="field__label" for="new-cnpj">CNPJ <span class="t-faint">(opcional)</span></label><input class="input" id="new-cnpj" name="cnpj" maxlength="18" inputmode="numeric" enterkeyhint="next" placeholder="00.000.000/0000-00"></div>
+      </fieldset>
+      <fieldset class="fieldset"><legend class="section__title">Localização</legend>
+        <div class="form-grid form-grid--city">
+          <div class="field"><label class="field__label" for="new-city">Cidade</label><input class="input" id="new-city" name="cidade" maxlength="100" enterkeyhint="next"></div>
+          <div class="field"><label class="field__label" for="new-uf">UF</label><input class="input" id="new-uf" name="uf" maxlength="2" autocapitalize="characters" enterkeyhint="next"></div>
+        </div>
+        <div class="form-grid form-grid--2">
+          <div class="field"><label class="field__label" for="new-lat">Latitude</label><input class="input" id="new-lat" name="latitude" type="number" step="any" inputmode="decimal" placeholder="-10.916"></div>
+          <div class="field"><label class="field__label" for="new-lng">Longitude</label><input class="input" id="new-lng" name="longitude" type="number" step="any" inputmode="decimal" placeholder="-37.061"></div>
+        </div>
+        <p class="field__hint">Use coordenadas de uma fonte confiável. Sem elas, a empresa aparece só na lista.</p>
+      </fieldset>
+      <fieldset class="fieldset"><legend class="section__title">Evidências</legend>
+        <div class="field"><label class="field__label" for="new-site">Site comercial</label><input class="input" id="new-site" type="url" name="site" inputmode="url" placeholder="https://empresa.com.br"></div>
+        <div class="field"><label class="field__label" for="new-fact">Fato público <span class="t-faint">(opcional)</span></label><textarea class="textarea" id="new-fact" name="fato" maxlength="300" rows="3"></textarea></div>
+        <div class="field"><label class="field__label" for="new-fact-url">URL da fonte do fato</label><input class="input" id="new-fact-url" name="fonteFato" type="url" inputmode="url" placeholder="https://fonte-oficial.com/…">
+          <span class="field__hint">Sem fonte, o fato não entra no rascunho.</span></div>
+      </fieldset>
+      <div class="alert">${icone("escudo")}<span>O cadastro não inicia campanhas nem consulta serviços externos. Contatos pessoais não são pedidos.</span></div>
+    </form>
+    <div class="drawer__foot">
+      <button class="btn btn--secondary" type="button" data-acao="fechar">Cancelar</button>
+      <button class="btn btn--primary grow" type="submit" form="new-company">${icone("mais")}Salvar empresa</button>
+    </div>
+  </section>`;
+}
+
+/* ───────────────────────── Ações ───────────────────────── */
 function atualizarLead(id, campos) {
-  leads = leads.map((x) => x.id === id ? { ...x, ...campos } : x);
-  renderApp();
+  estado.leads = estado.leads.map((x) => x.id === id ? { ...x, ...campos } : x);
+  atualizar();
 }
 function baixarCsv() {
-  const blob = new Blob([exportarCsv(leads)], { type: "text/csv;charset=utf-8" });
+  const blob = new Blob([exportarCsv(estado.leads)], { type: "text/csv;charset=utf-8" });
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url; link.download = "flowbot-prospeccao.csv";
   document.body.appendChild(link); link.click(); link.remove();
   setTimeout(() => URL.revokeObjectURL(url), 1000);
-  toast("Arquivo exportado. Guarde-o em local seguro.");
+  aviso(estado.leads.length + " empresa(s) exportada(s). Guarde o arquivo em local seguro.", { tipo: "success" });
 }
 async function importarArquivo(arquivo) {
   if (!arquivo) return;
-  if (arquivo.size > 1_000_000) { toast("CSV acima de 1 MB. Divida em arquivos menores."); return; }
+  if (arquivo.size > 1_000_000) { aviso("CSV acima de 1 MB. Divida em arquivos menores.", { tipo: "danger" }); return; }
   try {
-    const resposta = importarCsv(await arquivo.text(), leads);
-    leads = [...leads, ...resposta.adicionados];
-    renderApp();
-    toast(resposta.adicionados.length + " empresas importadas · " + resposta.duplicados +
-      " duplicadas · " + resposta.erros.length + " linhas inválidas." +
-      (resposta.erros.length ? " " + resposta.erros[0] : ""));
-  } catch (erro) { toast(erro.message); }
+    const resposta = importarCsv(await arquivo.text(), estado.leads);
+    estado.leads = [...estado.leads, ...resposta.adicionados];
+    resposta.adicionados.forEach((l) => registrar(l.id, "Importada de " + arquivo.name, "importar"));
+    ultimoEnquadramento = "";
+    atualizar();
+    aviso(resposta.adicionados.length + " importada(s) · " + resposta.duplicados + " duplicada(s) · " + resposta.erros.length + " linha(s) inválida(s)." +
+      (resposta.erros.length ? " " + resposta.erros[0] : ""), { tipo: resposta.adicionados.length ? "success" : "info", duracao: 7000 });
+  } catch (erro) { aviso(erro.message, { tipo: "danger" }); }
+}
+function trocarTema() {
+  const novo = temaAtual() === "light" ? "dark" : "light";
+  aplicarTema(novo);
+  document.querySelectorAll("[data-rotulo-tema]").forEach((s) => { s.textContent = "Tema " + (novo === "light" ? "escuro" : "claro"); });
+  desenharMarcadores({ enquadrar: false });
 }
 
 document.addEventListener("click", async (evento) => {
-  const alvo = evento.target.closest?.("[data-action], [data-filter], [data-view], [data-overlay]");
-  if (!alvo) return;
-  if (alvo.dataset.overlay) {
-    if (evento.target === alvo) fechar();
-    return;
+  const menuBotao = evento.target.closest?.('[aria-haspopup="menu"]');
+  if (menuBotao) { fecharMenus(menuBotao); alternarMenu(menuBotao); return; }
+  if (!evento.target.closest?.(".menu")) fecharMenus();
+
+  const alvo = evento.target.closest?.("[data-acao], [data-filtro], [data-vista], [data-aba]");
+  if (!alvo || alvo.disabled) return;
+  if (alvo.dataset.filtro) {
+    estado.filtro = estado.filtro === alvo.dataset.filtro && alvo.classList.contains("funnel__row") ? "todos" : alvo.dataset.filtro;
+    estado.marcado = null; atualizar(); return;
   }
-  if (alvo.dataset.filter) { filtro = alvo.dataset.filter; renderApp(); return; }
-  if (alvo.dataset.view) { vista = alvo.dataset.view; renderApp(); return; }
-  const acao = alvo.dataset.action;
-  if (acao === "new") { formularioAberto = true; selecionado = null; renderApp(); }
-  if (acao === "lead") abrir(alvo.dataset.id);
-  if (acao === "close") fechar();
-  if (acao === "import") document.querySelector("#csv-file")?.click();
-  if (acao === "export") baixarCsv();
-  if (acao === "generate" && selecionado) {
-    const lead = leads.find((x) => x.id === selecionado);
-    rascunhos.set(selecionado, criarRascunho(lead, "Alvo Digital"));
-    const campo = document.querySelector("#lead-draft");
-    if (campo) campo.value = rascunhos.get(selecionado);
-    toast("Rascunho criado. Confira o texto e as fontes antes de usar.");
+  if (alvo.dataset.vista) { estado.vista = alvo.dataset.vista; estado.marcado = null; atualizar(); return; }
+  if (alvo.dataset.aba) {
+    estado.aba = alvo.dataset.aba;
+    if (estado.aba !== "resumo") estado.vista = estado.aba;
+    atualizar(); window.scrollTo({ top: 0 }); return;
   }
-  if (acao === "copy" && selecionado) {
-    const texto = document.querySelector("#lead-draft")?.value.trim();
-    if (!texto) { toast("Prepare ou escreva uma mensagem antes de copiar."); return; }
+  const acao = alvo.dataset.acao;
+  if (acao === "novo") abrirPainel({ tipo: "novo" });
+  else if (acao === "abrir") { estado.marcado = null; desenharSelecao(); abrirPainel({ tipo: "detalhe", id: alvo.dataset.id }); }
+  else if (acao === "fechar" || acao === "fechar-fundo") fecharPainel();
+  else if (acao === "importar") { fecharMenus(); $("#csv-file").click(); }
+  else if (acao === "exportar") { fecharMenus(); baixarCsv(); }
+  else if (acao === "tema") { fecharMenus(); trocarTema(); }
+  else if (acao === "desmarcar") { estado.marcado = null; desenharMarcadores({ enquadrar: false }); }
+  else if (acao === "legenda") { estado.legendaAberta = !estado.legendaAberta; desenharMarcadores({ enquadrar: false }); $(".map-legend__toggle")?.focus(); }
+  else if (acao === "limpar-filtros") { estado.filtro = "todos"; estado.busca = ""; $("#search").value = ""; atualizar(); }
+  else if (acao === "ver-no-mapa") verNoMapa(alvo.dataset.id);
+  else if (acao === "em-breve") aviso(alvo.dataset.modulo + " ainda não existe nesta versão. A navegação já está reservada para ele.");
+  else if (acao === "gerar" && estado.painel?.tipo === "detalhe") {
+    const lead = estado.leads.find((x) => x.id === estado.painel.id);
+    rascunhos.set(lead.id, criarRascunho(lead, REMETENTE));
+    registrar(lead.id, "Rascunho preparado", "faisca");
+    desenharPainel();
+    aviso("Rascunho criado. Confira o texto e as fontes antes de usar.", { tipo: "success" });
+  } else if (acao === "copiar" && estado.painel?.tipo === "detalhe") {
+    const texto = $("#lead-draft")?.value.trim();
+    if (!texto) { aviso("Prepare ou escreva uma mensagem antes de copiar."); return; }
     try {
       await navigator.clipboard.writeText(texto);
-      toast("Texto copiado. O FlowBot não enviou nenhuma mensagem.");
+      registrar(estado.painel.id, "Texto copiado para revisão", "copiar");
+      desenharPainel();
+      aviso("Texto copiado. O FlowBot não enviou nenhuma mensagem.", { tipo: "success" });
     } catch {
-      toast("Não foi possível copiar automaticamente. Selecione o texto no campo.");
+      aviso("Não foi possível copiar automaticamente. Selecione o texto no campo.", { tipo: "danger" });
     }
   }
 });
+
 document.addEventListener("input", (evento) => {
-  if (evento.target.id === "search") {
-    busca = evento.target.value;
-    const secao = document.querySelector("#results");
-    if (secao) secao.innerHTML = lista();
-    if (vista === "mapa") { if (mapa) { mapa.remove(); mapa = null; } montarMapa(); }
+  const id = evento.target.id;
+  if (id === "search") {
+    estado.busca = evento.target.value;
+    desenharLista(); desenharMarcadores(); return;
   }
-  if (evento.target.id === "lead-notes" && selecionado) {
-    const l = leads.find((x) => x.id === selecionado);
+  if (id === "lead-notes" && estado.painel?.tipo === "detalhe") {
+    const l = estado.leads.find((x) => x.id === estado.painel.id);
     if (l) l.nota = evento.target.value.slice(0, 1000);
   }
-  if (evento.target.id === "lead-draft" && selecionado) {
-    rascunhos.set(selecionado, evento.target.value);
-  }
+  if (id === "lead-draft" && estado.painel?.tipo === "detalhe") rascunhos.set(estado.painel.id, evento.target.value);
+  if (evento.target.closest?.("#new-company")) { evento.target.removeAttribute("aria-invalid"); $("#erro-form").innerHTML = ""; }
 });
+
 document.addEventListener("change", (evento) => {
-  if (evento.target.id === "csv-file") {
-    void importarArquivo(evento.target.files?.[0]);
-    evento.target.value = "";
+  const id = evento.target.id;
+  if (id === "csv-file") { void importarArquivo(evento.target.files?.[0]); evento.target.value = ""; }
+  if (id === "ordem") { estado.ordem = evento.target.value; desenharLista(); }
+  if (id === "lead-stage" && estado.painel?.tipo === "detalhe") {
+    const de = etapa(estado.leads.find((x) => x.id === estado.painel.id).etapa).nome;
+    registrar(estado.painel.id, "Etapa: " + de + " → " + etapa(evento.target.value).nome, "seta");
+    atualizarLead(estado.painel.id, { etapa: evento.target.value });
+    $("#lead-stage")?.focus({ preventScroll: true });
   }
-  if (evento.target.id === "lead-stage" && selecionado) {
-    atualizarLead(selecionado, { etapa: evento.target.value });
-  }
-  if (evento.target.id === "suppression" && selecionado) {
-    atualizarLead(selecionado, { suprimido: evento.target.checked });
-    toast(evento.target.checked ? "Empresa marcada: não contatar." : "Marcação removida. Isso não concede consentimento.");
+  if (id === "suppression" && estado.painel?.tipo === "detalhe") {
+    const marcado = evento.target.checked;
+    registrar(estado.painel.id, marcado ? "Marcada como não contatar" : "Marcação de não contatar removida", "proibido");
+    atualizarLead(estado.painel.id, { suprimido: marcado });
+    $("#suppression")?.focus({ preventScroll: true });
+    aviso(marcado ? "Empresa marcada: não contatar." : "Marcação removida. Isso não concede consentimento.");
   }
 });
+
 document.addEventListener("submit", (evento) => {
   if (evento.target.id !== "new-company") return;
   evento.preventDefault();
+  const form = evento.target;
+  const nome = form.elements.nome;
+  const erroNome = $("#erro-nome");
+  if (nome.value.trim().length < 2) {
+    nome.setAttribute("aria-invalid", "true");
+    erroNome.hidden = false; erroNome.textContent = "Informe o nome da empresa, com pelo menos 2 caracteres.";
+    nome.focus(); return;
+  }
+  erroNome.hidden = true;
   try {
-    const lead = validarEmpresa(Object.fromEntries(new FormData(evento.target).entries()));
-    if (leads.some((l) => chaveEmpresa(l) === chaveEmpresa(lead)))
+    const lead = validarEmpresa(Object.fromEntries(new FormData(form).entries()));
+    if (estado.leads.some((l) => chaveEmpresa(l) === chaveEmpresa(lead)))
       throw new Error("Esta empresa já está cadastrada. Verifique CNPJ, nome e cidade.");
-    leads = [...leads, lead];
-    formularioAberto = false;
-    selecionado = lead.id;
-    renderApp();
-    toast("Empresa cadastrada apenas nesta sessão.");
-  } catch (erro) { toast(erro.message); }
+    estado.leads = [...estado.leads, lead];
+    registrar(lead.id, "Cadastrada manualmente", "mais");
+    ultimoEnquadramento = "";
+    focoAnterior = null;
+    estado.painel = { tipo: "detalhe", id: lead.id };
+    atualizar();
+    aviso("Empresa cadastrada só nesta sessão.", { tipo: "success" });
+  } catch (erro) {
+    $("#erro-form").innerHTML = `<div class="alert alert--danger">${icone("alerta")}<span>${html(erro.message)}</span></div>`;
+    $("#erro-form").scrollIntoView({ block: "nearest" });
+  }
 });
+
 document.addEventListener("keydown", (evento) => {
-  if (evento.key === "Escape" && (selecionado || formularioAberto)) fechar();
+  if (evento.key === "Escape") {
+    if (document.querySelector('[aria-haspopup="menu"][aria-expanded="true"]')) { fecharMenus(); return; }
+    if (estado.painel) { fecharPainel(); return; }
+    if (estado.marcado) { estado.marcado = null; desenharMarcadores({ enquadrar: false }); }
+  }
+  const digitando = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName) || document.activeElement?.isContentEditable;
+  if (evento.key === "/" && !digitando && !estado.painel) { evento.preventDefault(); $("#search").focus(); }
 });
-renderApp();
+
+aplicarTema(temaAtual());
+montarEstrutura();
+atualizar();

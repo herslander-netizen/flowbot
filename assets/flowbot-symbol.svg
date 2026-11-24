@@ -1,6 +1,1 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72" role="img" aria-label="FlowBot">
-  <rect width="72" height="72" rx="22" fill="#9fbbff"/>
-  <path d="M16 27c0-6 5-11 11-11h18c6 0 11 5 11 11v15c0 6-5 11-11 11H33l-11 8V52c-4-2-6-6-6-10V27Z" fill="#111522"/>
-  <circle cx="29" cy="36" r="4" fill="#b5e98b"/>
-  <circle cx="43" cy="36" r="4" fill="#b5e98b"/>
-</svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-4 -4 108 108" width="200" height="200"><path d="M50,52 L50.00,16.00 M50,52 L81.18,34.00 M50,52 L81.18,70.00 M50,52 L50.00,88.00 M50,52 L18.82,70.00 M50,52 L18.82,34.00 " fill="none" stroke="#FF6B2C" stroke-width="30" stroke-linecap="round"/><circle cx="50" cy="52" r="28" fill="#FF6B2C"/><path d="M35,55q6,-14 12,0M53,55q6,-14 12,0" fill="none" stroke="#FFFFFF" stroke-width="5.6" stroke-linecap="round"/></svg>

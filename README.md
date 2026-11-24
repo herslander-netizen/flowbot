@@ -12,9 +12,12 @@ Para executar com Node.js 22 ou superior:
 
     npm run dev
 
-Abra http://127.0.0.1:4173. Para testar:
+Abra http://127.0.0.1:4173. Outras páginas: a landing em http://127.0.0.1:4173/landing/ e a galeria do design system em http://127.0.0.1:4173/design-system.html.
 
-    npm run check
+Para testar:
+
+    npm run check       # sintaxe e testes de unidade (também roda no CI)
+    npm run test:e2e    # testes de navegador; precisa do servidor ligado e do Playwright com Chromium
 
 Inclui importação e exportação CSV, pesquisa, mapa com Leaflet, deduplicação, notas, funil, bloqueio de contato e preparação de rascunhos (somente com fatos que tenham fonte). Dados importados vivem só na memória da aba; exporte antes de fechar. Não insira dados pessoais sensíveis.
 
@@ -29,6 +32,11 @@ Esta implementação é isolada do serviço de execução https://github.com/her
 3. Verificar as alternativas de resposta, a tomada de controle pela equipe e o histórico da versão testada.
 
 O piloto não envia mensagens reais e não depende de WhatsApp, serviços pagos ou dados de clientes.
+
+## Identidade visual e design system
+
+- Marca, logo, agentes e tokens de cor: [docs/identidade](docs/identidade/README.md)
+- Design system (regras, componentes, padrões dos próximos módulos): [docs/design-system](docs/design-system/README.md)
 
 ## Estrutura
 

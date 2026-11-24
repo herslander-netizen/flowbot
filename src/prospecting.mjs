@@ -1,12 +1,13 @@
 // Camada de domínio sem dependências externas; nunca envia mensagens.
+// As cores seguem os tokens --stage-* de assets/tokens.css (tema escuro).
 export const ETAPAS = Object.freeze([
-  { id: "pesquisado", nome: "Pesquisado", cor: "#9299aa" },
-  { id: "lead", nome: "Lead", cor: "#f4bd65" },
-  { id: "qualificado", nome: "Qualificado", cor: "#a994ff" },
-  { id: "proposta", nome: "Proposta", cor: "#82b6ff" },
-  { id: "negociacao", nome: "Negociação", cor: "#f27e85" },
-  { id: "ganho", nome: "Ganho", cor: "#51cfa0" },
-  { id: "perdido", nome: "Perdido", cor: "#666b77" },
+  { id: "pesquisado", nome: "Pesquisado", cor: "#8C8882" },
+  { id: "lead", nome: "Lead", cor: "#60A5FA" },
+  { id: "qualificado", nome: "Qualificado", cor: "#A78BFA" },
+  { id: "proposta", nome: "Proposta", cor: "#FBBF24" },
+  { id: "negociacao", nome: "Negociação", cor: "#F472B6" },
+  { id: "ganho", nome: "Ganho", cor: "#34D399" },
+  { id: "perdido", nome: "Perdido", cor: "#C07A74" },
 ]);
 
 export function normalizar(valor) {
@@ -21,15 +22,47 @@ export function chaveEmpresa(lead) {
     "|" + normalizar(lead.uf);
 }
 
+const ETAPAS_AVANCADAS = ["qualificado", "proposta", "negociacao", "ganho"];
+
+// Cada critério da pontuação, na mesma regra usada pela soma. A interface mostra esta lista.
+export function explicarPontuacao(lead) {
+  return [
+    { id: "site", rotulo: "Site comercial com endereço válido", pontos: 20,
+      atendido: Boolean(lead.site && /^https?:\/\//i.test(lead.site)) },
+    { id: "cidade", rotulo: "Cidade informada", pontos: 10, atendido: Boolean(lead.cidade) },
+    { id: "segmento", rotulo: "Segmento informado", pontos: 10, atendido: Boolean(lead.categoria) },
+    { id: "evidencia", rotulo: "Fato público com URL de fonte", pontos: 35,
+      atendido: Boolean(lead.fato && lead.fonteFato && /^https?:\/\//i.test(lead.fonteFato)) },
+    { id: "etapa", rotulo: "Etapa a partir de Qualificado", pontos: 25,
+      atendido: ETAPAS_AVANCADAS.includes(lead.etapa) },
+  ];
+}
+
 export function pontuacao(lead) {
-  let pontos = 0;
-  if (lead.site && /^https?:\/\//i.test(lead.site)) pontos += 20;
-  if (lead.cidade) pontos += 10;
-  if (lead.categoria) pontos += 10;
-  if (lead.fato && lead.fonteFato && /^https?:\/\//i.test(lead.fonteFato)) pontos += 35;
-  if (lead.etapa === "qualificado" || lead.etapa === "proposta" ||
-    lead.etapa === "negociacao" || lead.etapa === "ganho") pontos += 25;
+  const pontos = explicarPontuacao(lead).reduce((soma, c) => soma + (c.atendido ? c.pontos : 0), 0);
   return Math.min(100, pontos);
+}
+
+// Indicadores calculados só a partir dos registros recebidos; nada é estimado.
+export function resumoFunil(leads) {
+  const total = leads.length;
+  const porEtapa = ETAPAS.map((etapa) => {
+    const quantidade = leads.filter((l) => l.etapa === etapa.id).length;
+    return { ...etapa, quantidade, percentual: total ? quantidade / total : 0 };
+  });
+  const conta = (id) => porEtapa.find((e) => e.id === id).quantidade;
+  const encerrados = conta("ganho") + conta("perdido");
+  return {
+    total,
+    porEtapa,
+    emAndamento: ["lead", "qualificado", "proposta", "negociacao"].reduce((s, id) => s + conta(id), 0),
+    ganhos: conta("ganho"),
+    perdidos: conta("perdido"),
+    taxaGanho: encerrados ? conta("ganho") / encerrados : null,
+    naoContatar: leads.filter((l) => l.suprimido).length,
+    comCoordenadas: leads.filter((l) => Number.isFinite(l.latitude) && Number.isFinite(l.longitude)).length,
+    demonstracao: leads.filter((l) => l.origem === "exemplo_ficticio").length,
+  };
 }
 
 function criarId() {

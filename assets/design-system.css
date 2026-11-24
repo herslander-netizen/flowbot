@@ -1,0 +1,15 @@
+/* Só a diagramação da galeria do design system. */
+.ds { max-width: 1120px; margin: 0 auto; padding: var(--space-8) max(var(--space-4), env(safe-area-inset-right)) var(--space-16) max(var(--space-4), env(safe-area-inset-left)); display: grid; gap: var(--space-12); }
+.ds-head { display: flex; flex-wrap: wrap; gap: var(--space-4); align-items: flex-end; justify-content: space-between; }
+.ds-sec { display: grid; gap: var(--space-4); }
+.ds-sec > h2 { font: var(--weight-bold) var(--text-xl)/var(--leading-xl) var(--font-display); letter-spacing: var(--tracking-tight); }
+.ds-row { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; }
+.ds-grid { display: grid; gap: var(--space-3); grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+.ds-grid--wide { grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); }
+.swatch { border-radius: var(--radius-md); overflow: hidden; border: var(--border-width) solid var(--border-subtle); background: var(--surface); }
+.swatch span { display: block; height: 56px; background: var(--c); border-bottom: var(--border-width) solid var(--border-subtle); }
+.swatch div { padding: var(--space-2) var(--space-3); font-size: var(--text-xs); line-height: var(--leading-xs); }
+.swatch code { font-family: var(--font-mono); color: var(--text-faint); font-size: 11px; }
+.ds-demo { padding: var(--space-5); border-radius: var(--radius-lg); background: var(--surface); border: var(--border-width) solid var(--border-subtle); display: grid; gap: var(--space-4); }
+.ds-type > * + * { margin-top: var(--space-3); }
+.space-bar { height: 12px; background: var(--accent); border-radius: 3px; }
