@@ -5,7 +5,7 @@ import {
   pontuacao, explicarPontuacao, resumoFunil, exportarCsv,
 } from "./prospecting.mjs";
 import { icone } from "./ui/icones.mjs";
-import { montarShell, atualizarRotuloTema } from "./ui/shell.mjs";
+import { iniciarBuscaCep } from "./cep-ui.mjs";
 import {
   html, formatar, aviso, prenderFoco, temaAtual, aplicarTema, alternarMenu, fecharMenus, ligarArrasteDaFolha, observarTeclado,
 } from "./ui/componentes.mjs";
@@ -716,3 +716,42 @@ try { const aba = sessionStorage.getItem("flowbot-prospeccao-aba"); if (matchMed
 montarEstrutura();
 observarTeclado();
 atualizar();
+
+// Módulo de descoberta geográfica: somente importação manual, sem canais de envio.
+iniciarBuscaCep({
+  getLeads: () => estado.leads,
+  onMessage: (message, tipo) => aviso(message, { tipo }),
+  onImport: (empresa, consulta) => {
+    try {
+      if (!/^https:\/\/www\.openstreetmap\.org\/(node|way|relation)\/\d+$/.test(empresa.fonte))
+        throw new Error("Empresa sem fonte pública verificável.");
+      const lead = validarEmpresa({
+        nome: empresa.nome,
+        cidade: empresa.cidade,
+        uf: empresa.uf,
+        categoria: empresa.categoria,
+        latitude: empresa.latitude,
+        longitude: empresa.longitude,
+        site: empresa.site,
+        origem: "osm_cep_importacao_manual",
+        etapa: "pesquisado",
+        optInWhatsapp: false,
+        suprimido: false,
+        nota: "Encontrada por CEP " + consulta.cep + " (raio " + consulta.raio +
+          " m). Fonte: " + empresa.fonte + ". Localização aproximada; confira antes de abordar.",
+      });
+      if (estado.leads.some((x) => chaveEmpresa(x) === chaveEmpresa(lead)))
+        return { ok: false, message: "Esta empresa já consta no funil. Nenhuma duplicata foi criada." };
+      estado.leads = [...estado.leads, lead];
+      registrar(lead.id, "Incluída manualmente a partir do OpenStreetMap", "pino");
+      ultimoEnquadramento = "";
+      estado.filtro = "todos";
+      estado.busca = "";
+      $("#search").value = "";
+      atualizar();
+      return { ok: true, message: "Empresa adicionada ao funil. Nenhuma mensagem foi enviada." };
+    } catch (error) {
+      return { ok: false, message: error.message };
+    }
+  },
+});
