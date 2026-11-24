@@ -115,11 +115,21 @@ export function iniciarConversa(contato = {}) {
   return { contato, variaveis: {}, visitas: {}, cursor: null, status: "new", caminho: [] };
 }
 
+// Mesmas regras do motor (packages/runtime/src/variaveis.ts): variável ausente vira vazio, lista vira
+// uma linha por item e não sobra pontuação solta ("Olá, {{contact.firstName}}!" sem nome vira "Olá!").
 function preencher(texto, s) {
-  return String(texto ?? "").replace(/\{\{\s*([\w.]+)\s*\}\}/g, (_, chave) => {
-    if (chave.startsWith("contact.")) return s.contato[chave.slice(8)] ?? "";
-    return s.variaveis[chave] ?? "";
-  });
+  return String(texto ?? "")
+    .replace(/\{\{\s*([^{}]*?)\s*\}\}/g, (_, chave) => {
+      const v = chave.startsWith("contact.") ? s.contato[chave.slice(8)] : s.variaveis[chave];
+      if (v === undefined || v === null || v === "") return "";
+      if (Array.isArray(v)) return v.length ? "\n" + v.map((i) => "• " + i).join("\n") : "";
+      return String(v);
+    })
+    .replace(/[ \t]{2,}/g, " ")
+    .replace(/[ \t]+\n/g, "\n")
+    .replace(/[ \t]*,[ \t]*(?=[!?.,;:])/g, "")
+    .replace(/[ \t]+(?=[!?.,;:])/g, "")
+    .trim();
 }
 
 function andar(doc, s, inicio, porta) {
@@ -151,7 +161,10 @@ function andar(doc, s, inicio, porta) {
         saida = "exhausted"; break;
       }
       case "data.set_variable": s.variaveis[c.variable] = c.value; saida = "next"; break;
-      case "action.handoff": s.status = "handed_off"; s.cursor = null; s.nota = c.note ?? ""; return saidas;
+      case "action.handoff":
+        s.status = "handed_off"; s.cursor = null; s.nota = c.note ?? "";
+        saidas.push({ tipo: "equipe", no: id, texto: "(encaminhado para a equipe" + (c.note ? ": " + c.note : "") + ")" });
+        return saidas;
       case "action.end": s.status = "completed"; s.cursor = null; return saidas;
       default:
         s.status = "failed"; s.motivo = "“" + (TIPOS[no.type]?.rotulo ?? no.type) + "” só roda no simulador do motor"; s.cursor = id;

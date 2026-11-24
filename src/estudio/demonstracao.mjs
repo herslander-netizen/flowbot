@@ -139,3 +139,37 @@ export const botsDeExemplo = [
   { id: "boas-vindas-menu", nome: "Boas-vindas e menu", canal: "WhatsApp (Evolution)", publicada: 1, rascunho: true },
   { id: "lembrete-retorno", nome: "Lembrete de retorno", canal: "WhatsApp (Evolution)", publicada: null, rascunho: true },
 ];
+
+// Fluxo extenso FICTÍCIO para testar o editor com muitos passos (roteiro "extenso").
+// Blocos repetidos de pergunta e ramificação, todos válidos no catálogo do motor.
+export function fluxoExtenso(alvo = 60) {
+  const nodes = [{ id: "inicio", type: "trigger.message_received", config: {} }];
+  const edges = []; let e = 0;
+  const ligar = (from, to, port) => edges.push({ id: "e" + (++e), from, to, port });
+  nodes.push({ id: "equipe", type: "action.handoff", config: { note: "Pediu atendimento" } }, { id: "fim", type: "action.end", config: {} });
+  let anterior = "inicio"; let porta = "next"; let b = 0;
+  while (nodes.length + 8 <= alvo) {
+    b++;
+    const id = (n) => n + "-" + b;
+    nodes.push(
+      { id: id("ola"), type: "message.text", config: { text: `Etapa ${b}: como podemos ajudar?` } },
+      { id: id("menu"), type: "message.quick_replies", config: { prompt: "Escolha uma opção:", options: [{ value: "1", label: "Seguir" }, { value: "2", label: "Detalhes" }, { value: "3", label: "Falar com alguém" }] } },
+      { id: id("espera"), type: "state.wait_for_reply", config: { timeoutSeconds: 300, saveAs: "session.escolha" } },
+      { id: id("rota"), type: "logic.switch", config: { variable: "session.escolha", cases: ["1", "2", "3"] } },
+      { id: id("detalhes"), type: "message.text", config: { text: `Detalhes da etapa ${b}.` } },
+      { id: id("invalida"), type: "message.text", config: { text: "Não reconheci. Escolha 1, 2 ou 3." } },
+      { id: id("voltar"), type: "logic.goto", config: { target: id("menu"), maxVisits: 2 } },
+      { id: id("silencio"), type: "message.text", config: { text: "Quando quiser, é só escrever." } },
+    );
+    ligar(anterior, id("ola"), porta); ligar(id("ola"), id("menu"), "next"); ligar(id("menu"), id("espera"), "next");
+    ligar(id("espera"), id("rota"), "reply"); ligar(id("espera"), id("silencio"), "timeout"); ligar(id("silencio"), "fim", "next");
+    ligar(id("rota"), id("detalhes"), "case:2"); ligar(id("rota"), "equipe", "case:3"); ligar(id("rota"), id("invalida"), "default");
+    ligar(id("invalida"), id("voltar"), "next"); ligar(id("voltar"), "equipe", "exhausted");
+    anterior = id("detalhes"); porta = "next";
+    // "Seguir" e "Detalhes" levam à próxima etapa
+    edges.push({ id: "e" + (++e), from: id("rota"), to: "__proxima__" + b, port: "case:1" });
+  }
+  ligar(anterior, "fim", "next");
+  for (const ed of edges) if (ed.to.startsWith("__proxima__")) { const n = Number(ed.to.slice(11)); ed.to = n < b ? "ola-" + (n + 1) : "fim"; }
+  return { schemaVersion: "flow-bot/v0", flow: { id: "boas-vindas-menu", name: "Atendimento em etapas (extenso, fictício)", timezone: "America/Sao_Paulo", status: "published", entryNodeId: "inicio" }, limits: { maxStepsPerEvent: 50 }, variables: [{ name: "session.escolha", type: "string" }], nodes, edges };
+}

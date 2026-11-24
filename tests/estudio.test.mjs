@@ -161,3 +161,102 @@ test("lê as saídas reais da ponte do motor", () => {
   assert.equal(invalido.erro, "fluxo_invalido");
   assert.ok(invalido.problemas.some((p) => p.nodeId === "espera"));
 });
+
+// ── Fase F: contrato da API de autoria (PR #21), fontes, sincronização e cenários ──
+import { traduzirResposta, cenariosAprovaveis } from "../src/estudio/contrato.mjs";
+import { criarFonteDeDemonstracao } from "../src/estudio/fontes.mjs";
+import { criarSincronia, analisarConflito } from "../src/estudio/sincronia.mjs";
+import { conferirCenarios } from "../src/estudio/cenarios.mjs";
+import { fluxoExtenso } from "../src/estudio/demonstracao.mjs";
+
+test("tradução das respostas da API de autoria", () => {
+  assert.equal(traduzirResposta(200, { ok: true, revision: 2, changed: true }).ok, true);
+  assert.equal(traduzirResposta(401, { error: "unauthorized" }).estado, "sessao");
+  assert.equal(traduzirResposta(403, { error: "forbidden" }).estado, "permissao");
+  const c = traduzirResposta(409, { ok: false, error: "revision_conflict", currentRevision: 7 });
+  assert.equal(c.estado, "conflito"); assert.equal(c.revisaoAtual, 7);
+  assert.equal(traduzirResposta(422, { ok: false, error: "independent_tests_failed", reports: [] }).estado, "validacao");
+  assert.equal(traduzirResposta(0, null).estado, "indisponivel");
+  assert.equal(traduzirResposta(500, { error: "internal_error" }).estado, "indisponivel");
+  assert.equal(cenariosAprovaveis(cenariosDeExemplo), true);
+  assert.equal(cenariosAprovaveis({ scenarios: [{ name: "x", steps: [{ say: "oi" }] }] }), false, "sem verificação não aprova");
+});
+
+test("prévia de cenários reproduz os relatórios reais do motor", () => {
+  const motor = JSON.parse(fixture("saida-ponte-offline.json"));
+  const previa = conferirCenarios(propostaDaOficina(), cenariosDeExemplo);
+  assert.deepEqual(previa.reports.map((r) => r.passos.map((p) => p.saidas)), motor.reports.map((r) => r.passos.map((p) => p.saidas)));
+  const falhou = JSON.parse(fixture("saida-ponte-cenario-falhou.json"));
+  const v1 = versaoPublicada(); v1.flow.status = "draft";
+  assert.deepEqual(conferirCenarios(v1, cenariosDeExemplo).reports.map((r) => r.ok), falhou.reports.map((r) => r.ok));
+});
+
+const relogioManual = () => { let fila = []; return { setTimeout: (f) => { fila.push(f); return fila.length; }, clearTimeout: () => { fila = []; }, rodar: async () => { const f = fila; fila = []; for (const x of f) await x(); } }; };
+
+test("fonte de demonstração: revisão esperada, histórico e aprovação presa à revisão", async () => {
+  const fonte = criarFonteDeDemonstracao();
+  const r1 = await fonte.obterRascunho();
+  assert.equal(r1.dados.revision, 1);
+  const doc = structuredClone(r1.dados.document); doc.nodes.find((n) => n.id === "agendar").config.text = "Agende pelo link.";
+  const ok = await fonte.salvarRascunho("boas-vindas-menu", 1, doc);
+  assert.deepEqual([ok.ok, ok.dados.revision, ok.dados.changed], [true, 2, true]);
+  const igual = await fonte.salvarRascunho("boas-vindas-menu", 2, doc);
+  assert.equal(igual.dados.changed, false, "mesmo documento não cria revisão");
+  const conflito = await fonte.salvarRascunho("boas-vindas-menu", 1, doc);
+  assert.deepEqual([conflito.estado, conflito.revisaoAtual], ["conflito", 2]);
+  assert.deepEqual((await fonte.historico()).dados.map((h) => h.revision), [2, 1]);
+  assert.equal((await fonte.aprovar("x", { revision: 2, confirmation: false, scenarios: cenariosDeExemplo })).codigo, "approval_not_authorized");
+  const reprovada = await fonte.aprovar("x", { revision: 2, confirmation: true, scenarios: cenariosDeExemplo });
+  assert.equal(reprovada.codigo, "independent_tests_failed", "v1 não tem a opção 4: cenário de horários falha");
+  const sem4 = { scenarios: cenariosDeExemplo.scenarios.slice(0, 4) };
+  assert.equal((await fonte.aprovar("x", { revision: 2, confirmation: true, scenarios: sem4 })).ok, true);
+  assert.equal((await fonte.aprovacaoAtual()).dados.revision, 2);
+  doc.nodes.find((n) => n.id === "agendar").config.text = "Agende pelo link da página.";
+  await fonte.salvarRascunho("boas-vindas-menu", 2, doc);
+  assert.equal((await fonte.aprovacaoAtual()).estado, "vazio", "revisão nova não herda a aprovação");
+});
+
+test("sincronia: salva sozinho, junta edições e entra em conflito preservando o local", async () => {
+  const relogio = relogioManual();
+  const fonte = criarFonteDeDemonstracao({ roteiro: "conflito" });
+  const sinc = criarSincronia({ fonte, flowId: "boas-vindas-menu", relogio });
+  const doc = await sinc.carregar();
+  const meu = structuredClone(doc); meu.nodes.find((n) => n.id === "servicos").config.text = "Meu texto";
+  sinc.alterar(meu);
+  assert.equal(sinc.estado.estado, "nao-salvo");
+  await relogio.rodar();
+  assert.equal(sinc.estado.estado, "conflito");
+  assert.equal(sinc.estado.conflito.revisaoAtual, 2);
+  assert.equal(sinc.estado.conflito.local, meu, "alterações locais preservadas");
+  assert.deepEqual(sinc.estado.conflito.analise.sobrepostos, ["servicos"]);
+  const final = await sinc.resolver("minhas");
+  assert.equal(final, meu);
+  assert.equal(sinc.estado.estado, "salvo");
+  assert.equal(sinc.estado.base.revision, 3);
+});
+
+test("sincronia: sem permissão e sessão expirada param de salvar e mantêm o local", async () => {
+  for (const [roteiro, esperado] of [["permissao", "permissao"], ["sessao", "sessao"], ["indisponivel", "indisponivel"]]) {
+    const relogio = relogioManual();
+    const fonte = criarFonteDeDemonstracao({ roteiro });
+    const sinc = criarSincronia({ fonte, flowId: "boas-vindas-menu", relogio });
+    if (roteiro !== "indisponivel") {
+      const doc = await sinc.carregar();
+      const meu = structuredClone(doc); meu.nodes[1].config.text = "x";
+      sinc.alterar(meu); await relogio.rodar();
+      assert.equal(sinc.estado.estado, esperado, roteiro);
+      assert.equal(sinc.estado.local, meu);
+    } else {
+      assert.equal(await sinc.carregar(), null);
+      assert.equal(sinc.estado.estado, "indisponivel");
+    }
+  }
+});
+
+test("fluxo extenso de 59 passos é válido e organizado", () => {
+  const d = fluxoExtenso(60);
+  assert.deepEqual(conferirFluxo(d), []);
+  const o = organizarFluxo(d);
+  assert.equal(o.ordem.length, d.nodes.length);
+  assert.deepEqual(analisarConflito(d, d, d).sobrepostos, []);
+});

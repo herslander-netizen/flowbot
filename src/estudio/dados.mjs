@@ -1,14 +1,10 @@
-// Camada de acesso a dados do Bot Studio. A interface só fala com uma "fonte"; hoje a única fonte é a de
-// demonstração. Quando o motor tiver um endpoint autenticado (gate 4 de docs/BOT_STUDIO_OFFLINE_D1.md,
-// PR #18 do flow-bot), basta criar outra fonte com os mesmos métodos — nenhuma tela muda.
+// Camada de acesso a dados do Bot Studio. A interface só fala com uma "fonte" (fontes.mjs) cujos métodos
+// têm os nomes das operações da API de autoria do motor (contrato.mjs, PR #21). Trocar a fonte de
+// demonstração pela real (via BFF autenticado) não muda nenhuma tela.
 //
 // O que já é real: o formato de entrada e saída da ponte offline do motor (`avaliarRascunhoStudio`,
 // `packages/server/bin/studio-offline.mjs`). A interface monta a entrada exata e lê a saída exata, para o
 // operador rodar a avaliação oficial na máquina dele e importar o resultado. Nada aqui inventa endpoint.
-import {
-  versaoPublicada, resultadoDeExemplo, historicoDeExemplo, botsDeExemplo, perfilDeExemplo, cenariosDeExemplo,
-  briefingDeExemplo, NEGOCIO_FICTICIO,
-} from "./demonstracao.mjs";
 
 /* ── Contrato da ponte offline (PR #18 do motor) ─────────────────────────── */
 export const LIMITES_DA_PONTE = { bytes: 1024 * 1024, cenarios: 20, passosPorCenario: 20 };
@@ -58,29 +54,7 @@ export function lerSaidaDaPonte(texto) {
   return { valido: true, ok: true, modo: s.mode, relatorios, diff, cenariosOk: s.scenariosPassed };
 }
 
-/* ── Fonte de demonstração ───────────────────────────────────────────────── */
-// Mesmos métodos que uma fonte real terá. `estado` diz à interface como mostrar a conexão.
-export function criarFonteDeDemonstracao() {
-  return {
-    tipo: "demonstracao",
-    estado: "demonstracao",
-    descricao: "Dados fictícios no navegador. Motor, WhatsApp e oficina com Claude não estão conectados.",
-    async carregarEspaco() {
-      return {
-        negocio: NEGOCIO_FICTICIO,
-        bots: botsDeExemplo.map((b) => ({ ...b })),
-        publicada: versaoPublicada(),
-        historico: historicoDeExemplo.map((h) => ({ ...h })),
-        perfil: structuredClone(perfilDeExemplo),
-        cenarios: structuredClone(cenariosDeExemplo),
-        briefing: briefingDeExemplo,
-      };
-    },
-    // A oficina com Claude não existe como serviço; a demonstração só devolve o exemplo fixo.
-    async resultadoDeExemplo() { return resultadoDeExemplo(); },
-    // Operações que dependem do motor: nesta fonte respondem "indisponível", nunca sucesso falso.
-    async salvarRascunho() { return { ok: false, estado: "indisponivel" }; },
-    async publicar() { return { ok: false, estado: "indisponivel" }; },
-    async pedirProposta() { return { ok: false, estado: "indisponivel" }; },
-  };
-}
+/* ── Fontes ─────────────────────────────────────────────────────────────── */
+// As fontes (demonstração, roteiro de homologação e, no futuro, a real via BFF) ficam em fontes.mjs;
+// o contrato da API de autoria (PR #21 do motor) em contrato.mjs.
+export { criarFonteDeDemonstracao, roteiroDaUrl, ROTEIROS, NOMES_DE_AUTOR } from "./fontes.mjs";
