@@ -6,8 +6,9 @@
   "scripts": {
     "dev": "node scripts/serve.mjs",
     "test": "node --test tests/*.test.mjs",
-    "check": "node --check src/prospecting.mjs && node --check src/app.mjs && node --check src/cep-ui.mjs && node --check server/cep-lookup.mjs && node --check scripts/serve.mjs && node --check functions/api/prospeccao/cep.js && node --check src/ui/icones.mjs && node --check src/ui/componentes.mjs && node --check src/design-system.mjs && node --check landing/landing.js && npm test",
-    "test:e2e": "node tests/e2e/prospeccao.e2e.mjs"
+    "check": "node --check src/prospecting.mjs && node --check src/app.mjs && node --check src/cep-ui.mjs && node --check server/cep-lookup.mjs && node --check scripts/serve.mjs && node --check scripts/build-pages.mjs && node --check functions/api/prospeccao/cep.js && node --check src/ui/icones.mjs && node --check src/ui/componentes.mjs && node --check src/design-system.mjs && node --check landing/landing.js && npm test",
+    "test:e2e": "node tests/e2e/prospeccao.e2e.mjs",
+    "build:pages": "node scripts/build-pages.mjs"
   },
   "engines": {
     "node": ">=22"
