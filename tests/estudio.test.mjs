@@ -78,3 +78,86 @@ test("resultado de exemplo nunca vem aprovado nem publicado", () => {
   assert.equal(r.published, false);
   assert.ok(r.gaps.length <= 20);
 });
+
+import { inserirPasso, removerPasso, ligar, arvoreDoFluxo, repetirConversa, TIPOS_CRIAVEIS } from "../src/estudio/edicao.mjs";
+import { montarEntradaDaPonte, lerSaidaDaPonte } from "../src/estudio/dados.mjs";
+import { cenariosDeExemplo, perfilDeExemplo } from "../src/estudio/demonstracao.mjs";
+
+test("inserir passo no meio mantém o caminho e passa na conferência", () => {
+  const { doc, id } = inserirPasso(versaoPublicada(), { tipo: "message.text", depoisDe: "ola", porta: "next" });
+  assert.equal(id, "texto");
+  assert.equal(doc.edges.find((e) => e.from === "ola").to, "texto");
+  assert.equal(doc.edges.find((e) => e.from === "texto").to, "menu");
+  assert.deepEqual(conferirFluxo(doc), []);
+  assert.equal(versaoPublicada().nodes.length, 12, "original intacto");
+});
+
+test("todo tipo criável nasce com configuração aceita", () => {
+  for (const tipo of TIPOS_CRIAVEIS) {
+    const { doc, id } = inserirPasso(versaoPublicada(), { tipo });
+    const avisos = conferirFluxo(doc).filter((p) => p.path === id && !["unreachable", "missing_edge"].includes(p.code));
+    assert.deepEqual(avisos, [], tipo);
+  }
+  assert.throws(() => inserirPasso(versaoPublicada(), { tipo: "action.webhook" }), /segurança/);
+});
+
+test("excluir passo liga quem chegava ao destino e protege a entrada", () => {
+  const { doc } = removerPasso(versaoPublicada(), "ola");
+  assert.equal(doc.edges.find((e) => e.from === "inicio").to, "menu");
+  assert.deepEqual(conferirFluxo(doc), []);
+  assert.throws(() => removerPasso(versaoPublicada(), "inicio"), /entrada/);
+  const sem = ligar(versaoPublicada(), "espera", "timeout", null);
+  assert.ok(conferirFluxo(sem).some((p) => p.code === "missing_edge" && p.path === "espera"));
+});
+
+test("árvore do celular: ramos com nível e retorno como referência", () => {
+  const a = arvoreDoFluxo(versaoPublicada());
+  assert.equal(a[0].id, "inicio");
+  const rota = a.find((i) => i.id === "rota");
+  const filhos = a.filter((i) => i.nivel === rota.nivel + 1 && i.via?.startsWith("case:"));
+  assert.equal(filhos.length, 3);
+  assert.ok(a.some((i) => i.via === "retorno" && i.id === "menu" && i.referencia));
+  assert.equal(a.filter((i) => !i.referencia && !i.faltando).length, 12, "cada passo aparece uma vez");
+});
+
+test("repetir a mesma conversa nas duas versões mostra a diferença", () => {
+  const entradas = [{ tipo: "say", texto: "oi" }, { tipo: "say", texto: "4" }];
+  assert.equal(repetirConversa(propostaDaOficina(), entradas).status, "completed");
+  assert.equal(repetirConversa(versaoPublicada(), entradas).status, "waiting_input", "na v1 a opção 4 não existe");
+});
+
+test("entrada da ponte offline segue o contrato da PR #18", () => {
+  const { entrada } = montarEntradaDaPonte({ rascunho: propostaDaOficina(), base: versaoPublicada(), cenarios: cenariosDeExemplo, perfil: perfilDeExemplo });
+  assert.deepEqual(Object.keys(entrada).sort(), ["base", "draft", "perfil", "scenarios"]);
+  assert.equal(entrada.draft.flow.status, "draft");
+  assert.ok(Array.isArray(entrada.scenarios.scenarios));
+  assert.ok(montarEntradaDaPonte({ rascunho: versaoPublicada(), cenarios: cenariosDeExemplo }).erro, "publicada não é rascunho");
+});
+
+test("saída da ponte: aceita só o formato do motor", () => {
+  const ok = lerSaidaDaPonte(JSON.stringify({ ok: true, mode: "offline", approved: false, published: false, problems: [], diff: [{ path: "/nodes/2", before: null, after: 1 }], reports: [{ name: "A", ok: false, passos: [{ entrada: "oi", saidas: ["x"], status: "completed", motivo: "", falhas: ["status: esperado y"] }] }], scenariosPassed: false }));
+  assert.equal(ok.valido, true);
+  assert.equal(ok.relatorios[0].passos[0].falhas.length, 1);
+  assert.equal(ok.diff[0].caminho, "/nodes/2");
+  const erro = lerSaidaDaPonte({ ok: false, error: "fluxo_invalido", approved: false, published: false, problems: [{ code: "x", message: "y", path: "z" }] });
+  assert.equal(erro.erro, "fluxo_invalido");
+  assert.equal(lerSaidaDaPonte({ ok: true, approved: true, published: false, reports: [], scenariosPassed: true }).valido, false, "nunca aceita aprovado");
+  assert.equal(lerSaidaDaPonte("{").valido, false);
+  assert.equal(lerSaidaDaPonte({ ok: false, error: "inventado", approved: false, published: false }).valido, false);
+});
+
+// Saídas reais da ponte offline do motor (flow-bot PR #18, packages/server/bin/studio-offline.mjs),
+// geradas a partir da entrada que esta interface monta. Ver tests/fixtures/LEIAME.md.
+import { readFileSync } from "node:fs";
+const fixture = (n) => readFileSync(new URL("./fixtures/" + n, import.meta.url), "utf8");
+
+test("lê as saídas reais da ponte do motor", () => {
+  const ok = lerSaidaDaPonte(fixture("saida-ponte-offline.json"));
+  assert.equal(ok.valido, true); assert.equal(ok.cenariosOk, true); assert.equal(ok.relatorios.length, 5);
+  const falhou = lerSaidaDaPonte(fixture("saida-ponte-cenario-falhou.json"));
+  assert.equal(falhou.cenariosOk, false);
+  assert.deepEqual(falhou.relatorios.filter((r) => !r.ok).map((r) => r.nome), ["Cliente pergunta horários"]);
+  const invalido = lerSaidaDaPonte(fixture("saida-ponte-fluxo-invalido.json"));
+  assert.equal(invalido.erro, "fluxo_invalido");
+  assert.ok(invalido.problemas.some((p) => p.nodeId === "espera"));
+});

@@ -67,12 +67,35 @@ export const briefingDeExemplo =
   "Quero que o bot cumprimente o cliente pelo nome, ofereça agendar, ver serviços, saber os horários ou falar com alguém. " +
   "Se o cliente não responder em 5 minutos, encerrar com educação. Nunca confirmar horário sem a equipe.";
 
-// Fatos do negócio que a oficina pode consultar (perfil de realidade, `reality.*`).
-export const perfilDeExemplo = [
-  { chave: "reality.servicos", valor: "Corte, escova, coloração" },
-  { chave: "reality.horario", valor: "Segunda a sábado, 9h às 19h" },
-  { chave: "reality.agendamento", valor: "Pelo link da página; a equipe confirma" },
-];
+// Perfil de realidade no formato do motor (PerfilDeRealidade, packages/contracts/src/realidade.ts):
+// o que é verdade no negócio e que o fluxo pode ler por `reality.*`. Fictício.
+export const perfilDeExemplo = {
+  id: "estudio-exemplo/v1",
+  name: "Estúdio Exemplo (fictício)",
+  facts: [
+    { name: "reality.servicos", type: "list", description: "Serviços oferecidos", example: ["Corte", "Escova", "Coloração"] },
+    { name: "reality.horario", type: "string", description: "Horário de atendimento", example: "Segunda a sábado, 9h às 19h" },
+    { name: "reality.agendamento", type: "string", description: "Como o cliente agenda", example: "Pelo link da página; a equipe confirma" },
+  ],
+};
+
+// Cenários no formato do motor (ArquivoDeCenarios). Os quatro primeiros são os de
+// examples/boas-vindas-menu.cenarios.json do flow-bot; o quinto cobre a opção nova da proposta.
+export const cenariosDeExemplo = {
+  scenarios: [
+    { name: "Cliente escolhe serviços", contact: { firstName: "Ana" }, steps: [
+      { say: "oi", expect: { contains: ["Olá, Ana!", "[2] Serviços"], status: "waiting_input", cursor: "espera" } },
+      { say: "2", expect: { status: "completed", variables: { "session.escolha": "2" } } }] },
+    { name: "Cliente pede atendimento humano", steps: [{ say: "bom dia" }, { say: "3", expect: { handoff: true, status: "handed_off" } }] },
+    { name: "Respostas inválidas acabam na equipe", steps: [
+      { say: "oi" }, { say: "banana", expect: { contains: ["Não reconheci", "Escolha uma opção:"] } },
+      { say: "laranja", expect: { contains: ["Escolha uma opção:"] } }, { say: "uva", expect: { handoff: true } }] },
+    { name: "Cliente some e a conversa encerra no prazo", steps: [
+      { say: "oi" }, { wait: 900, expect: { replies: ["Quando quiser, é só escrever de novo."], status: "completed" } }] },
+    { name: "Cliente pergunta horários", steps: [
+      { say: "oi" }, { say: "4", expect: { contains: ["segunda a sábado"], status: "completed" } }] },
+  ],
+};
 
 export function resultadoDeExemplo() {
   return {
