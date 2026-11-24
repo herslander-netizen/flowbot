@@ -11,6 +11,19 @@ Cada resultado informa nome, categoria, distância aproximada e **link direto pa
 
 **Não é cadastro oficial de CNPJ, nem garantia de completude ou existência do negócio.** A localização e a precisão dependem dos registros públicos do OSM; nenhum telefone, contato pessoal, opt-in ou autorização comercial pode ser inferido.
 
+## Homologação online isolada — 24/11/2026 UTC
+
+Uma prévia foi carregada no Worker **flowbot-cep-homologacao** da conta Cloudflare dos pilotos. Não existe projeto Pages associado, porque a criação com conexão GitHub falhou com erro 8000011 da instalação Cloudflare–GitHub. Por isso, foi usado um Worker separado, com arquivos públicos fixados por SHA de commit da PR #12.
+
+- Link de acesso privado fornecido ao operador. Não registrar o token no repositório.
+- Cookie de autenticação HttpOnly temporário. A rota /health informa somente estado operacional.
+- D1 independente flowbot-cep-preview, com três tabelas e migração aplicada e verificada.
+- CEP_SEARCH_ENABLED=1 apenas nesse Worker de homologação protegido, não em produção nem Pages.
+- Interface carregou no navegador remoto de largura 390 px com botão de busca por CEP.
+- CI da PR com testes de unidade aprovados. Ainda não houve teste bem-sucedido com empresas reais: Nominatim e Overpass recusaram chamadas externas. Fallback por BrasilAPI v2 e Overpass Private.coffee foi testado com respostas simuladas; nova verificação externa ficou inconclusiva devido ao bloqueio da ferramenta de teste.
+- A instalação é homologação técnica parcial, não prova de que as buscas reais estejam operacionais. Android físico e persistência no CRM ainda não foram validados.
+
+Para liberar o uso, são necessários: fonte de negócios que funcione no edge, autenticação por tenant, controle de quota por usuário e testes reais. Não aumentar tentativas nem mudar instâncias para contornar bloqueios HTTP 403/429.
 ## Ambiente de desenvolvimento
 
 O servidor de desenvolvimento Node.js disponibiliza a API same-origin `GET /api/prospeccao/cep?cep=49000000&raio=1000&segmento=todos`. Ele não precisa de chaves:
@@ -43,6 +56,8 @@ O D1 registra apenas chave CEP/raio/segmento, resposta pública, tempo de valida
 ## Fontes e regras
 
 - ViaCEP — https://viacep.com.br/
+- BrasilAPI CEP V2 — https://brasilapi.com.br/docs (coordenadas aproximadas, quando disponíveis)
+- Overpass comunitário — https://overpass.private.coffee/api/ (fallback transitório, nunca para HTTP 403/429)
 - Nominatim Usage Policy — https://operations.osmfoundation.org/policies/nominatim/ (máximo 1 consulta/s global, identificação da aplicação e cache; não usar como autocomplete)
 - Overpass API — https://dev.overpass-api.de/overpass-doc/en/preface/commons.html (pode retornar 429; evitar requisições pesadas)
 - OpenStreetMap copyright — https://www.openstreetmap.org/copyright
