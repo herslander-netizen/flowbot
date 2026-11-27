@@ -5,7 +5,7 @@ import { resolve, join } from "node:path";
 // Não incluir server/, functions/, db/, docs/, tests/, .github/ ou segredos.
 const root = resolve(import.meta.dirname, "..");
 const dist = join(root, "dist");
-const entries = ["index.html", "design-system.html", "manifest.webmanifest", "assets", "src", "landing"];
+const entries = ["index.html", "design-system.html", "manifest.webmanifest", "assets", "src", "landing", "estudio", "whatsapp.html"];
 rmSync(dist, { recursive: true, force: true });
 mkdirSync(dist, { recursive: true });
 for (const name of entries) {

@@ -32,6 +32,15 @@ jobs:
           test -f src/app.mjs
           test -f db/migrations/001_prospeccao.sql
           ! grep -R "message/sendText" src/ worker/
+      - name: Testar as páginas do pacote de publicação
+        run: |
+          npm run build:pages
+          python3 -m http.server 4174 --bind 127.0.0.1 --directory dist &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for route in / /estudio/ /whatsapp.html /landing/ /design-system.html; do
+            curl --retry 5 --retry-connrefused --fail --silent --show-error "http://127.0.0.1:4174$route" --output /dev/null
+          done
       - name: Instalar Playwright fixado
         run: |
           npm ci --ignore-scripts
