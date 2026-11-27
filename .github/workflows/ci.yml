@@ -1,0 +1,58 @@
+name: Prospecção — testes de domínio e backend
+on:
+  push:
+    branches: [main]
+  pull_request:
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Verificar sintaxe e testes
+        run: |
+          node --check src/prospecting.mjs
+          node --check src/app.mjs
+          node --check src/prospeccao-api-client.mjs
+          node --check worker/index.mjs
+          npm test
+      - name: Verificar PWA sem disparos
+        run: |
+          test -f index.html
+          test -f assets/tokens.css
+          test -f assets/components.css
+          test -f landing/index.html
+          test -f manifest.webmanifest
+          test -f src/app.mjs
+          test -f db/migrations/001_prospeccao.sql
+          ! grep -R "message/sendText" src/ worker/
+      - name: Testar as páginas do pacote de publicação
+        run: |
+          npm run build:pages
+          python3 -m http.server 4174 --bind 127.0.0.1 --directory dist &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for route in / /estudio/ /whatsapp.html /landing/ /design-system.html; do
+            curl --retry 5 --retry-connrefused --fail --silent --show-error "http://127.0.0.1:4174$route" --output /dev/null
+          done
+      - name: Instalar Playwright fixado
+        run: |
+          npm ci --ignore-scripts
+          npx --no-install playwright install --with-deps chromium
+      - name: Verificar supressão no navegador móvel (somente dados fictícios)
+        run: |
+          npm run dev > /tmp/flowbot-prospeccao.log 2>&1 &
+          server_pid=$!
+          trap 'kill "$server_pid" 2>/dev/null || true' EXIT
+          for attempt in {1..20}; do
+            if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then break; fi
+            sleep 1
+          done
+          curl --fail --silent http://127.0.0.1:4173/ > /dev/null
+          npm run test:e2e:suppression

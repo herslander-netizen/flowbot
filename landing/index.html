@@ -1,0 +1,542 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<title>FlowBot — Teste a conversa antes do cliente</title>
+<meta name="description" content="FlowBot, da Alvo Digital: prospecção comercial, fluxos de atendimento testados antes de publicar e agentes que trabalham com revisão humana." />
+<link rel="icon" type="image/svg+xml" href="../assets/flowbot-symbol.svg" />
+<link rel="manifest" href="../manifest.webmanifest" />
+<meta name="theme-color" content="#0B0B0B" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=Lexend:wght@400&family=Inter:wght@400;500;550;600&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet" />
+<style>
+/* ── TOKENS ─────────────────────────────────────────────── */
+:root{
+  --bg:#0B0B0B; --card:#141413; --sunken:#1C1C1A; --hover:rgba(245,245,245,.06);
+  --line:rgba(245,245,245,.08); --line-2:rgba(245,245,245,.14);
+  --fg:#F5F5F5; --fg-2:#BCBAB4; --fg-3:#8C8882; --dim:#3A3835; /* --fg-3 = --text-faint do design system */
+  --acc:#FF6B2C; --acc-rgb:255,107,44; --ok:#34D399; --mark:#F59E0B;
+  --display:"Bricolage Grotesque","Inter",system-ui,sans-serif;
+  --mono:"JetBrains Mono",ui-monospace,Menlo,monospace;
+  --ease:cubic-bezier(.32,.72,0,1); --spring:cubic-bezier(.34,1.56,.64,1);
+  --mat:inset 0 1px 0 rgba(255,255,255,.07),inset 0 0 0 .5px rgba(255,255,255,.04),0 16px 32px -20px rgba(0,0,0,.95);
+  --key:inset 0 1px 0 rgba(255,255,255,.6),inset 0 -1px 0 rgba(0,0,0,.14),0 1px 2px rgba(0,0,0,.4),0 12px 24px -12px rgba(0,0,0,.9);
+  --pop:inset 0 1px 0 rgba(255,255,255,.07),0 40px 120px rgba(0,0,0,.7),0 0 0 .5px rgba(245,245,245,.12);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--fg);font:16px/1.55 Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit;text-decoration:none}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+input{font:inherit;color:inherit}
+:focus-visible{outline:2px solid var(--acc);outline-offset:3px;border-radius:8px}
+h1,h2{font-family:var(--display);letter-spacing:-.045em;line-height:.98;margin:0;text-wrap:balance}
+.wrap{width:min(1080px,100% - 40px);margin-inline:auto}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.eyebrow{display:inline-flex;align-items:center;gap:9px;font:500 12px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--fg-2)}
+.eyebrow i{width:7px;height:7px;border-radius:50%;background:var(--acc);box-shadow:0 0 0 4px rgba(var(--acc-rgb),.22)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;height:46px;padding:0 22px;border-radius:999px;background:var(--fg);color:var(--bg);font-weight:600;font-size:15px;box-shadow:var(--key);transition:transform .25s var(--spring),opacity .2s}
+.btn:hover{transform:translateY(-1px) scale(1.03)}
+.btn:active{transform:scale(.96)}
+.btn.ghost{background:transparent;color:var(--fg);box-shadow:inset 0 0 0 .5px var(--line-2)}
+
+/* palco */
+.stage{position:relative;overflow:clip;isolation:isolate}
+.stage>.in{position:relative;z-index:2}
+.au{position:absolute;inset:-20%;pointer-events:none}
+.au i{position:absolute;width:62vmax;height:62vmax;border-radius:50%;will-change:transform}
+.au i:nth-child(1){left:-8%;top:-18%;background:radial-gradient(closest-side,rgba(255,107,44,.24),transparent);animation:d1 19s ease-in-out infinite alternate}
+.au i:nth-child(2){right:-10%;top:6%;background:radial-gradient(closest-side,rgba(124,58,237,.3),transparent);animation:d2 23s ease-in-out infinite alternate}
+.au i:nth-child(3){left:22%;bottom:-30%;background:radial-gradient(closest-side,rgba(52,211,153,.16),transparent);animation:d3 27s ease-in-out infinite alternate}
+.au i:nth-child(4){right:14%;bottom:-34%;background:radial-gradient(closest-side,rgba(245,158,11,.14),transparent);animation:d1 31s ease-in-out infinite alternate-reverse}
+.au.b i:nth-child(1){background:radial-gradient(closest-side,rgba(52,211,153,.2),transparent)}
+.au.b i:nth-child(2){background:radial-gradient(closest-side,rgba(245,158,11,.18),transparent)}
+@keyframes d1{100%{transform:translate(9vmax,6vmax) scale(1.15)}}
+@keyframes d2{100%{transform:translate(-8vmax,7vmax) scale(.9)}}
+@keyframes d3{100%{transform:translate(6vmax,-7vmax) scale(1.1)}}
+.dots{position:absolute;inset:0;pointer-events:none;background-image:radial-gradient(var(--line-2) 1px,transparent 1.4px);background-size:26px 26px;-webkit-mask-image:radial-gradient(70% 60% at 50% 46%,#000 0%,transparent 78%);mask-image:radial-gradient(70% 60% at 50% 46%,#000 0%,transparent 78%)}
+.grain{position:absolute;inset:0;pointer-events:none;opacity:.11;mix-blend-mode:overlay;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 .9 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E")}
+
+/* mascotes */
+.fxl{position:absolute;inset:0;z-index:5;pointer-events:none}
+.fxb{position:absolute;left:0;top:0;width:160px;height:160px;cursor:pointer;pointer-events:auto;will-change:transform;--lx:0;--ly:0;-webkit-tap-highlight-color:transparent;opacity:0}
+.fxb .sq{width:100%;height:100%;transform-origin:50% 88%}
+.fxb svg{width:100%;height:100%;display:block;overflow:visible}
+.fxb .body{fill:var(--c);transition:fill .3s}
+.fxb .eyes{transform:translate(calc(var(--lx)*5px),calc(var(--ly)*4px));transition:transform .2s var(--ease)}
+.fxb .eyes>g{display:none}
+.fxb[data-eye=dot] .e-dot,.fxb[data-eye=arc] .e-arc,.fxb[data-eye=wide] .e-wide,.fxb[data-eye=flat] .e-flat{display:block}
+.fxb circle{fill:var(--e)}
+.fxb .eyes path{stroke:var(--e);stroke-width:5.6;stroke-linecap:round;fill:none}
+.fxb .e-dot{transform-origin:50px 48px;animation:blink 4.6s ease infinite;animation-delay:var(--bd)}
+@keyframes blink{0%,93%,100%{transform:scaleY(1)}96%{transform:scaleY(.08)}}
+.fxb.think .sq{animation:think 1s ease-in-out infinite}
+@keyframes think{50%{transform:translateY(-5px) rotate(-3deg)}}
+.ring{position:absolute;left:0;top:0;width:160px;height:160px;margin:-80px 0 0 -80px;border-radius:50%;border:3px solid var(--acc);pointer-events:none}
+.bit{position:absolute;left:0;top:0;pointer-events:none}
+.bub{position:absolute;left:0;top:0;z-index:2;width:max-content;max-width:240px;padding:8px 13px;border-radius:15px;background:var(--fg);color:var(--bg);font-size:13px;font-weight:550;line-height:1.35;box-shadow:var(--pop);pointer-events:none;opacity:0}
+
+/* nav */
+.nav{position:fixed;inset:0 0 auto;z-index:30;display:flex;align-items:center;justify-content:space-between;padding:14px max(20px,50% - 540px);transition:background .3s}
+.nav.lit{background:color-mix(in srgb,var(--bg) 72%,transparent);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);border-bottom:.5px solid var(--line)}
+.logo{display:flex;align-items:center;gap:9px;font:400 21px/1 Lexend,var(--display);letter-spacing:-.02em}
+.logo svg{width:28px;height:28px}
+.nav nav{display:flex;gap:26px;font-size:14px;color:var(--fg-2)}
+.nav nav a{transition:color .2s}
+.nav nav a:hover{color:var(--fg)}
+.nav .btn{height:36px;padding:0 16px;font-size:13.5px}
+
+/* hero */
+#hero{min-height:max(100svh,780px);display:grid;align-items:center;padding:96px 0 60px}
+#hero .in{text-align:center}
+.soon{display:inline-flex;align-items:center;gap:8px;margin:0 0 22px;padding:6px 13px;border-radius:999px;border:.5px solid var(--line-2);background:rgba(245,245,245,.05);font-size:13px;color:var(--fg-2);opacity:0}
+.soon i{flex:0 0 auto;width:7px;height:7px;border-radius:50%;background:var(--acc);box-shadow:0 0 0 4px rgba(var(--acc-rgb),.2);animation:soonP 1.8s ease-in-out infinite}
+@keyframes soonP{50%{box-shadow:0 0 0 7px rgba(var(--acc-rgb),0)}}
+#hero h1{font-size:clamp(46px,8.4vw,116px);font-weight:700}
+#hero h1 span{display:inline-block;opacity:0;white-space:pre}
+#hero .lead{max-width:44ch;margin:22px auto 0;font-size:clamp(16px,1.8vw,19px);color:var(--fg-2);opacity:0}
+.acc{position:relative;width:min(420px,100%);margin:clamp(96px,12vh,128px) auto 0;padding:34px 24px 20px;border-radius:26px;background:color-mix(in srgb,var(--card) 90%,transparent);border:.5px solid var(--line-2);box-shadow:var(--pop);-webkit-backdrop-filter:blur(18px);backdrop-filter:blur(18px);text-align:left;display:grid;grid-template-columns:minmax(0,1fr);gap:10px;opacity:0}
+.acc b{font:700 24px var(--display);letter-spacing:-.03em}
+.acc p{margin:-4px 0 6px;color:var(--fg-2);font-size:14px}
+.acc .row{display:flex;align-items:center;gap:10px;height:48px;border-radius:14px;border:.5px solid var(--line);background:var(--sunken);padding:0 15px;font-size:15px;color:var(--fg-2)}
+.acc .row span{margin-left:auto;font:500 11.5px var(--mono);color:var(--fg-3)}
+.acc .row i{width:9px;height:9px;border-radius:50%;background:var(--c)}
+.acc .btn{width:100%;margin-top:4px}
+.acc small{text-align:center;color:var(--fg-3);font-size:12px}
+
+/* seções */
+.sc{padding:clamp(90px,12vw,160px) 0}
+.sc-h{max-width:760px}
+.sc-h h2{font-size:clamp(38px,6.2vw,80px);font-weight:700;margin:16px 0 18px}
+.sc-h p{font-size:clamp(16px,1.7vw,19px);color:var(--fg-2);max-width:50ch;margin:0}
+.rv{opacity:0;transform:translateY(26px);transition:opacity .8s var(--ease),transform .8s var(--ease)}
+.rv.on{opacity:1;transform:none}
+
+/* dor */
+#dor{padding:clamp(110px,15vw,200px) 0;text-align:center}
+.dor p{font:700 clamp(30px,5.6vw,76px)/1.04 var(--display);letter-spacing:-.04em;margin:0;color:var(--dim);transition:color .9s var(--ease)}
+.dor p.on{color:var(--fg)}
+.dor p+p{margin-top:.16em}
+.dor .lead{font:400 clamp(16px,1.8vw,20px)/1.5 Inter,sans-serif;letter-spacing:0;max-width:44ch;color:var(--dim);margin:40px auto 0!important}
+.dor .lead.on{color:var(--fg-2)}
+.dor-floor{height:120px;margin-top:26px}
+.dor-then{margin-top:6px;font:500 13px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--fg-2);opacity:0;transition:opacity .6s}
+.dor-then.on{opacity:1}
+
+/* manhã: caixa de mensagem e três raias */
+.comp{position:relative;display:flex;align-items:center;gap:10px;width:min(640px,100%);min-height:60px;margin:clamp(110px,13vw,150px) auto 0;padding:8px 8px 8px 20px;border-radius:30px;background:var(--card);border:.5px solid var(--line-2);box-shadow:var(--pop);font-size:15.5px}
+.comp .tx{flex:1;min-height:1.5em}
+.comp .tx:empty::before{content:"Descreva o atendimento que você quer";color:var(--fg-3)}
+.comp .tx::after{content:"";display:inline-block;width:2px;height:1.1em;margin-left:2px;vertical-align:-3px;background:var(--acc);animation:car 1s steps(1) infinite}
+@keyframes car{50%{opacity:0}}
+.comp .go{width:44px;height:44px;border-radius:50%;background:var(--fg);color:var(--bg);box-shadow:var(--key);display:grid;place-items:center;flex:0 0 auto;transition:transform .3s var(--spring)}
+.comp.sent .go{transform:scale(1.25) rotate(-12deg)}
+.comp .go svg{width:18px;height:18px;fill:none;stroke:currentColor;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
+.lanes{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:clamp(110px,12vw,140px)}
+.lane{position:relative;min-height:250px;padding:30px 18px 18px;border-radius:24px;background:color-mix(in srgb,var(--card) 92%,transparent);border:.5px solid var(--line-2);box-shadow:0 20px 60px rgba(0,0,0,.4);opacity:0;display:grid;align-content:start;gap:10px}
+.lane h3{margin:0;font:600 12px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--fg-2);display:flex;justify-content:space-between}
+.lane h3 b{color:var(--fg);font-weight:500}
+.co{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:13px;background:var(--sunken);font-size:13.5px}
+.co i{width:9px;height:9px;border-radius:50%;background:var(--c,#6B6762);flex:0 0 auto}
+.co span{margin-left:auto;font:500 11.5px var(--mono);color:var(--fg-2)}
+.msg{padding:11px 14px;border-radius:18px 18px 18px 6px;background:var(--sunken);font-size:14px;line-height:1.45;min-height:5.6em}
+.msg mark,.m mark{background:color-mix(in srgb,var(--mark) 30%,transparent);color:inherit;border-radius:4px;padding:0 2px}
+.fact{font:500 11.5px var(--mono);color:var(--fg-3);opacity:0}
+.week{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.day{display:grid;justify-items:center;gap:6px;padding:10px 0;border-radius:13px;background:var(--sunken);font:500 11px var(--mono);color:var(--fg-3);transition:background .3s,color .3s,transform .4s var(--spring)}
+.day i{width:16px;height:16px;border-radius:50%;border:1.5px solid var(--line-2);transition:.3s}
+.day.sent{color:var(--fg)}
+.day.sent i{background:var(--fg-3);border-color:transparent}
+.day.win{background:color-mix(in srgb,var(--ok) 22%,var(--sunken));color:var(--fg);transform:translateY(-6px)}
+.day.win i{background:var(--ok);border-color:transparent}
+.reply{padding:10px 13px;border-radius:18px 18px 6px;background:var(--ok);color:#04130D;font-size:14px;font-weight:550;justify-self:end;opacity:0}
+.again{display:block;margin:34px auto 0;font:500 12px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--fg-3);opacity:0;transition:opacity .4s,color .2s}
+.again.on{opacity:1}
+.again:hover{color:var(--fg)}
+
+/* conversa */
+.duo{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:clamp(30px,6vw,90px);align-items:center}
+.pts{display:grid;gap:18px;margin-top:34px}
+.pts div{border-top:.5px solid var(--line-2);padding-top:14px;color:var(--fg-2);font-size:15px;max-width:46ch}
+.pts b{display:block;color:var(--fg);font:600 18px var(--display);letter-spacing:-.01em;margin-bottom:3px}
+.sum{display:flex;flex-wrap:wrap;gap:6px;margin-top:22px}
+.sum span{font:500 11.5px var(--mono);padding:6px 10px;border-radius:999px;background:var(--sunken);color:var(--fg-3);transition:background .3s,color .3s}
+.sum span.on{background:color-mix(in srgb,var(--acc) 18%,var(--sunken));color:var(--fg)}
+.phone{position:relative;width:min(330px,100%);height:560px;margin-top:90px;padding:14px 14px 14px;border-radius:44px;background:var(--card);border:.5px solid var(--line-2);box-shadow:var(--pop),inset 0 0 0 6px #0E0E0D;display:grid;grid-template-rows:auto 1fr auto;gap:10px}
+.ph-h{display:flex;align-items:center;gap:10px;padding:12px 10px 10px;border-bottom:.5px solid var(--line)}
+.ph-av{width:36px;height:36px;border-radius:50%;background:var(--sunken);display:grid;place-items:center}
+.ph-av svg{width:28px;height:28px}
+.ph-h b{display:block;font-size:14.5px}
+.ph-h small{color:var(--fg-3);font-size:12px}
+.ph-you{margin-left:auto;display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:12px;background:var(--fg);color:var(--bg);font-size:11.5px;font-weight:600;opacity:0;transition:opacity .3s}
+.ph-you.on{opacity:1}
+.ph-b{display:flex;flex-direction:column;gap:8px;padding:6px 6px 0;overflow-y:auto;scrollbar-width:none;min-height:0}
+.ph-b>:first-child{margin-top:auto}
+.m{max-width:86%;padding:10px 13px;border-radius:18px 18px 18px 6px;background:var(--sunken);font-size:14px;line-height:1.42;flex:0 0 auto}
+.m.r{align-self:flex-end;border-radius:18px 18px 6px;background:var(--acc);color:#1A0A02;font-weight:550}
+.m.s{align-self:center;text-align:center;font:500 11px var(--mono);letter-spacing:.04em;color:var(--ok);background:color-mix(in srgb,var(--ok) 12%,transparent);border-radius:999px;padding:7px 12px}
+.m small{display:block;margin-top:4px;font:500 10px var(--mono);color:var(--fg-3)}
+.m.r small{color:rgba(4,18,27,.6)}
+.typing{display:inline-flex;gap:4px;padding:12px 14px;border-radius:18px;background:var(--sunken);align-self:flex-start;flex:0 0 auto}
+.typing i{width:6px;height:6px;border-radius:50%;background:var(--fg-2);animation:ty 1s ease infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+@keyframes ty{0%,60%,100%{opacity:.3;transform:none}30%{opacity:1;transform:translateY(-3px)}}
+.ops{display:flex;flex-wrap:wrap;gap:6px;min-height:44px;align-content:flex-end}
+.op{height:36px;padding:0 13px;border-radius:999px;background:var(--sunken);border:.5px solid var(--line-2);font-size:13px;transition:background .2s,transform .25s var(--spring),border-color .2s}
+.op:hover{background:var(--hover);border-color:rgba(var(--acc-rgb),.5)}
+.op:active{transform:scale(.95)}
+.take{width:100%;height:44px;border-radius:999px;box-shadow:var(--key);background:var(--fg);color:var(--bg);font-weight:600;font-size:14.5px;transition:background .3s,color .3s,transform .3s var(--spring)}
+.take.pulse{animation:tk 1s ease-in-out infinite}
+@keyframes tk{50%{box-shadow:0 0 0 8px rgba(245,245,245,.12)}}
+.take.done{background:var(--sunken);color:var(--fg-2);transform:scale(.98);box-shadow:none}
+
+/* níveis */
+.rk{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:clamp(20px,5vw,60px);margin-top:clamp(70px,9vw,110px)}
+.rk-bot{width:clamp(150px,20vw,220px);aspect-ratio:1/1}
+.rk-t small{font:500 12px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--fg-3)}
+.rk-t b{display:block;font:700 clamp(40px,6vw,76px)/1 var(--display);letter-spacing:-.045em;margin:6px 0 10px}
+.rk-t p{margin:0;color:var(--fg-2);min-height:1.6em}
+.rk-steps{display:flex;gap:6px;margin-top:22px;flex-wrap:wrap}
+.rk-steps i{width:34px;height:8px;border-radius:4px;background:var(--sunken);box-shadow:inset 0 0 0 1px var(--line-2);transition:background .4s,transform .4s var(--spring)}
+.rk-steps i.on{transform:scaleY(1.5)}
+.fxb .hat{transform-origin:50% 30%}
+
+/* time */
+.crew{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-top:clamp(110px,12vw,140px)}
+.mate{position:relative;padding:34px 16px 18px;border-radius:24px;background:color-mix(in srgb,var(--card) 92%,transparent);border:.5px solid var(--line-2);min-height:190px;display:grid;align-content:start;gap:6px;opacity:0}
+.mate small{font:500 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--fg-3)}
+.mate b{font:700 24px var(--display);letter-spacing:-.03em}
+.mate p{margin:0;font-size:13.5px;color:var(--fg-2);line-height:1.45}
+.mate.mk{border-style:dashed;gap:9px}
+.mate.mk input{height:38px;border-radius:11px;border:.5px solid var(--line);background:var(--sunken);padding:0 12px;font-size:14px;outline:none;width:100%;transition:border-color .2s}
+.mate.mk input:focus{border-color:var(--line-2)}
+.sw{display:flex;flex-wrap:wrap;gap:6px}
+.sw button{width:22px;height:22px;border-radius:50%;background:var(--c);transition:transform .25s var(--spring)}
+.sw button[aria-pressed=true]{box-shadow:0 0 0 2px var(--bg),0 0 0 3.5px var(--fg)}
+.sw button:hover{transform:scale(1.18)}
+.shp{display:flex;gap:5px;flex-wrap:wrap}
+.shp button{width:30px;height:30px;border-radius:9px;background:var(--sunken);display:grid;place-items:center;transition:background .2s}
+.shp svg{width:20px;height:20px;color:var(--fg-3)}
+.shp button[aria-pressed=true]{background:var(--fg)}
+.shp button[aria-pressed=true] svg{color:var(--bg)}
+
+/* quem usa */
+#gente{padding-bottom:clamp(60px,8vw,100px)}
+.mq{overflow:hidden;margin-top:18px;-webkit-mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent);mask-image:linear-gradient(90deg,transparent,#000 8%,#000 92%,transparent)}
+.mq.a{margin-top:clamp(48px,6vw,72px)}
+.mq-t{display:flex;gap:16px;width:max-content;animation:mq 70s linear infinite}
+.mq.b .mq-t{animation-direction:reverse;animation-duration:84s}
+.mq:hover .mq-t{animation-play-state:paused}
+@keyframes mq{100%{transform:translateX(-50%)}}
+.pass{position:relative;width:330px;flex:0 0 auto;padding:16px 18px 14px;border-radius:22px;background:var(--fg);color:var(--bg);overflow:hidden;--mu:rgba(11,11,11,.62);transition:transform .35s var(--spring)}
+.pass:hover{transform:translateY(-6px) rotate(-1deg)}
+.pass::after{content:"";position:absolute;inset:0;pointer-events:none;opacity:.5;background-image:radial-gradient(rgba(11,11,11,.16) 1px,transparent 1.4px);background-size:20px 20px;-webkit-mask-image:linear-gradient(115deg,transparent 45%,#000);mask-image:linear-gradient(115deg,transparent 45%,#000)}
+.ps-top{display:flex;justify-content:space-between;align-items:center;font:700 14px var(--display);letter-spacing:-.02em}
+.ps-top span{font:500 11px var(--mono);letter-spacing:.08em;color:var(--mu)}
+.ps-mid{display:flex;align-items:center;gap:13px;margin:16px 0 14px}
+.ps-mid svg{width:58px;height:58px;flex:0 0 auto;overflow:visible}
+.ps-mid b{display:block;font:700 23px/1.05 var(--display);letter-spacing:-.035em}
+.ps-mid small{color:var(--mu);font-size:12.5px}
+.ps-say{font-size:13px;line-height:1.4;color:var(--mu);min-height:3.6em}
+.ps-ft{display:flex;justify-content:space-between;align-items:center;padding-top:10px;border-top:1px dashed rgba(11,11,11,.18);font:500 11px var(--mono);color:var(--mu)}
+.ps-ft b{display:inline-flex;align-items:center;gap:6px;color:var(--bg);font-weight:600}
+.ps-ft b::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--c)}
+
+/* comparar */
+.vs{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:clamp(34px,5vw,56px)}
+.vs>div{padding:26px 24px;border-radius:26px;border:.5px solid var(--line-2);background:color-mix(in srgb,var(--card) 92%,transparent)}
+.vs h3{margin:0 0 14px;font:600 12px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--fg-3)}
+.vs ul{list-style:none;margin:0;padding:0;display:grid;gap:12px}
+.vs li{font-size:16px;color:var(--fg-3);padding-left:26px;position:relative}
+.vs li::before{content:"";position:absolute;left:0;top:.5em;width:12px;height:2px;border-radius:1px;background:currentColor}
+.vs .us{background:var(--fg);color:var(--bg);border-color:transparent}
+.vs .us h3{color:rgba(11,11,11,.62)}
+.vs .us li{color:var(--bg);font-weight:550}
+.vs .us li::before{width:8px;height:8px;top:.42em;left:2px;border-radius:50%;background:var(--acc)}
+
+/* conta */
+.calc{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:clamp(34px,5vw,56px)}
+.calc>div{padding:26px 24px;border-radius:26px;border:.5px solid var(--line-2);background:color-mix(in srgb,var(--card) 92%,transparent);box-shadow:var(--mat)}
+.calc label{display:grid;gap:8px;margin-bottom:20px;font-size:14px;color:var(--fg-2)}
+.calc label:last-child{margin-bottom:0}
+.calc label span{display:flex;justify-content:space-between}
+.calc label b{color:var(--fg);font:500 14px var(--mono)}
+.calc input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:3px;background:var(--sunken);outline:none;margin:8px 0}
+.calc input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:22px;height:22px;border-radius:50%;background:var(--fg);cursor:grab;box-shadow:0 2px 10px rgba(0,0,0,.5);transition:transform .25s var(--spring)}
+.calc input[type=range]:active::-webkit-slider-thumb{transform:scale(1.15);cursor:grabbing}
+.calc input[type=range]::-moz-range-thumb{width:22px;height:22px;border:0;border-radius:50%;background:var(--fg);cursor:grab}
+.out small{font:500 12px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--fg-3)}
+.out>b{display:block;font:700 clamp(40px,6vw,72px)/1 var(--display);letter-spacing:-.045em;margin:8px 0 22px}
+.out dl{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:0}
+.out dd{margin:0;font:600 22px var(--display)}
+.out dt{font-size:12.5px;color:var(--fg-3)}
+.out p{margin:22px 0 0;font-size:12.5px;color:var(--fg-3)}
+
+/* dúvidas */
+.faq{margin-top:clamp(30px,4vw,48px);border-top:.5px solid var(--line-2)}
+.faq details{border-bottom:.5px solid var(--line-2)}
+.faq summary{list-style:none;cursor:pointer;padding:20px 40px 20px 0;font:600 clamp(17px,2vw,21px) var(--display);letter-spacing:-.015em;position:relative}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";position:absolute;right:6px;top:50%;transform:translateY(-50%);font:400 26px var(--display);color:var(--fg-3);transition:transform .3s var(--spring)}
+.faq details[open] summary::after{transform:translateY(-50%) rotate(45deg)}
+.faq p{margin:0 0 22px;color:var(--fg-2);max-width:66ch}
+
+/* fechamento */
+#acesso{padding:clamp(100px,13vw,170px) 0 80px;text-align:center}
+#acesso h2{font-size:clamp(38px,6.4vw,84px);font-weight:700}
+#acesso .sub{color:var(--fg-2);max-width:40ch;margin:18px auto 0;font-size:clamp(16px,1.8vw,19px)}
+#acesso .acc{opacity:1}
+#acesso .acc .btn.ghost{margin-top:0}
+
+footer{border-top:.5px solid var(--line);padding:26px 0 40px;font-size:13px;color:var(--fg-3)}
+footer .wrap{display:flex;flex-wrap:wrap;gap:8px 20px;justify-content:space-between}
+footer .links{display:flex;flex-wrap:wrap;gap:6px 18px}
+footer .links a{text-decoration:underline;text-underline-offset:3px}
+footer .links a:hover{color:var(--fg)}
+footer p{margin:0;flex-basis:100%}
+
+@media (max-width:860px){
+  .nav nav{display:none}
+  .lanes{grid-template-columns:1fr;gap:86px}
+  .duo{grid-template-columns:1fr;justify-items:center}
+  .duo>div:first-child{justify-self:stretch}
+  .rk{grid-template-columns:1fr;justify-items:center;text-align:center}
+  .rk-steps{justify-content:center}
+  .crew{grid-template-columns:1fr 1fr;gap:80px 12px}
+  .mate.mk{grid-column:1/-1}
+  .vs,.calc{grid-template-columns:1fr}
+  .pass{width:290px}
+}
+@media (prefers-reduced-motion:reduce){
+  *,*::before,*::after{transition-duration:.01ms!important;scroll-behavior:auto!important}
+  .au i,.fxb .e-dot,.mq-t,.soon i,.comp .tx::after{animation:none!important}
+  .rv{opacity:1!important;transform:none!important}
+}
+
+/* módulo disponível */
+.feats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:clamp(40px,6vw,64px)}
+.feat{padding:26px 20px 22px;border-radius:24px;background:color-mix(in srgb,var(--card) 92%,transparent);border:.5px solid var(--line-2);display:grid;align-content:start;gap:8px;transition:transform .35s var(--spring),border-color .2s}
+.feat:hover{transform:translateY(-4px);border-color:rgba(var(--acc-rgb),.4)}
+.feat small{font:500 11px var(--mono);letter-spacing:.1em;text-transform:uppercase;color:var(--acc)}
+.feat b{font:700 21px/1.1 var(--display);letter-spacing:-.03em}
+.feat p{margin:0;font-size:14px;color:var(--fg-2)}
+.acts .btn.ghost{background:transparent;color:var(--fg);box-shadow:inset 0 0 0 .5px var(--line-2)}
+@media (max-width:960px){.feats{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:560px){.feats{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <radialGradient id="botSh" cx=".5" cy=".95" r=".75"><stop offset="0" stop-color="#000" stop-opacity=".28"/><stop offset="1" stop-color="#000" stop-opacity="0"/></radialGradient>
+    <radialGradient id="botHi" cx=".32" cy=".22" r=".5"><stop offset="0" stop-color="#fff" stop-opacity=".38"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+    <radialGradient id="capHi" cx=".36" cy=".18" r=".55"><stop offset="0" stop-color="#fff" stop-opacity=".42"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+    <filter id="capBlur" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="2.2"/></filter>
+  </defs>
+</svg>
+
+<header class="nav" id="nav">
+  <a class="logo" href="#hero" aria-label="FlowBot, início"><span id="logoG"></span>flowbot</a>
+  <nav aria-label="Seções"><a href="#prospeccao">Prospecção</a><a href="#manha">Como funciona</a><a href="#conversa">Demo</a><a href="#time">O time</a><a href="#duvidas">Dúvidas</a></nav>
+  <a class="btn" href="../">Abrir o app</a>
+</header>
+
+<main>
+<!-- 1. abertura -->
+<section class="stage" id="hero">
+  <div class="au"><i></i><i></i><i></i><i></i></div><div class="dots"></div>
+  <div class="in wrap">
+    <p class="soon"><i></i>Alvo Digital · prospecção já disponível para teste</p>
+    <h1 id="h1" aria-label="Teste a conversa antes do cliente.">Teste a conversa antes do cliente.</h1>
+    <p class="lead">Encontre e organize empresas, monte fluxos de atendimento e só publique depois de percorrer cada caminho como se fosse o cliente. Quem decide o contato é sempre uma pessoa.</p>
+    <div class="acc" id="acc">
+      <b>Simule um atendimento</b>
+      <p>Um orçamento audiovisual, do primeiro oi até a equipe.</p>
+      <div class="row" style="--c:#38BDF8"><i></i>Tipo de vídeo<span>pergunta</span></div>
+      <div class="row" style="--c:#F59E0B"><i></i>Cidade e data<span>pergunta</span></div>
+      <div class="row" style="--c:#34D399"><i></i>Passa para a equipe<span>transferência</span></div>
+      <a class="btn" href="#conversa">Abrir a simulação</a>
+      <small>Sem cadastro. Nada é enviado para ninguém.</small>
+    </div>
+  </div>
+  <div class="grain"></div>
+</section>
+
+<!-- 2. a dor -->
+<section class="stage" id="dor">
+  <div class="dots"></div>
+  <div class="in wrap dor" id="dorW">
+    <p>O bot respondeu errado.</p>
+    <p>O cliente caiu no caminho errado.</p>
+    <p>Ninguém tinha testado.</p>
+    <p class="lead">Testar depois de publicar é descobrir o erro na frente do cliente. Por isso o atendimento travou na terça.</p>
+    <div class="dor-floor" id="dorF"></div>
+    <div class="dor-then" id="dorT">Até agora.</div>
+  </div>
+</section>
+
+
+<!-- 2b. o produto que já existe -->
+<section class="sc" id="prospeccao">
+  <div class="wrap">
+    <div class="sc-h rv"><span class="eyebrow"><i></i>Disponível para teste</span><h2>Comece pela prospecção.</h2>
+      <p>O primeiro módulo do FlowBot já funciona no navegador e no celular. Sem disparos: pesquisa e organização ficam separadas de qualquer envio.</p></div>
+    <div class="feats">
+      <article class="feat rv"><small>Mapa</small><b>Território à vista</b><p>Cada empresa no mapa, colorida pela etapa do funil, com legenda e agrupamento.</p></article>
+      <article class="feat rv"><small>Funil</small><b>Sete etapas, números reais</b><p>De Pesquisado a Ganho ou Perdido, contado a partir dos seus registros.</p></article>
+      <article class="feat rv"><small>Planilhas</small><b>Importa e exporta CSV</b><p>Até 500 empresas por arquivo, sem duplicar, com proteção contra fórmulas.</p></article>
+      <article class="feat rv"><small>Abordagem</small><b>Rascunho com fonte</b><p>Só cita um fato quando há link para conferir. Você revisa e copia; nada é enviado.</p></article>
+    </div>
+    <div class="acts" style="margin-top:28px;display:flex;gap:10px;flex-wrap:wrap"><a class="btn" href="../">Abrir o Modo Prospecção</a><a class="btn ghost" href="#duvidas">Ver limites desta versão</a></div>
+  </div>
+</section>
+
+<!-- 3. a manhã: um pedido, três agentes -->
+<section class="stage sc" id="manha">
+  <div class="au b"><i></i><i></i><i></i><i></i></div>
+  <div class="in wrap">
+    <div class="sc-h rv"><span class="eyebrow"><i></i>Próximo módulo · Bot Studio</span><h2>Você descreve. O time monta e testa.</h2>
+      <p>Sem arrastar caixinha nem escrever regra. Você diz que atendimento quer, e cada agente cuida de uma parte.</p></div>
+    <div class="comp" id="comp"><div class="tx" id="compT"></div><button class="go" aria-label="Enviar pedido"><svg viewBox="0 0 24 24"><path d="M12 19V5M5 12l7-7 7 7"/></svg></button></div>
+    <div class="lanes">
+      <div class="lane" id="l1"><h3>Monta <b id="l1n"></b></h3><div id="l1b" style="display:grid;gap:6px"></div></div>
+      <div class="lane" id="l2"><h3>Simula <b>ramo A</b></h3><div class="msg" id="l2m"></div><div class="fact" id="l2f">resposta escrita a partir do fluxo</div></div>
+      <div class="lane" id="l3"><h3>Passa <b>para a equipe</b></h3><div class="week" id="l3w"></div><div class="reply" id="l3r">Equipe assumiu.</div></div>
+    </div>
+    <button class="again" id="again2">Ver de novo</button>
+  </div>
+  <div class="grain"></div>
+</section>
+
+<!-- 4. a conversa -->
+<section class="stage sc" id="conversa">
+  <div class="au"><i></i><i></i><i></i><i></i></div>
+  <div class="in wrap duo">
+    <div>
+      <div class="sc-h rv"><span class="eyebrow"><i></i>Simulação de conversa</span><h2>Converse com o fluxo. Antes de todo mundo.</h2>
+        <p>Do outro lado, você faz o papel do cliente. Escolha as respostas e veja exatamente o que ele veria.</p></div>
+      <div class="pts rv">
+        <div><b>Uma pergunta por vez</b>O fluxo espera a resposta antes de seguir. Nada de despejar formulário.</div>
+        <div><b>Cada ramo, testado</b>Recomece e escolha outro caminho. Cada resposta leva para onde você definiu.</div>
+        <div><b>A equipe assume com um toque</b>O bot não escreve mais nada naquela conversa. O preço quem confirma é a equipe.</div>
+      </div>
+      <div class="sum rv" aria-live="polite"><span id="rTipo">tipo —</span><span id="rCid">cidade —</span><span id="rData">período —</span></div>
+    </div>
+    <div class="phone rv" id="phone" role="region" aria-label="Simulação de conversa">
+      <div class="ph-h"><div class="ph-av" id="phAv"></div><div><b>FlowBot</b><small>Produtora Lumen · simulação</small></div><span class="ph-you" id="phYou">Equipe</span></div>
+      <div class="ph-b" id="msgs" aria-live="polite"></div>
+      <div class="ops" id="ops" role="group" aria-label="Respostas"></div>
+    </div>
+  </div>
+  <div class="grain"></div>
+</section>
+
+<!-- 5. níveis do fluxo -->
+<section class="stage sc" id="nivel">
+  <div class="dots"></div>
+  <div class="in wrap">
+    <div class="sc-h rv"><span class="eyebrow"><i></i>Do rascunho ao ar</span><h2>Todo fluxo sobe de nível.</h2>
+      <p>Cada fluxo começa como rascunho e ganha uma boina nova a cada etapa vencida. A preta é o topo: só ela vai para o cliente.</p></div>
+    <div class="rk rv">
+      <div class="rk-bot" id="rkBot"></div>
+      <div class="rk-t"><small id="rkK">Rascunho</small><b id="rkN">Rascunho</b><p id="rkG">Todo fluxo começa aqui.</p><div class="rk-steps" id="rkS"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 6. o time -->
+<section class="stage sc" id="time">
+  <div class="dots"></div>
+  <div class="in wrap">
+    <div class="sc-h rv"><span class="eyebrow"><i></i>O time</span><h2>Um agente para cada etapa.</h2>
+      <p>Cada bloco do fluxo tem dono. Você fala com eles como fala com gente, e pode criar quantos quiser.</p></div>
+    <div class="crew" id="crew">
+      <div class="mate"><small>Primeiro contato</small><b>Recepcionista</b><p>Abre a conversa e explica o que vai acontecer.</p></div>
+      <div class="mate"><small>Triagem</small><b>Qualificador</b><p>Pergunta o que importa, na ordem certa, e ramifica pela resposta.</p></div>
+      <div class="mate"><small>Transferência</small><b>Passador</b><p>Encerra o bot e entrega o resumo para a equipe.</p></div>
+      <div class="mate"><small>Validação</small><b>Guardião</b><p>Segura respostas fora do esperado sem travar a conversa.</p></div>
+      <div class="mate mk" id="mk"><small>Crie o seu</small><label class="sr" for="mkN">Nome do agente</label><input id="mkN" placeholder="Dê um nome" maxlength="18" />
+        <div class="sw" id="mkC" role="group" aria-label="Cor"></div><div class="shp" id="mkS" role="group" aria-label="Formato"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- 7. quem usa -->
+<section class="sc" id="gente">
+  <div class="wrap"><div class="sc-h rv"><span class="eyebrow"><i></i>Quem usa</span><h2>Cada negócio com o seu fluxo.</h2>
+    <p>Todo fluxo vira um cartão com o que ele já resolveu. Dá para baixar e mostrar para a equipe.</p></div></div>
+  <div class="mq a"><div class="mq-t" id="mqA"></div></div>
+  <div class="mq b"><div class="mq-t" id="mqB"></div></div>
+</section>
+
+<!-- 8. a diferença -->
+<section class="sc" id="comparar">
+  <div class="wrap">
+    <div class="sc-h rv"><span class="eyebrow"><i></i>A diferença</span><h2>Bot comum responde. O FlowBot é testado antes.</h2></div>
+    <div class="vs rv">
+      <div><h3>Bot comum</h3><ul><li>Você publica e torce.</li><li>O erro aparece com o cliente.</li><li>Ninguém sabe qual ramo quebrou.</li><li>O bot continua falando depois que a equipe entra.</li><li>Estima preço sozinho.</li></ul></div>
+      <div class="us"><h3>FlowBot</h3><ul><li>Cada caminho é simulado antes.</li><li>O erro aparece para você, não para o cliente.</li><li>Cada ramo tem selo de testado.</li><li>A equipe assume e o bot para.</li><li>Quem fala em preço é a equipe.</li></ul></div>
+    </div>
+  </div>
+</section>
+
+<!-- 9. a conta -->
+<section class="sc" id="conta">
+  <div class="wrap">
+    <div class="sc-h rv"><span class="eyebrow"><i></i>Faça a conta</span><h2>Quanto custa um fluxo que ninguém testou?</h2><p>Ponha os seus números.</p></div>
+    <div class="calc rv">
+      <div>
+        <label><span>Conversas por dia útil <b id="vA">40</b></span><input type="range" id="iA" min="5" max="200" step="5" value="40" /></label>
+        <label><span>Caem num caminho errado <b id="vB">10%</b></span><input type="range" id="iB" min="1" max="40" value="10" /></label>
+        <label><span>Desses, desistem <b id="vC">50%</b></span><input type="range" id="iC" min="5" max="100" step="5" value="50" /></label>
+        <label><span>Valor de um pedido <b id="vD">R$ 2.000</b></span><input type="range" id="iD" min="200" max="20000" step="100" value="2000" /></label>
+      </div>
+      <div class="out" aria-live="polite">
+        <small>Deixado na mesa por mês</small><b id="oT">R$ 0</b>
+        <dl><div><dd id="oA">0</dd><dt>conversas no caminho errado</dt></div><div><dd id="oB">0</dd><dt>clientes que desistem</dt></div><div><dd id="oC">22</dd><dt>dias úteis</dt></div></dl>
+        <p>Conta ilustrativa, com 22 dias úteis. Não é promessa de resultado.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- 10. dúvidas -->
+<section class="sc" id="duvidas">
+  <div class="wrap">
+    <div class="sc-h rv"><span class="eyebrow"><i></i>Dúvidas</span><h2>O que todo mundo pergunta.</h2></div>
+    <div class="faq" id="faq"></div>
+  </div>
+</section>
+
+<!-- 11. fechamento -->
+<section class="stage" id="acesso">
+  <div class="au"><i></i><i></i><i></i><i></i></div><div class="dots"></div>
+  <div class="in wrap">
+    <h2>Seu próximo cliente começa num mapa.</h2>
+    <p class="sub">Organize o território hoje. Os fluxos e os agentes chegam nos próximos módulos.</p>
+    <div class="acc" id="acc2">
+      <b>Experimente agora</b>
+      <p>Sem cadastro. Os dados ficam só no seu navegador e nada é enviado.</p>
+      <a class="btn" href="../">Abrir o Modo Prospecção</a>
+      <a class="btn ghost" href="#conversa">Testar a simulação de conversa</a>
+      <small>Versão de demonstração.</small>
+    </div>
+  </div>
+  <div class="grain"></div>
+</section>
+</main>
+
+<footer><div class="wrap">
+  <span>flowbot · um produto da Alvo Digital.</span>
+  <div class="links"><a href="../">Modo Prospecção</a><a href="#conversa">Demo</a><a href="#duvidas">Dúvidas</a><a href="https://github.com/herslander-netizen/flowbot" target="_blank" rel="noopener">GitHub</a></div>
+  <p>O Modo Prospecção funciona como demonstração local. Bot Studio, Central de Atendimento, Agentes de IA e as integrações ainda não existem. Empresas, pessoas e números das demonstrações são ilustrativos.</p>
+</div></footer>
+
+<script src="./landing.js" defer></script>
+</body>
+</html>
